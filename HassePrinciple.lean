@@ -1,3 +1,4 @@
+import HassePrinciple.Padics.Legendre
 import HassePrinciple.Padics.Squares
 import HassePrinciple.QuadraticForm.Basic
 import HassePrinciple.QuadraticForm.HasseMinkowski
