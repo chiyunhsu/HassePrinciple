@@ -15,6 +15,7 @@ namespace Padic
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
+/-- The open subgroup of p-adic unit squares inside ℚ_[p]ˣ. -/
 def squares : OpenSubgroup ℚ_[p]ˣ where
   carrier  := {x : ℚ_[p]ˣ | IsSquare x}
   mul_mem' := sorry
