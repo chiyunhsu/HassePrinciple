@@ -29,7 +29,7 @@ structure Chain (Q : QuadraticForm k V) (b b' : Basis (Fin (finrank k V)) k V) :
   basis_isContiguous {i : ℕ} (hi : i < m) : (basis ⟨i, by omega⟩).IsContiguous (basis ⟨i, by omega⟩)
 
 -- Used in the proof of case (iii) of Theorem 2.
-private lemma exists_const (hdim : 3 ≤ finrank k V) (hQ : Q.Nondegenerate)
+lemma exists_const (hdim : 3 ≤ finrank k V) (hQ : Q.Nondegenerate)
     {b b' : Basis (Fin (finrank k V)) k V} (hb : Q.associated.IsOrthoᵢ b)
     (hb' : Q.associated.IsOrthoᵢ b') :
     ∃ (x : k), Q (b' ⟨1, by omega⟩ + x • b' ⟨2, by omega⟩) ≠ 0 ∧

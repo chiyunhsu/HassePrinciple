@@ -14,7 +14,7 @@ Let $M$ be a module over a commutative ring $A$. A function $f : M \to A$ is cal
 The \code{QuadraticForm} folder of \mathlib contains definitions and results about quadratic forms, including the bilinear map associated to a quadratic form (see \code{QuadraticMap.associated}) and the definition and characterization of nondegenerate quadratic form (see \code{QuadraticMap.Nondegenerate}).
 
 \begin{definition}\label{def:isotropic}
-\lean{QuadraticForm.Isotropic}
+\lean{QuadraticMap.Isotropic}
 \uses{def:quadratic_form}
 \leanok
 A quadratic form $f : M \to A$ is called \emph{isotropic} if there exists a nonzero $x \in M$ such that $f(x) = 0$.
@@ -40,7 +40,7 @@ Let $V$ be a $K$-vector space of dimension at least $3$, let $Q$ be a nondegener
 \end{theorem}
 
 \begin{proof}
-\uses{Module.Basis.exists_const}
+\uses{def:contiguous}
 See \cite[\S IV.1.4, Theorem 2]{Ser73}.
 \end{proof}
 
@@ -206,7 +206,7 @@ Follows from the results below.
 From now on, given \ref{lem:HM_of_degenerate}, we may assume that $f$ is a nondegenerate quadratic form.
 
 \begin{lemma}\label{lem:ev_loc_isotr_of_isotr}
-\lean{QuadraticForm.Isotropic.everywhereLocallyIsotropic}
+\lean{QuadraticMap.Isotropic.everywhereLocallyIsotropic}
 \uses{def:everywhere_locally_isotropic}
 \leanok
 Let $f$ be an isotropic quadratic form over $\Q$. Then $f$ is everywhere locally isotropic.
@@ -265,7 +265,19 @@ Since $f_p$ represents $0$, $a$ is a square in $\Q_p$, so $v_p(a)$ is even. It f
 	Let $f$ be a quadratic form over $\Q$ of rank three which is everywhere locally isotropic. Then $f$ is isotropic.
 \end{lemma}
 \begin{proof}
-	
+$f$ is equivalent to $X_1^2 - a X_2^2 - b X_3^2$; since we can multiply $a$ and $b$ by squares, we can reduce to the case where $a$ and $b$ are square-free integers. We can also assume $|a| \le |b|$. We use induction on $m := |a| + |b|$. 
+
+If $m = 2$, then $f \sim X_1^2 \pm X_2^2 \pm b X_3^2$. The case $X_1^2 + X_2^2 + X_3^2$ is excluded by the hypothesis that $f_\infty$ represents zero. In the other cases, $f$ represents zero (take e.g. $(1, 1, 0)$ or $(1, 0, 1)$, respectively).
+
+Suppose now that $m > 2$, that is, $|b| \ge 2$ and write $b = \pm p_1 \cdots p_k$, where the $p_i$ are distinct primes. Let $p$ be one of the $p_i$; we will show that $a$ is a square modulo $p$. This is obvious if $a \equiv 0 \mod p$. Otherwise $a$ is a $p$-adic unit, and by hypothesis there exists $(x, y, z) \in \Q_p^3$ such that $z^2 - ax^2 - by^2 = 0$. By \textcolor{red}{TODO: II.2.1, Prop. 6}, we can suppose that $(x, y, z)$ is primitive.
+From $z^2 - a x^2 \equiv 0 \mod p$, we deduce that if $x \equiv 0 \mod p$, then $z \equiv 0 \mod p$ and $p^2$ divides $by^2$; since $v_p(b) = 1$, this implies $y \equiv 0 \mod p$, contradicting the assumption that $(x, y, z)$ is primitive. Therefore $x \not\equiv 0 \mod p$ and $a$ is a square modulo $p$.
+
+Since $\Z / b\Z = \prod_i \Z / p_i \Z$, we also have that $a$ is a square modulo $b$, so there exist integers $t, b'$ such that $bb' = t^2 - a$ and we can choose $t$ so that $|t| \le |b|/2$. Then $bb'$ is a norm of the extension $k(\sqrt{a})/k$ for $k = \Q$, $\R$ or $\Q_p$. From this we conclude that $f$ represents $0$ in $k$ if and only if the same is true for $f' := X_1^2 - a X_2^2 - b' X_3^2$ (see the proof of \textcolor{red}{III Prop 1}).
+
+In particular, $f'$ represents $0$ in each $\Q_v$. But we have 
+\[ |b'| = \left | \frac{t^2 - a}{b} \right | \le \frac{|b|}{4} + 1 < |b| \quad \text{because } |b| \ge 2.  \]
+
+Write $b' = b'' u^2$, with $b'', u$ integers and $b''$ square-free, so $|b''| < |b|$. We can then apply the induction hypothesis to the form $X_1^2 - a X_2^2 - b'' X_3^2$, which is equivalent to $f'$; hence $f'$ represents $0$ in $\Q$ and so does $f$.
 \end{proof}
 
 \begin{lemma}\label{lem:isotr_of_rk_four}
