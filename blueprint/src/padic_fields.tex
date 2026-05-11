@@ -1,5 +1,35 @@
 \chapter{$p$-adic Fields}
 
+\section{$p$-adic equations}\label{sec:padic_equations}
+
+\begin{definition}\label{def:primitive}
+Let $R$ be a ring. An element $(x_1, \cdots, x_n) \in R^n$ is \emph{primitive} if at least one of the $x_i$ is invertible.
+\end{definition}
+
+
+\begin{proposition}\label{prop:common_root}
+\lean{Function.IsPrimitive}
+\leanok
+\uses{def:primitive}
+Let $f^{(i)} \in \Z_p[X_1, \cdots, X_m]$ be homogeneous polynomials with $p$-adic integer coefficients. For each $n \ge 1$, denote by $f_n^{(i)}$ the reduction of $f^{(i)}$ modulo $p^n$. 
+ The following are equivalent:
+\begin{enumerate}[(a)]
+\lean{Padic.common_root_tfae}
+\leanok
+\item The $f^{(i)}$ have a nontrivial common zero in $\Q_p^m$.
+\item The $f^{(i)}$ have a common primitive zero in $\Z_p^m$.
+\item For all $n \ge 1$, the $f_n^{(i)}$ have a common primitive zero in $(\Z / p^n \Z_p)^m$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+The implication (b) $ \implies$ (a) is trivial. Conversely, if $x = (x_1, \cdots, x_m) \in \Q_p^m$ is a nontrivial common zero of the $f^{(i)}$, put 
+\[ h := \min(v_p(x_1), \cdots, v_p(x_m)) \quad \text{and} \quad y := p^{-h} x. \]
+Then $y \in \Z_p^m$ is a common primitive zero of the $f^{(i)}$.
+For the equivalence (b) $\iff$ (c), Serre applies the first Lemma from \cite[\S II.2.1]{Ser73}. However, using \mathlib's \texttt{DirectLimit} definition here might be tricky. It could be easier to just prove this specific result; note that the file \texttt{Mathlib.NumberTheory.Padics.RingHoms} contains useful results relating $\Z_p$ and $\Z/p^n\Z$ (without relying on \texttt{DirectLimit}).
+
+\end{proof}
+
 \section[Squares in the $p$-adic units]{Squares in $\Q_p^{\times}$}\label{sec:padic_squares}
 
 TODO: expand this section.
