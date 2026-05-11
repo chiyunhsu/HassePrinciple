@@ -108,7 +108,7 @@ def EverywhereLocallyIsotropic :=
 variable {Q}
 
 -- The easy implication of the Hasse-Minkowski theorem.
-theorem Isotropic.everywhereLocallyIsotropic (h : Q.Isotropic) :
+theorem _root_.QuadraticMap.Isotropic.everywhereLocallyIsotropic (h : Q.Isotropic) :
     Q.EverywhereLocallyIsotropic := by
   sorry
 
