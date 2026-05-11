@@ -17,5 +17,4 @@ lemma isotropic_of_five_le_rank (hr : 5 ≤ Module.finrank ℚ V) (hQ : Q.Nondeg
     (hQ' : Q.EverywhereLocallyIsotropic) :
     Q.Isotropic := sorry
 
-
 end QuadraticForm.EverywhereLocallyIsotropic

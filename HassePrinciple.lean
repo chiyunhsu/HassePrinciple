@@ -1,7 +1,9 @@
+import HassePrinciple.LinearAlgebra.Basis.Chain
 import HassePrinciple.Padics.Legendre
 import HassePrinciple.Padics.Squares
 import HassePrinciple.QuadraticForm.Basic
 import HassePrinciple.QuadraticForm.HasseMinkowski
+import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
 import HassePrinciple.QuadraticForm.HighRank
 import HassePrinciple.QuadraticForm.HilbertSymbol
 import HassePrinciple.QuadraticForm.RankFour

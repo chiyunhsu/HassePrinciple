@@ -14,11 +14,114 @@ Let $M$ be a module over a commutative ring $A$. A function $f : M \to A$ is cal
 The \code{QuadraticForm} folder of \mathlib contains definitions and results about quadratic forms, including the bilinear map associated to a quadratic form (see \code{QuadraticMap.associated}) and the definition and characterization of nondegenerate quadratic form (see \code{QuadraticMap.Nondegenerate}).
 
 \begin{definition}\label{def:isotropic}
-\lean{QuadraticForm.Isotropic}
+\lean{QuadraticMap.Isotropic}
 \uses{def:quadratic_form}
 \leanok
 A quadratic form $f : M \to A$ is called \emph{isotropic} if there exists a nonzero $x \in M$ such that $f(x) = 0$.
 \end{definition}
+
+\subsection{Orthogonal basis}\label{subsec:ortho_basis}
+
+Let $K$ be a field in which $2$ is invertible and let $V$ be a $K$-vector space.
+
+The definition of orthogonal basis for $V$ is available in Mathlib as \code{LinearMap.IsOrtho}$_i$. The lemma \code{LinearMap.BilinForm.exists_orthogonal_basis} proves that for any symmetric bilinear form $B$ on $V$ there exists an orthogonal basis with respect to $B$.
+
+\begin{definition}\label{def:contiguous}
+\lean{Module.Basis.IsContiguous}
+\leanok
+Two bases of $V$ are called \emph{contiguous} if they have an element in common.
+\end{definition}
+
+\begin{theorem}\label{thm:exists_chain}
+\lean{Module.Basis.chain_of_nondegenerate}
+\uses{Module.Basis.Chain}
+\leanok
+Let $V$ be a $K$-vector space of dimension at least $3$, let $Q$ be a nondegenerate quadratic form on $V$, and let $b, b'$ be two $Q$-orthogonal bases of $V$. Then there exists a finite sequence $(b^{(0)}, \cdots, b^{(m)})$ of orthogonal bases of $V$ such that $b^{(0)} = b$, $b^{(m)} = b'$ and $b^{(i)}$ is contiguous with $b^{(i + 1)}$ for $0 \le i < m$.
+\end{theorem}
+
+\begin{proof}
+\uses{def:contiguous}
+See \cite[\S IV.1.4, Theorem 2]{Ser73}.
+\end{proof}
+
+\begin{definition}\label{def:chain}
+\lean{Module.Basis.Chain}
+\leanok
+A sequence of bases $(b^{(0)} = b, \cdots, b^{(m)} = b')$ as in Theorem \ref{thm:exists_chain} is called a \emph{chain} of orthogonal bases contiguously relating $b$ to $b'$.
+\end{definition}
+
+\begin{lemma}\label{lem:exists_const}
+	\lean{Module.Basis.exists_const}
+	\leanok
+\end{lemma}
+
+\begin{proof}
+	See \cite[\S IV.1.4, Lemma after Theorem 2]{Ser73}.
+\end{proof}
+
+\subsection{Translations}\label{subsec:translations}
+
+Let $R$ be a commutative ring, let $V$ and $W$ be $R$-modules and let $Q$ and $Q'$ be quadratic forms on $V$ and $W$, respectively. Then $Q \dotplus Q'$ denotes the quadratic form on $V \times W$ obtained by applying $Q$ on $V$ and $Q'$ on $W$. This is available in Mathlib as \texttt{QuadraticMap.prod}. Similarly, $Q \dotminus Q'$ denotes the form $Q \dotplus (-Q')$ on $V \times W$.
+
+\begin{definition}\label{def:hyperbolic}
+\lean{QuadraticForm.IsHyperbolic}
+A quadratic form is \emph{hyperbolic} if it is equivalent to the form $X^2 - Y^2$.
+\end{definition}
+
+\begin{lemma}\label{lem:XY_hyperbolic}
+\lean{QuadraticForm.XY_isHyperbolic}
+\uses{def:hyperbolic}
+The quadratic form $XY$ is hyperbolic.
+\end{lemma}
+
+% NOTE: if needed, assume $R$ is a field.
+\begin{definition}\label{def:represents}
+\lean{QuadraticForm.represents}
+Let $R$ be a commutative ring, let $V$ be an $R$-module and let $Q$ be a quadratic form on $V$. We say that $Q$ \emph{represents} an element $r \in R$ if there exists $x \in V$ such that $Q(v) = r$ and $v \ne 0$.
+\end{definition}
+
+\begin{lemma}\label{lem:represents_zero}
+\uses{def:represents}
+Let $R$ be a commutative ring, let $V$ be an $R$-module and let $Q$ be a quadratic form on $V$. Then $Q$ \emph{represents} $0$ if and only if it is isotropic.
+\end{lemma}
+\begin{proof}
+This follows immediately from the definitions.
+\end{proof}
+
+% NOTE: if needed, assume $R$ is a field.
+\begin{proposition}\label{prop:sum_hyperbolic}
+\lean{QuadraticForm.equivalent_hyperbolic_add}
+\uses{def:hyperbolic, def:represents}
+Let $R$ be a commutative ring. If a quadratic form $Q$ on an $R$-module $V$ represents $0$ and is nondegenerate, then $Q$ is equivalent to $H + Q'$, where $H$ is hyperbolic. Moreover, $f$ represents all elements of $R$.
+\end{proposition}
+\begin{proof}
+Fix $x \in V$ such that $Q(x) = 0$. Since $Q$ is nondegenerate, there exists $z \in V$ such that $x \cdot z = 1$. The element $y = 2z - (z\cdot z)x$ is isotropic and $x \cdot y = 2$.
+The restriction of $Q$ to the submodule $U := Rx \oplus Ry$ is the desired hyperbolic form $H$.
+\end{proof}
+
+\begin{corollary}\label{cor:represents_iff}
+\lean{QuadraticForm.represents_iff_sub_isotropic}	
+Let $K$ be a field, let $r \in K\^times$ and let $Q$ be a quadratic form on a free $K$-vector space $V$. Then $Q$ represents $r$ if and only if the form $Q' := Q \dotminus rZ$ represents $0$.
+\end{corollary}
+\begin{proof}
+\uses{prop:sum_hyperbolic}
+The forward implication is clear. For the second one, fix a basis for $V$ and assume that $Q' := Q \dotminus rZ$ has a nontrivial zero $(x_1, \cdots, x_n, z) \in V \times K$. Then either $z = 0$, in which case $Q$ represents zero and thus also $r$, or $Q(x_1/z, \cdots, x_n/z) = r$.
+\end{proof}
+
+\begin{corollary}\label{cor:prod_isotropic_iff}
+\lean{QuadraticForm.prod_isotropic_iff, QuadraticForm.prod_isotropic_iff}	
+Let $K$ be a field and $Q$ and $Q'$ be nondegenerate quadratic forms over $K$ of rank at least $1$. Then the following properties are equivalent:
+\begin{enumerate}[a)]
+\item $Q \dotminus Q'$ represents $0$.
+\item There exists $r \in K^\times$ which is represented by $Q$ and $Q'$.
+\item There exists $r \in K^\times$ such that $Q \dotminus rZ^2$ and $Q' \dotminus rZ^2$ represent $0$.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+\uses{cor:represents_iff}
+The equivalence (b) $\iff$ (c) follows from Corollary \ref{cor:represents_iff}. The implication (b) $\implies$ (a) is trivial. To show (a) $\implies (b)$, write a nontrivial zero of $Q \dotminus Q'$ in the form $(x, y)$ with $Q(x) = Q'(y)$. If $Q(x) \ne 0$, we are done. If $Q(x) = 0$, then $Q$ represents $0$ and thus by Proposition \ref{prop:sum_hyperbolic} also all elements of $K$. In particular, it represents all nonzero values taken by $Q'$. 
+\end{proof}
 
 \section{Quadratic Forms over $\Q_p$}\label{sec:quadratic_form_padic}
 
@@ -31,26 +134,39 @@ Note that \mathlib contains \code{QuadraticMap.discr}, as an element of $\Q_p$.
 
 \begin{definition}\label{def:HM_inv}
 \uses{def:Hilbert_symbol}
+\lean{QuadraticForm.HasseMinkoskiInvariant}
 Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p$. Take a diagonal quadratic form $a_1X_1^2 + \cdots + a_nX_n^2$ which is equivalent to $f$; then the \emph{Hasse--Minkowski invariant} of $f$ is the element
 \[ \epsilon(f) := \prod_{i < j}(a_i, a_j).\]
 \end{definition}
 
 \begin{lemma}\label{lem:HM_inv_well_defined}
 \uses{def:HM_inv}
+\lean{QuadraticForm.HasseMinkoskiInvariant.eq_of_equivalent}
 The value $\epsilon(f)$ does not depend on the choice of diagonal quadratic form equivalent to $f$.
 \end{lemma}
 \begin{proof}
-	
+Let $b = (b_1, \cdots, b_n)$ be an orthogonal basis for $V$ such that $Q(x) = a_1 x_1^2 + \cdots + a_n x_n^2$ for $x = \sum x_i b_i$. We denote  $\epsilon(b) := \prod_{i < j}(a_i, a_j)$. 
+
+If $n=1$, then $\epsilon(f) = 1$. If $n=2$, then $\epsilon(f) = 1$ if and only if the form $Z^2 - a_1 X^2 - a_2 Y^2$ represents $0$. By {\color{red}{TODO}}, this is equivalent to $a_1 X^2 + a_2 Y^2$ representing $1$, which means that there exists $v \in V$ with $Q(v) = 1$; this is independent on $b$. 
+For $n \ge 3$ we use induction on $n$. By \ref{thm:exists_chain}, it suffices to prove that for any pair of contiguous bases $b$ and $b'$, we have $\epsilon(b) = \epsilon(b')$. 
+Thanks to the symmetry of the Hilbert symbol, $\epsilon(b)$ is unchanged by permutation of the basis elements, so we may assume that $b_1 = b_1'$.
+Then $b_1' \cdot b_1' = a_1$, and we can write 
+\begin{align*}
+	\epsilon(b) &= (a_1, a_2 \cdots a_n) \prod_{2 \le i < j} (a_i, a_j) = \\
+	&= (a_1, d(Q) a_1) \prod_{2 \le i < j} (a_i, a_j).
+\end{align*}
+Analogously, \[\epsilon(b') = (a_1', d(Q) a_1) \prod_{2 \le i < j} (a_i', a_j'). \]
+The result follows by combining $a_1 = a_1'$ and the induction hypothesis applied to the orthogonal complement of $e_1$.
 \end{proof}
 
 \begin{lemma}\label{lem:HM_inv_pm_one}
 \uses{def:HM_inv}
+\lean{QuadraticForm.HasseMinkoskiInvariant.eq_one_or_neg_one}
 For every quadratic form $f$, we have $\epsilon(f) = \pm 1$.
 \end{lemma}
 \begin{proof}
 Each term in the product is equal to $\pm 1$.
 \end{proof}
-
 
 \section{Hasse--Minkowski}\label{sec:Hasse--Minkowski}
 
@@ -90,7 +206,7 @@ Follows from the results below.
 From now on, given \ref{lem:HM_of_degenerate}, we may assume that $f$ is a nondegenerate quadratic form.
 
 \begin{lemma}\label{lem:ev_loc_isotr_of_isotr}
-\lean{QuadraticForm.Isotropic.everywhereLocallyIsotropic}
+\lean{QuadraticMap.Isotropic.everywhereLocallyIsotropic}
 \uses{def:everywhere_locally_isotropic}
 \leanok
 Let $f$ be an isotropic quadratic form over $\Q$. Then $f$ is everywhere locally isotropic.
@@ -149,7 +265,19 @@ Since $f_p$ represents $0$, $a$ is a square in $\Q_p$, so $v_p(a)$ is even. It f
 	Let $f$ be a quadratic form over $\Q$ of rank three which is everywhere locally isotropic. Then $f$ is isotropic.
 \end{lemma}
 \begin{proof}
-	
+$f$ is equivalent to $X_1^2 - a X_2^2 - b X_3^2$; since we can multiply $a$ and $b$ by squares, we can reduce to the case where $a$ and $b$ are square-free integers. We can also assume $|a| \le |b|$. We use induction on $m := |a| + |b|$. 
+
+If $m = 2$, then $f \sim X_1^2 \pm X_2^2 \pm b X_3^2$. The case $X_1^2 + X_2^2 + X_3^2$ is excluded by the hypothesis that $f_\infty$ represents zero. In the other cases, $f$ represents zero (take e.g. $(1, 1, 0)$ or $(1, 0, 1)$, respectively).
+
+Suppose now that $m > 2$, that is, $|b| \ge 2$ and write $b = \pm p_1 \cdots p_k$, where the $p_i$ are distinct primes. Let $p$ be one of the $p_i$; we will show that $a$ is a square modulo $p$. This is obvious if $a \equiv 0 \mod p$. Otherwise $a$ is a $p$-adic unit, and by hypothesis there exists $(x, y, z) \in \Q_p^3$ such that $z^2 - ax^2 - by^2 = 0$. By \textcolor{red}{TODO: II.2.1, Prop. 6}, we can suppose that $(x, y, z)$ is primitive.
+From $z^2 - a x^2 \equiv 0 \mod p$, we deduce that if $x \equiv 0 \mod p$, then $z \equiv 0 \mod p$ and $p^2$ divides $by^2$; since $v_p(b) = 1$, this implies $y \equiv 0 \mod p$, contradicting the assumption that $(x, y, z)$ is primitive. Therefore $x \not\equiv 0 \mod p$ and $a$ is a square modulo $p$.
+
+Since $\Z / b\Z = \prod_i \Z / p_i \Z$, we also have that $a$ is a square modulo $b$, so there exist integers $t, b'$ such that $bb' = t^2 - a$ and we can choose $t$ so that $|t| \le |b|/2$. Then $bb'$ is a norm of the extension $k(\sqrt{a})/k$ for $k = \Q$, $\R$ or $\Q_p$. From this we conclude that $f$ represents $0$ in $k$ if and only if the same is true for $f' := X_1^2 - a X_2^2 - b' X_3^2$ (see the proof of \textcolor{red}{III Prop 1}).
+
+In particular, $f'$ represents $0$ in each $\Q_v$. But we have 
+\[ |b'| = \left | \frac{t^2 - a}{b} \right | \le \frac{|b|}{4} + 1 < |b| \quad \text{because } |b| \ge 2.  \]
+
+Write $b' = b'' u^2$, with $b'', u$ integers and $b''$ square-free, so $|b''| < |b|$. We can then apply the induction hypothesis to the form $X_1^2 - a X_2^2 - b'' X_3^2$, which is equivalent to $f'$; hence $f'$ represents $0$ in $\Q$ and so does $f$.
 \end{proof}
 
 \begin{lemma}\label{lem:isotr_of_rk_four}
@@ -164,7 +292,7 @@ Since $f_p$ represents $0$, $a$ is a square in $\Q_p$, so $v_p(a)$ is even. It f
 
 \begin{lemma}\label{lem:isotr_of_five_le_rk}
 	\lean{QuadraticForm.EverywhereLocallyIsotropic.isotropic_of_five_le_rank}
-	\uses{def:everywhere_locally_isotropic, lem:equiv_sum_squares, thm:padic_squares_open, lem:approx_thm}
+	\uses{def:everywhere_locally_isotropic, lem:equiv_sum_squares, thm:padic_squares_open, lem:approx_thm, def:HM_inv}
 	\leanok
 	Let $f$ be a quadratic form over $\Q$ of rank $n \ge 5$ which is everywhere locally isotropic. Then $f$ is isotropic.
 \end{lemma}

@@ -10,14 +10,92 @@ public import Mathlib.Analysis.RCLike.Basic
 public import Mathlib.LinearAlgebra.QuadraticForm.Radical
 public import Mathlib.LinearAlgebra.QuadraticForm.TensorProduct
 public import Mathlib.NumberTheory.Padics.PadicNumbers
+public import Mathlib.LinearAlgebra.QuadraticForm.Prod
 
 @[expose] public section
 
-namespace QuadraticForm
 
 /-- A quadratic form is isotropic if it vanishes on some nonzero vector. -/
-abbrev Isotropic {R V : Type*} [CommSemiring R] [AddCommGroup V] [Module R V]
-    (Q : QuadraticForm R V) := ¬ Q.Anisotropic
+abbrev QuadraticMap.Isotropic {R V : Type*} [CommSemiring R] [AddCommGroup V] [Module R V]
+    (Q : QuadraticMap R V R) := ¬ Q.Anisotropic
+
+namespace QuadraticForm
+
+section Hyperbolic
+
+open Module
+
+section CommRing
+
+variable {R V : Type*} [CommRing R] [AddCommGroup V] [Module R V]
+
+/-- A quadratic form is hyperbolic if it is equivalent to the form X^2 - Y^2. -/
+def IsHyperbolic (Q : QuadraticForm R V) : Prop :=
+  Q.Equivalent (QuadraticMap.weightedSumSquares R ![1, -1])
+
+-- If needed for any particular result, replace `[CommRing R]` by `[Field R]`.
+
+/-- The quadratic form `XY` on a two dimensional free `R`-module. -/
+noncomputable abbrev XY (b : Basis (Fin 2) R V) : QuadraticForm R V where
+  toFun v := b.repr v 0 * b.repr v 1
+  toFun_smul r v := sorry
+  exists_companion' := by
+    let B : LinearMap.BilinMap R V R := {
+      toFun v := {
+        toFun w := b.repr v 0 * b.repr w 1 + b.repr w 0 * b.repr v 1
+        map_add' v w := sorry
+        map_smul' := sorry
+      }
+      map_add' w z := sorry
+      map_smul' r w := sorry
+    }
+    exact ⟨B, by sorry⟩
+
+lemma XY_isHyperbolic (b : Basis (Fin 2) R V) :
+    IsHyperbolic (XY b) := sorry
+
+/-- `Q : QuadraticForm R V` represents `r : R` if there exists a nonzero `x : V` such that
+  `Q x = 0`. -/
+def represents (Q : QuadraticForm R V) (r : R) : Prop :=
+  ∃ x : V, Q x = r ∧ x ≠ 0
+
+lemma equivalent_hyperbolic_add {Q : QuadraticForm R V} (hQ : Q.Isotropic)
+    (hQ' : Q.Nondegenerate) (r : R) :
+    ∃ (A B : QuadraticForm R V), A.IsHyperbolic ∧ Q.Equivalent (A + B) := sorry
+
+lemma represents_of_isotropic_of_nondegenerate {Q : QuadraticForm R V} (hQ : Q.Isotropic)
+    (hQ' : Q.Nondegenerate) (r : R) :
+    Q.represents r := sorry
+
+lemma represents_zero_iff_isotropic {Q : QuadraticForm R V} :
+    Q.represents 0 ↔ Q.Isotropic := by
+  sorry
+
+end CommRing
+
+section Field
+
+variable {K V W : Type*} [Field K] [AddCommGroup V] [Module K V] [AddCommGroup W] [Module K W]
+
+-- Condition (ii) seems annoying to state, can we avoid it?
+lemma represents_iff_sub_isotropic {Q : QuadraticForm K V} (hQ : Q.Isotropic)
+    (hQ' : Q.Nondegenerate) (r : Kˣ) :
+    Q.represents r ↔
+      (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
+
+lemma prod_isotropic_iff {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
+    (hQ' : Q'.Nondegenerate) :
+    (Q.prod Q').Isotropic ↔ ∃ r : Kˣ, Q.represents r ∧ Q'.represents r := sorry
+
+lemma prod_isotropic_iff' {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
+    (hQ' : Q'.Nondegenerate) :
+    (Q.prod Q').Isotropic ↔ ∃ r : Kˣ,
+      (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic ∧
+      (Q'.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
+
+end Field
+
+end Hyperbolic
 
 -- Let `V` be a `ℚ`-vector space.
 variable {V : Type*} [AddCommGroup V] [Module ℚ V]
@@ -33,7 +111,7 @@ def EverywhereLocallyIsotropic :=
 variable {Q}
 
 -- The easy implication of the Hasse-Minkowski theorem.
-theorem Isotropic.everywhereLocallyIsotropic (h : Q.Isotropic) :
+theorem _root_.QuadraticMap.Isotropic.everywhereLocallyIsotropic (h : Q.Isotropic) :
     Q.EverywhereLocallyIsotropic := by
   sorry
 
