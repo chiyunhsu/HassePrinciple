@@ -5,8 +5,8 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.QuadraticForm.Basic
-
+public import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
+public import HassePrinciple.QuadraticForm.RankThree
 @[expose] public section
 
 namespace QuadraticForm.EverywhereLocallyIsotropic

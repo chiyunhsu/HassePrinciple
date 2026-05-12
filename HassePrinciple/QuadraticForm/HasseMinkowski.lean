@@ -5,10 +5,7 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.QuadraticForm.Basic
 public import HassePrinciple.QuadraticForm.HighRank
-public import HassePrinciple.QuadraticForm.RankFour
-public import HassePrinciple.QuadraticForm.RankThree
 
 @[expose] public section
 

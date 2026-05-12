@@ -5,7 +5,7 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.QuadraticForm.Basic
+public import HassePrinciple.QuadraticForm.Rat
 
 @[expose] public section
 
