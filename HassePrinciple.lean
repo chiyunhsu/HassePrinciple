@@ -1,14 +1,12 @@
-module
-
-public import HassePrinciple.LinearAlgebra.Basis.Chain
-public import HassePrinciple.Padics.Equations
-public import HassePrinciple.Padics.Legendre
-public import HassePrinciple.Padics.Squares
-public import HassePrinciple.QuadraticForm.Basic
-public import HassePrinciple.QuadraticForm.HasseMinkowski
-public import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
-public import HassePrinciple.QuadraticForm.HighRank
-public import HassePrinciple.QuadraticForm.HilbertSymbol
-public import HassePrinciple.QuadraticForm.RankFour
-public import HassePrinciple.QuadraticForm.RankThree
-public import HassePrinciple.QuadraticForm.Rat
+import HassePrinciple.LinearAlgebra.Basis.Chain
+import HassePrinciple.Padics.Equations
+import HassePrinciple.Padics.Legendre
+import HassePrinciple.Padics.Squares
+import HassePrinciple.QuadraticForm.Basic
+import HassePrinciple.QuadraticForm.HasseMinkowski
+import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
+import HassePrinciple.QuadraticForm.HighRank
+import HassePrinciple.QuadraticForm.HilbertSymbol
+import HassePrinciple.QuadraticForm.RankFour
+import HassePrinciple.QuadraticForm.RankThree
+import HassePrinciple.QuadraticForm.Rat
