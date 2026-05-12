@@ -1,10 +1,9 @@
 module
 
 public import HassePrinciple.LinearAlgebra.Basis.Chain
+public import HassePrinciple.QuadraticForm.Basic
 public import HassePrinciple.QuadraticForm.HilbertSymbol
 public import Mathlib.LinearAlgebra.QuadraticForm.IsometryEquiv
-public import Mathlib.LinearAlgebra.QuadraticForm.Radical
-
 public import Mathlib.Data.Fin.Basic
 
 @[expose] public section
@@ -75,5 +74,35 @@ lemma eq_one_or_neg_one :
     HasseMinkoskiInvariant hQ = 1 ∨ HasseMinkoskiInvariant hQ = 1 := sorry
 
 end HasseMinkoskiInvariant
+
+open Module
+section Padic
+
+variable {p : ℕ} [Fact (Nat.Prime p)]
+
+-- inferInstance fails (priority issue?)
+noncomputable instance : Module ℚ_[p] ℚ_[p] := Semiring.toModule
+
+instance : Invertible (2 : ℚ_[p]) := sorry
+
+variable {V : Type*} [AddCommGroup V] [Module ℚ_[p] V]
+  {Q : QuadraticForm ℚ_[p] V} (hQ : Q.Nondegenerate)
+
+lemma represents_zero_iff_of_rank_three [FiniteDimensional ℚ_[p] V] (b : Basis (Fin 3) ℚ_[p] V) :
+    Q.represents 0 ↔
+      HilbertSymbol (-1 : ℚ_[p]ˣ)
+        (Units.mk0 (-Q.discr b) (neg_ne_zero.mpr ((Q.nondegenerate_iff_discr_ne_zero b).mp hQ))) =
+      HasseMinkoskiInvariant (Q.nondegenerate_associated_iff.mpr hQ).1 := by
+  sorry
+
+lemma represents_iff_of_rank_two [FiniteDimensional ℚ_[p] V] (b : Basis (Fin 2) ℚ_[p] V)
+    (a : ℚ_[p]ˣ) :
+    Q.represents a ↔
+      HilbertSymbol a
+        (Units.mk0 (-Q.discr b) (neg_ne_zero.mpr ((Q.nondegenerate_iff_discr_ne_zero b).mp hQ))) =
+      HasseMinkoskiInvariant (Q.nondegenerate_associated_iff.mpr hQ).1 := by
+  sorry
+
+end Padic
 
 end QuadraticForm

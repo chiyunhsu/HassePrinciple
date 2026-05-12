@@ -173,4 +173,36 @@ end CommRing
 
 end Hyperbolic
 
+section Discr
+
+-- TODO: PR to Mathlib before workshop
+
+variable {R M n : Type*} [CommRing R] [Invertible (2 : R)] [AddCommGroup M] [Module R M]
+  [Fintype n] [DecidableEq n] (b : Module.Basis n R M)
+    {Q : QuadraticForm R M}
+
+/-- A matrix representation of the quadratic form. -/
+def toMatrix' (Q : QuadraticForm R (n → R)) : Matrix n n R :=
+  LinearMap.toMatrix₂' R (Q.associated)
+
+/-- A matrix representation of the quadratic form. -/
+noncomputable def toMatrix (Q : QuadraticForm R M) : Matrix n n R :=
+  LinearMap.toMatrix₂ b b (Q.associated)
+
+lemma foo (Q : QuadraticForm R (n → R)) :
+    Q.toMatrix (Pi.basisFun R n)  = Q.toMatrix' := by
+  simp only [toMatrix, toMatrix']
+  exact LinearEquiv.congr_arg rfl
+
+/-- The discriminant of a quadratic form generalizes the discriminant of a quadratic polynomial. -/
+noncomputable def discr (Q : QuadraticForm R M) : R :=
+  (Q.toMatrix b).det
+
+lemma nondegenerate_iff_discr_ne_zero [IsDomain R] :
+    Q.Nondegenerate ↔ Q.discr b ≠ 0 := by
+  simp [QuadraticForm.discr, QuadraticForm.toMatrix, ← QuadraticMap.nondegenerate_associated_iff,
+    LinearMap.nondegenerate_iff_det_ne_zero (b := b)]
+
+end Discr
+
 end QuadraticForm
