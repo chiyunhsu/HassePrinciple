@@ -8,6 +8,7 @@ module
 public import HassePrinciple.Padics.Legendre
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
 public import Mathlib.NumberTheory.PrimeCounting
+public import Mathlib.NumberTheory.LSeries.PrimesInAP
 
 
 @[expose] public section
@@ -257,7 +258,7 @@ theorem product_formula (a b : ℚˣ) : HilbertSymbol.at_infty a b *
   ∏ (n ∈ hilbertSym_support a b), hilbertSym_fun a b n  = 1 := by
   sorry
 /-
-# Approximation theorem
+# Approximation and Existence theorem
 -/
 
 /-- TODO -/
@@ -283,7 +284,7 @@ theorem approximation (S : Finset ℕ) : ∀ ε > 0, ∀ y : Prod_over_S S, ∃ 
   sorry
 
 /-- TODO -/
-theorem existence {I : Type*} [Fintype I] (a : I → ℚˣ) (efin : I × ℕ → ℤˣ) (einf : I → ℤˣ) :
+theorem existence {I : Type*} [Finite I] (a : I → ℚˣ) (efin : I × ℕ → ℤˣ) (einf : I → ℤˣ) :
   ∃ x : ℚˣ, ∀ i : I, ∀ n : ℕ, efin (i, n) = at_p x (a i) (Nat.nth Nat.Prime n) ∧ einf i =
   at_infty x (a i) ↔ ∃ S : Finset ℕ, ∀ n , n ∉ S → efin (i, n) = 1 ∧ ∀ i : I, einf i * ∏ (n ∈ S),
   efin (i, n) = 1 ∧ ∀ n : ℕ, ∃ xn : ℚ_[Nat.nth Nat.Prime n]ˣ, efin (i, n) = HilbertSymbol xn

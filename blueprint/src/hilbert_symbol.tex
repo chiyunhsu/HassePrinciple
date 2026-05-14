@@ -50,7 +50,7 @@ The following definition and lemma use \code{QuadraticAlgebra} from \mathlib.
 \begin{lemma}
 	\label{lem:eq_one_iff}
 	\lean{HilbertSymbol.eq_one_iff}
-	\uses{def:Hilbert_symbol}
+	\uses{def:Hilbert_symbol, def:kb}
 	\leanok
 	Let $a, b \in k^\times$. Then $(a, b)_k = 1$ if and only if there exists $t \in k(\sqrt{b})$ such
 	that $a = N_{k(\sqrt{b})/k}(t)$.
@@ -92,6 +92,7 @@ The following definition and lemma use \code{QuadraticAlgebra} from \mathlib.
 
 
 \begin{proof}
+	\uses{def:Hilbert_symbol, def:kb, lem:eq_one_iff}
 	\begin{itemize}
 		\item If $x,y,z$ is a solution to $z^2 = ax^2 + by^2$, then $y,x,z$ is a solution to
 	$z^2 = bx^2 + ay^2$.
@@ -100,12 +101,14 @@ The following definition and lemma use \code{QuadraticAlgebra} from \mathlib.
 		\ref{lem:eq_one_iff} applies.
 		\item In this case, $0 = a \cdot 1^2 + (-a) \cdot 1^2$.
 		\item In this case, $1 = a \cdot 1^2 + (1 - a) \cdot 1^2$.
-		\item Let $x, y, z \in k$ be not all zero, such that $z^2 = ax^2 + by^2$. Assume that
-		$z'^2 = a x'^2 + b y'^2$ for some $x', y', z' \in k$, not all zero. Then todo
-		\item todo
-		\item todo
+		\item We know, by Lemma \ref{lem:eq_one_iff}, that there exists $t \in k(\sqrt{b})$ such that
+		$a = N_{k(\sqrt{b})/k}(t)$. If $(a',b)_k=1$, then $a'$ is the norm of some $t' \in k(\sqrt{b})$,
+		so $aa' = N_{k(\sqrt{b})/k}(t t')$, so $(aa', b)_k = 1$. Conversely, if $(aa', b)_k = 1$, then
+		$aa' = N_{k(\sqrt{b})/k}(t'')$ for some $t'' \in k(\sqrt{b})$, so
+		$a' = N_{k(\sqrt{b})/k}(t''/t)$, hence $(a', b)_k = 1$.
+		\item Follows from the previous steps, since $(a, -a)_k = 1$.
+		\item Follows from the previous steps, since $(a, 1 - a)_k = 1$.
 	\end{itemize}
-
 \end{proof}
 \subsection{Local Properties}
 We now specialize to the case where $k$ is either $\R$ or $\Q_p$ for some prime $p$. In this case, the Hilbert symbol can be computed explicitly.
@@ -118,11 +121,20 @@ We now specialize to the case where $k$ is either $\R$ or $\Q_p$ for some prime 
 	Let $a, b \in \R^\times$. Then $(a, b)_{\R} = 1$ if and only if $a > 0$ or $b > 0$; otherwise $(a, b)_{\R} = -1$.
 \end{theorem}
 
+\begin{proof}
+	If $a>0$, then $(1,0,\sqrt{a})$ works. Similarly, if $b>0$, then $(0,1,\sqrt{b})$ works.
+	If both $a$ and $b$ are negative, then $ax^2 + by^2 \le 0$ for all $x,y$, so there is no
+	nontrivial solution to $z^2 = ax^2 + by^2$.
+\end{proof}
+
 The following uses the \code{mathlib} code for $p$-adic numbers and integers, as well as the
-integration in \code{Padic.Legendre}.
+integration in \code{Padic.Legendre}, in which we also define the unit part of a $p$-adic nonzero
+element.
+
 
 For the statement of the theorem in the $p$-adic case, we need the following definitions.
 
+TODO: should we move all these to a Padic section?
 \begin{definition}
 	\label{def:epsilon}
 	\lean{HilbertSymbol.epsilon}
@@ -144,9 +156,14 @@ For the statement of the theorem in the $p$-adic case, we need the following def
 Let $p$ be an odd prime. Then its image in $\Z_2$ is a unit.
 \end{lemma}
 
+\begin{proof}
+TODO
+\end{proof}
+
 \begin{definition}
 	\label{def:p_in_Q2}
 	\lean{HilbertSymbol.p_in_Q2}
+	\uses{lem:is_unit_odd_p}
 	\leanok
 Let $p$ be an odd prime. Then we define $p_{in_Q2} \in (\Z_2)^\times$ as the image of $p$ in
 $(\Z_2)^\times$.
@@ -162,6 +179,9 @@ $(x, y, z) \ne (0, 0, 0)$ and $z^2 - p x^2 - v y^2 = 0$. Then there exist
 $z', y' \in (\Q_p)^\times$ and $x' \in \Z_p$ such that $(z', y', x')$ is a nontrivial solution to
 the same equation.
 \end{lemma}
+\begin{proof}
+	TODO
+\end{proof}
 
 We are now ready to compute the Hilbert symbol $(x,y)$ in the $p$-adic case.
 We split the statement and the proof of the theorem for the $p$-adic into the cases where $p$ is odd
@@ -171,39 +191,9 @@ and $y$ are both $0$, both $1$, or one of them is $0$ and the other is $1$.
 Everywhere in the following, we assume that $x, y \in (\Q_p)^\times$, and denote by $v_x$ and $v_y$
 their valuations, and by $u_x$ and $u_y$ their unit parts.
 
-\begin{lemma}
-	\label{lem:padic_odd_p_case00}
-	\lean{HilbertSymbol.padic_odd_p_case00}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:legp}
-	\leanok
-Let $p$ be an odd prime and let $x,y \in (\Q_p)^\times$. Assume that $v_x = v_y = 0$.
-Then $(x,y) = (-1)^{v_x v_y\epsilon(p)}\left(\dfrac{u_x}{p}\right) \left(\dfrac{u_y}{p}\right)$,
-where $\left(\dfrac{\cdot}{p}\right)$ is the Legendre symbol.
-\end{lemma}
-
-\begin{lemma}
-	\label{lem:padic_odd_p_case10}
-	\lean{HilbertSymbol.padic_odd_p_case10}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:legp}
-	\leanok
-Let $p$ be an odd prime and let $x,y \in (\Q_p)^\times$. Assume that $v_x = 1$ and $v_y = 0$.
-Then $(x,y) = (-1)^{v_x v_y\epsilon(p)}\left(\dfrac{u_x}{p}\right) \left(\dfrac{u_y}{p}\right)$,
-where $\left(\dfrac{\cdot}{p}\right)$ is the Legendre symbol.
-\end{lemma}
-
-\begin{lemma}
-	\label{lem:padic_odd_p_case11}
-	\lean{HilbertSymbol.padic_odd_p_case11}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:legp}
-	\leanok
-Let $p$ be an odd prime and let $x,y \in (\Q_p)^\times$. Assume that $v_x = v_y = 1$.
-Then $(x,y) = (-1)^{v_x v_y\epsilon(p)}\left(\dfrac{u_x}{p}\right) \left(\dfrac{u_y}{p}\right)$,
-where $\left(\dfrac{\cdot}{p}\right)$ is the Legendre symbol.
-\end{lemma}
-
 \begin{theorem}
 	\label{thm:padic_odd_p}
-	\lean{HilbertSymbol.padic_odd_p}
+	\lean{HilbertSymbol.padic_odd_p, HilbertSymbol.padic_odd_p_case00, HilbertSymbol.padic_odd_p_case10, HilbertSymbol.padic_odd_p_case11}
 	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:legp}
 	\leanok
 Let $p$ be an odd prime and let $x,y \in (\Q_p)^\times$. Then
@@ -211,43 +201,25 @@ Let $p$ be an odd prime and let $x,y \in (\Q_p)^\times$. Then
 where $\left(\dfrac{\cdot}{p}\right)$ is the Legendre symbol.
 \end{theorem}
 
+\begin{proof}
+	\uses{lem:nontrivialzero}
+	TODO
+\end{proof}
+
 We proceed similarly for the case $p = 2$.
-
-\begin{lemma}
-	\label{lem:padic_2_case00}
-	\lean{HilbertSymbol.padic_2_case00}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega}
-	\leanok
-Let $x,y \in (\Q_2)^\times$. Assume that $v_x = v_y = 0$.
-Then $(x,y) = (-1)^{\epsilon(u_x)*\epsilon(u_y) + v_x * \omega(u_y) + v_y * \omega(u_x)}$.
-\end{lemma}
-
-\begin{lemma}
-	\label{lem:padic_2_case10}
-	\lean{HilbertSymbol.padic_2_case10}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega}
-	\leanok
-Let $x,y \in (\Q_2)^\times$. Assume that $v_x = 1$ and $v_y = 0$.
-Then $(x,y) = (-1)^{\epsilon(u_x)*\epsilon(u_y) + v_x * \omega(u_y) + v_y * \omega(u_x)}$.
-\end{lemma}
-
-\begin{lemma}
-	\label{lem:padic_2_case11}
-	\lean{HilbertSymbol.padic_2_case11}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega}
-	\leanok
-Let $x,y \in (\Q_2)^\times$. Assume that $v_x = v_y = 1$.
-Then $(x,y) = (-1)^{\epsilon(u_x)*\epsilon(u_y) + v_x * \omega(u_y) + v_y * \omega(u_x)}$.
-\end{lemma}
 
 \begin{theorem}
 	\label{thm:padic_2}
-	\lean{HilbertSymbol.padic_2}
+	\lean{HilbertSymbol.padic_2, HilbertSymbol.padic_2_case00, HilbertSymbol.padic_2_case10, HilbertSymbol.padic_2_case11}
 	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega}
 	\leanok
 Let $x,y \in (\Q_2)^\times$. Then
 \[(x,y) = (-1)^{\epsilon(u_x)*\epsilon(u_y) + v_x * \omega(u_y) + v_y * \omega(u_x)}.\]
 \end{theorem}
+
+\begin{proof}
+TODO
+\end{proof}
 
 \subsection{Global properties of the Hilbert symbol}
 
@@ -284,6 +256,10 @@ Let $a, b \in \Q^\times$. We define $(a, b)_\infty$ as the Hilbert symbol $(a,b)
 Let $a, b \in \Q^\times$. Then there exists a finite set $S$ of prime numbers such that
 $(a, b)_p = 1$ for all primes $p \notin S$.
 \end{theorem}
+
+\begin{proof}
+	TODO
+\end{proof}
 
 Notice that it is equivalent to stating that for every $a, b \in \Q^\times$, we have $(a, b)_v = 1$
 for all but finitely many $v \in V$.
@@ -324,6 +300,9 @@ Notice that, in the Lean code, this is any superset of the minimal support defin
 Let $a, b \in \Q^\times$. Then the product of the Hilbert symbols of the pair $(a,b)$ at all places
 is $1$.
 \end{theorem}
+\begin{proof}
+	TODO
+\end{proof}
 
 \subsection{Approximation and Existence Theorem}
 
@@ -337,6 +316,9 @@ Let $a_1,\dots,a_n$ be integer numbers and let $m_1,\dots,m_n$ be pairwise copri
 integers. Then there exists an integer $x$ such that $x \equiv a_i \pmod{m_i}$ for all
 $i = 1, \dots, n$.
 \end{theorem}
+\begin{proof}
+	TODO
+\end{proof}
 
 For the statement of the approximation theorem, it is convenient to define the following product
 space.
@@ -370,6 +352,9 @@ We define the finite embedding of $\Q$ into $\rm{Prod\_over\_S} (S)$ as the natu
 	$y \in \rm{Prod\_over\_S} (S)$, there exists $x \in \Q$ such that the distance
 	between $y$ and the image of $x$ is less than $\epsilon$.
 \end{theorem}
+\begin{proof}
+	TODO
+\end{proof}
 
 
 \begin{theorem}\label{thm:existence}

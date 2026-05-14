@@ -13,7 +13,7 @@ Let $R$ be a ring. An element $(x_1, \cdots, x_n) \in R^n$ is \emph{primitive} i
 \lean{Function.IsPrimitive}
 \leanok
 \uses{def:primitive}
-Let $f^{(i)} \in \Z_p[X_1, \cdots, X_m]$ be homogeneous polynomials with $p$-adic integer coefficients. For each $n \ge 1$, denote by $f_n^{(i)}$ the reduction of $f^{(i)}$ modulo $p^n$. 
+Let $f^{(i)} \in \Z_p[X_1, \cdots, X_m]$ be homogeneous polynomials with $p$-adic integer coefficients. For each $n \ge 1$, denote by $f_n^{(i)}$ the reduction of $f^{(i)}$ modulo $p^n$.
  The following are equivalent:
 \begin{enumerate}[(a)]
 \lean{Padic.common_root_tfae}
@@ -25,7 +25,7 @@ Let $f^{(i)} \in \Z_p[X_1, \cdots, X_m]$ be homogeneous polynomials with $p$-adi
 \end{proposition}
 
 \begin{proof}
-The implication (b) $ \implies$ (a) is trivial. Conversely, if $x = (x_1, \cdots, x_m) \in \Q_p^m$ is a nontrivial common zero of the $f^{(i)}$, put 
+The implication (b) $ \implies$ (a) is trivial. Conversely, if $x = (x_1, \cdots, x_m) \in \Q_p^m$ is a nontrivial common zero of the $f^{(i)}$, put
 \[ h := \min(v_p(x_1), \cdots, v_p(x_m)) \quad \text{and} \quad y := p^{-h} x. \]
 Then $y \in \Z_p^m$ is a common primitive zero of the $f^{(i)}$.
 For the equivalence (b) $\iff$ (c), Serre applies the first Lemma from \cite[\S II.2.1]{Ser73}. However, using \mathlib's \texttt{DirectLimit} definition here might be tricky. It could be easier to just prove this specific result; note that the file \texttt{Mathlib.NumberTheory.Padics.RingHoms} contains useful results relating $\Z_p$ and $\Z/p^n\Z$ (without relying on \texttt{DirectLimit}).
@@ -55,6 +55,7 @@ This is an element in $\Q_p^\times$.
 
 \begin{lemma}\label{lem:padic_unit_part_unit}
 \lean{Padic.padic_unit_part_unit}
+\uses{def:padicUnitPart_qp}
 \leanok
 Let $p$ be a prime and $x \in \Q_p^\times$. Then $\|x \cdot p^{-v_p(x)}\| = 1$, so the
 unit part is a unit, i.e. it is in $(\Z_p)^\times$.
@@ -65,6 +66,7 @@ Straightforward.
 
 \begin{definition}\label{def:padicUnitPart}
   \lean{Padic.padicUnitPart}
+  \uses{def:padicUnitPart_qp,lem:padic_unit_part_unit}
   \leanok
 Let $p$ be a prime and $x \in \Q_p^\times$. The \emph{unit part} of $x$ is defined as the element
 of $\Z_p^\times$ corresponding to $x \cdot p^{-v_p(x)}$.
