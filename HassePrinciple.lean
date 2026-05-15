@@ -1,4 +1,7 @@
+import HassePrinciple.HilbertSymbol.Basic
+import HassePrinciple.HilbertSymbol.ExistenceTheorem
 import HassePrinciple.LinearAlgebra.Basis.Chain
+import HassePrinciple.NumberTheory.ApproximationTheorem
 import HassePrinciple.Padics.Equations
 import HassePrinciple.Padics.Legendre
 import HassePrinciple.Padics.Squares
@@ -6,9 +9,6 @@ import HassePrinciple.QuadraticForm.Basic
 import HassePrinciple.QuadraticForm.HasseMinkowski
 import HassePrinciple.QuadraticForm.HasseMinkowskiInvariant
 import HassePrinciple.QuadraticForm.HighRank
-import HassePrinciple.HilbertSymbol.Basic
-import HassePrinciple.HilbertSymbol.ExistenceTheorem
-import HassePrinciple.NumberTheory.ApproximationTheorem
 import HassePrinciple.QuadraticForm.RankFour
 import HassePrinciple.QuadraticForm.RankThree
 import HassePrinciple.QuadraticForm.Rat
