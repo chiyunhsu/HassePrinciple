@@ -2,7 +2,9 @@ module
 
 public import HassePrinciple.LinearAlgebra.Basis.Chain
 public import HassePrinciple.QuadraticForm.Basic
-public import HassePrinciple.QuadraticForm.HilbertSymbol
+public import HassePrinciple.HilbertSymbol.Basic
+public import HassePrinciple.HilbertSymbol.ExistenceTheorem
+public import HassePrinciple.NumberTheory.ApproximationTheorem
 public import Mathlib.LinearAlgebra.QuadraticForm.IsometryEquiv
 public import Mathlib.Data.Fin.Basic
 
