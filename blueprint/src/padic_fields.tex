@@ -34,66 +34,37 @@ For the equivalence (b) $\iff$ (c), Serre applies the first Lemma from \cite[\S 
 
 \section[Squares in the p-adic units]{Squares in $\Q_p^{\times}$}\label{sec:padic_squares}
 
-TODO: expand this section.
-
 \begin{theorem}\label{thm:padic_squares_open}
 \lean{Padic.squares}
 \leanok
 ${\Q_p^\times}^2$ is an open subgroup of $\Q_p^\times$.
 \end{theorem}
 
+\begin{proof}
+See \cite[\S II.3.3]{Ser73}.
+\end{proof}
+
 \section[Units and Legendre symbols]{Units and Legendre symbols}\label{sec:padic_legendre}
 
-\begin{definition}\label{def:padicUnitPart_qp}
-\lean{Padic.padicUnitPart_qp}
-\leanok
-Let $p$ be a prime and $x \in \Q_p^\times$. Let $v$ denote the usual $p$-adic valuation.
-The \emph{unit part in $\Q_p$} of $x$ is defined as
-\[x \cdot p^{-v_p(x)}.\]
-This is an element in $\Q_p^\times$.
-\end{definition}
-
 \begin{lemma}\label{lem:padic_unit_part_unit}
-\lean{Padic.padic_unit_part_unit}
-\uses{def:padicUnitPart_qp}
+\lean{Padic.norm_mul_pow_neg_valuation_eq_one}
 \leanok
-Let $p$ be a prime and $x \in \Q_p^\times$. Then $\|x \cdot p^{-v_p(x)}\| = 1$, so the
-unit part is a unit, i.e. it is in $(\Z_p)^\times$.
+Let $p$ be a prime, let $x \in \Q_p^\times$, and let $v_p$ denote the $p$-adic valuation. Then $\|x \cdot p^{-v_p(x)}\| = 1$.
 \end{lemma}
 \begin{proof}
 Straightforward.
 \end{proof}
 
 \begin{definition}\label{def:padicUnitPart}
-  \lean{Padic.padicUnitPart}
-  \uses{def:padicUnitPart_qp,lem:padic_unit_part_unit}
+  \lean{Padic.unitPart}
+  \uses{lem:padic_unit_part_unit}
   \leanok
 Let $p$ be a prime and $x \in \Q_p^\times$. The \emph{unit part} of $x$ is defined as the element
 of $\Z_p^\times$ corresponding to $x \cdot p^{-v_p(x)}$.
 \end{definition}
 
-% \begin{lemma}
-% 	\label{lem:is_twoadic_unit_odd_p}
-% 	\lean{Padic.is_twoadic_unit_odd_p}
-% 	\leanok
-% Let $p$ be an odd prime. Then its image in $\Z_2$ is a unit.
-% \end{lemma}
-
-% \begin{proof}
-% Immediate, since $ 2 \nmid p$.
-% \end{proof}
-
-% \begin{definition}
-% 	\label{def:p2}
-% 	\lean{Padic.p2}
-% 	\uses{lem:is_twoadic_unit_odd_p}
-% 	\leanok
-% Let $p$ be an odd prime. Then we define $p_{in_Q2} \in (\Z_2)^\times$ as the image of $p$ in
-% $(\Z_2)^\times$.
-% \end{definition}
-
-\begin{definition}\label{def:legendreSym'}
-  \lean{Padic.legendreSym'}
+\begin{definition}\label{def:legendreSym}
+  \lean{Padic.legendreSym}
   \leanok
 Let $p$ be a prime and $u \in \Z_p^\times$. The \emph{Legendre symbol} $\left(\dfrac{u}{p}\right)$
 is defined as
