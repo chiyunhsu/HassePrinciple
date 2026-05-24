@@ -5,7 +5,7 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 -/
 module
 
-public import HassePrinciple.Padics.Aux
+public import HassePrinciple.Padics.Lemmas
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
 public import Mathlib.NumberTheory.PrimeCounting
 public import Mathlib.NumberTheory.LSeries.PrimesInAP
