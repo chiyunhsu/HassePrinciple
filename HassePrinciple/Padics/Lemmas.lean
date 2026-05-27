@@ -19,18 +19,6 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 def Function.IsPrimitive {M σ : Type*} [Monoid M] (f : σ → M) : Prop :=
    ∃ (s : σ), IsUnit (f s)
 
-namespace PadicInt
-
-/-- epsilon(u) is the class modulo 2 of (u-1)/2. -/
-noncomputable def epsilon (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).appr 2 % 4 = 1 then 0 else 1
-
-/-- omega(u) is the class modulo 2 of (u^2-1)/8. -/
-noncomputable def omega (u : (PadicInt 2)ˣ) : ℤ :=
-  if (u.val).appr 3 % 8 = 1 ∨ (u.val).appr 3 % 8 = 7 then 0 else 1
-
-end PadicInt
-
 namespace Padic
 
 variable {p : ℕ} [Fact (Nat.Prime p)] (x : ℚ_[p]ˣ)
@@ -54,9 +42,6 @@ lemma norm_natCast_eq_one_of_ne_two {n : ℕ} (hn : n ≠ 2) : ‖(n : ℚ_[2])�
 /-- TODO -/
 noncomputable abbrev p2 {n : ℕ} (hn : n ≠ 2) : ℤ_[2]ˣ :=
   PadicInt.mkUnits (norm_natCast_eq_one_of_ne_two hn)
-
-/-- TODO -/
-noncomputable def legendreSym (u : ℤ_[p]ˣ) : ℤ := _root_.legendreSym p ((u.val).appr 1)
 
 -- better name?
 /-- TODO -/
