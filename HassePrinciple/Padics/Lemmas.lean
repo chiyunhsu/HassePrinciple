@@ -6,7 +6,9 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 
 module
 
+public import Mathlib.Algebra.MvPolynomial.PDeriv
 public import Mathlib.NumberTheory.LegendreSymbol.Basic
+public import Mathlib.NumberTheory.Padics.PadicIntegers
 public import Mathlib.NumberTheory.Padics.RingHoms
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 
@@ -60,3 +62,19 @@ lemma common_root_tfae {σ ι : Type*} {f : ι → MvPolynomial σ ℤ_[p]}
   sorry
 
 end Padic
+/-! # Multivariable Hensel's Lemma. -/
+
+
+@[expose] public section
+
+open PadicInt
+
+/-! ## Multivariable Hensel's Lemma -/
+
+theorem multivariable_hensel {p : ℕ} [Fact (Nat.Prime p)] {m : ℕ}
+    {f : MvPolynomial (Fin m) ℤ_[p]} {a : Fin m → ℤ_[p]}
+    {n k : ℤ} {j : Fin m}
+    (hF : n ≤ valuation (MvPolynomial.aeval a f))
+    (hJ : valuation (MvPolynomial.aeval a (MvPolynomial.pderiv j f)) = k) :
+      ∃ (z : Fin m → ℤ_[p]), (MvPolynomial.aeval z f = 0) ∧ ∀ i, 0 < valuation (z i - a i) :=
+  sorry
