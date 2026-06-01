@@ -14,9 +14,12 @@ public import HassePrinciple.HilbertSymbol.Basic
 
 namespace hilbertSym
 
--- TODO: descriptive name
-/-- TODO -/
-theorem existence {I : Type*} [Finite I] (a : I → ℚˣ) (efin : I × ℕ → ℤˣ) (einf : I → ℤˣ) :
+
+/-- Given a finite set of rational numbers {a_i}_{i ∈ I} and functions from I to {±1} for each
+place of ℚ, there exists a rational number x such that the Hilbert symbol of x and a_i at each place
+is given by the respective function -/
+theorem exists_rat_with_prescribed_hilbert_symbols_at_finitely_many_places
+    {I : Type*} [Finite I] (a : I → ℚˣ) (efin : I × ℕ → ℤˣ) (einf : I → ℤˣ) :
     ∃ x : ℚˣ, ∀ i : I, ∀ n : ℕ, efin (i, n) = atP x (a i) (Nat.nth Nat.Prime n) ∧
       einf i = atInfty x (a i) ↔
       ∃ S : Finset ℕ, ∀ n , n ∉ S → efin (i, n) = 1 ∧

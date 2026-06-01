@@ -25,31 +25,37 @@ namespace Padic
 
 variable {p : ℕ} [Fact (Nat.Prime p)] (x : ℚ_[p]ˣ)
 
-/-- TODO -/
+/-- Given a nonzero padic number `x`, the norm of `x` times `p` raised to the negative of its
+valuation equals one. -/
 lemma norm_mul_pow_neg_valuation_eq_one : ‖(x : ℚ_[p]) * p ^ (- valuation x.val)‖ = 1 := by
   sorry
 
-/-- TODO -/
+/-- Given a nonzero padic number `x`, the unit part of `x` is defined as the element in `ℤ_[p]ˣ`
+which is equal to  `x` times `p` raised to the negative of its valuation. -/
 noncomputable def unitPart : ℤ_[p]ˣ :=
   PadicInt.mkUnits (norm_mul_pow_neg_valuation_eq_one x)
 
+/-- The map that sends a padic integer to its unit part in ℤ_[p]ˣ is the natural inclusion. -/
 lemma map_unitPart (x : ℚ_[p]ˣ) :
     Units.map (algebraMap ℤ_[p] ℚ_[p]) (unitPart x) = x := by
   sorry
 
-/-- TODO -/
-lemma norm_natCast_eq_one_of_ne_two {n : ℕ} (hn : n ≠ 2) : ‖(n : ℚ_[2])‖ = 1 := by
+/-- Given a prime number `p` different from 2, the norm of `p` in ℚ_[2] equals one. -/
+lemma norm_natCast_eq_one_of_ne_two_prime {p : ℕ} [Fact (Nat.Prime p)] (hn : p ≠ 2) :
+    ‖(p : ℚ_[2])‖ = 1 := by
   sorry
 
-/-- TODO -/
-noncomputable abbrev p2 {n : ℕ} (hn : n ≠ 2) : ℤ_[2]ˣ :=
-  PadicInt.mkUnits (norm_natCast_eq_one_of_ne_two hn)
+/-- For an odd prime `p` different from 2, the element `p` in ℤ_[2]ˣ is defined. -/
+noncomputable abbrev p2 {p : ℕ} [Fact (Nat.Prime p)] (hn : p ≠ 2) : ℤ_[2]ˣ :=
+  PadicInt.mkUnits (norm_natCast_eq_one_of_ne_two_prime hn)
 
--- better name?
-/-- TODO -/
+--better name?
+/-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
+and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
+`z', y'` units in `ℤ_[p]ˣ` and `x'` in `ℤ_[p]`. -/
 lemma exists_nontrivial_zero {p : ℕ} [hp : Fact (Nat.Prime p)] {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
-    ∃ z' y' : (ℚ_[p])ˣ, ∃ x' : ℤ_[p],
+    ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
       (z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2 - v * (y' : ℚ_[p])^2 = 0 := by
   sorry
 
@@ -62,19 +68,38 @@ lemma common_root_tfae {σ ι : Type*} {f : ι → MvPolynomial σ ℤ_[p]}
   sorry
 
 end Padic
-/-! # Multivariable Hensel's Lemma. -/
 
+
+
+/-! # Multivariable Hensel's Lemma. -/
 
 @[expose] public section
 
-open PadicInt
+namespace PadicInt
 
 /-! ## Multivariable Hensel's Lemma -/
 
+
+/-- Serre's generalization of Hensel's lemma to a multivariable polynomial over ℤ_[p]. If a
+polynomial f in m variables has a solution a modulo p^n, and a is a zero modulo p^k of one of its
+partial derivatives, with 0 < 2k < n, then there exists a solution in ℤ_[p], which is congruent to
+a modulo p^{n-k}. -/
 theorem multivariable_hensel {p : ℕ} [Fact (Nat.Prime p)] {m : ℕ}
     {f : MvPolynomial (Fin m) ℤ_[p]} {a : Fin m → ℤ_[p]}
-    {n k : ℤ} {j : Fin m}
+    {n k : ℤ} (hk : 0 < 2 * k ∧ 2 * k < n) {j : Fin m}
     (hF : n ≤ valuation (MvPolynomial.aeval a f))
-    (hJ : valuation (MvPolynomial.aeval a (MvPolynomial.pderiv j f)) = k) :
-      ∃ (z : Fin m → ℤ_[p]), (MvPolynomial.aeval z f = 0) ∧ ∀ i, 0 < valuation (z i - a i) :=
+    (hJ : valuation (MvPolynomial.aeval a (MvPolynomial.pderiv j f)) = k):
+      ∃ (z : Fin m → ℤ_[p]), (MvPolynomial.aeval z f = 0) ∧
+        ∀ i, n - k ≤ valuation (z i - a i) := by
   sorry
+
+/-- Same theorem, in terms of norms. TODO: Keep one. -/
+theorem multivariable_hensel' {p : ℕ} [Fact (Nat.Prime p)] {m : ℕ}
+    {f : MvPolynomial (Fin m) ℤ_[p]} {a : Fin m → ℤ_[p]}
+    {n k : ℤ} (hk : 0 < 2 * k ∧ 2 * k < n) {j : Fin m}
+    (hF : ‖(MvPolynomial.aeval a) f‖ ≤ p ^ (-n))
+    (hJ : ‖(MvPolynomial.aeval a) (MvPolynomial.pderiv j f)‖ = p ^ (-k)) :
+      ∃ (z : Fin m → ℤ_[p]), (MvPolynomial.aeval z f = 0) ∧ ∀ i, ‖z i - a i‖ < p ^ (-n + k) := by
+  sorry
+
+end PadicInt

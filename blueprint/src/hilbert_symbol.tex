@@ -77,8 +77,8 @@ The following lemma uses the definition \code{QuadraticAlgebra} from \mathlib.
 \end{proposition}
 
 \begin{proof}
-	\uses{def:Hilbert_symbol, lem:eq_one_iff}
-	
+	\uses{def:Hilbert_symbol, lem:eq_one_iff, lem:well_defined_up_to_squares}
+
 	\begin{itemize}
 		\item Trivial if $a$ or $b$ are zero. Otherwise, if $x,y,z$ is a solution to $z^2 = ax^2 + by^2$, then $y,x,z$ is a solution to
 	$z^2 = bx^2 + ay^2$.
@@ -200,7 +200,7 @@ We proceed similarly for the case $p = 2$.
 \begin{theorem}
 	\label{thm:padic_2}
 	\lean{hilbertSym.two_adic_eq, hilbertSym.two_adic_case00, hilbertSym.two_adic_case10, hilbertSym.two_adic_case11}
-	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega}
+	\uses{def:Hilbert_symbol, def:padicUnitPart, def:epsilon, def:omega, def:legendreSym}
 	\leanok
 Let $x,y \in (\Q_2)^\times$. Then
 \[(x,y) = (-1)^{\epsilon(u_x)*\epsilon(u_y) + v_x * \omega(u_y) + v_y * \omega(u_x)}.\]
@@ -241,6 +241,7 @@ Let $a, b \in \Q^\times$. Then $(a, b)_p = 1$ for all but finitely many primes $
 Let $a, b \in \Q^\times$. Then $\prod_{v \in V} (a, b)_v = 1$.
 \end{theorem}
 \begin{proof}
+	\uses{thm:almost_all_one, thm:real, thm:padic_odd_p, thm:padic_2, prop:hilbert_symbol_properties}
 	TODO
 \end{proof}
 
@@ -273,7 +274,7 @@ over the $n$-th prime for $n \in S$.
 
 
 \begin{theorem}\label{thm:existence}
-	\lean{hilbertSym.existence}
+	\lean{hilbertSym.exists_rat_with_prescribed_hilbert_symbols_at_finitely_many_places}
 	\uses{def:Hilbert_symbol}
 	\leanok
 	Let $(a_i)_{i \in I}$ be a finite family of nonzero rational numbers, and let
@@ -294,6 +295,7 @@ over the $n$-th prime for $n \in S$.
 The proof uses \code{Nat.infinite_setOf_prime_and_modEq}.
 
 \begin{proof}
-	\uses{def:Hilbert_symbol, thm:approximation}
+	\uses{def:Hilbert_symbol, thm:approximation, thm:real, thm:padic_odd_p, thm:padic_2,
+	prop:hilbert_symbol_properties, thm:product_formula, thm:padic_squares_open}
 TODO: necessity uses product formula, sufficiency uses the theorems in this section.
 \end{proof}
