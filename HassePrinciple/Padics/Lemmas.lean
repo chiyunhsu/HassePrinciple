@@ -36,24 +36,20 @@ noncomputable def unitPart : ℤ_[p]ˣ :=
   PadicInt.mkUnits (norm_mul_pow_neg_valuation_eq_one x)
 
 /-- The map that sends a padic integer to its unit part in ℤ_[p]ˣ is the natural inclusion. -/
-lemma map_unitPart (x : ℚ_[p]ˣ) :
+lemma map_unitPart :
     Units.map (algebraMap ℤ_[p] ℚ_[p]) (unitPart x) = x := by
   sorry
 
-/-- Given a prime number `p` different from 2, the norm of `p` in ℚ_[2] equals one. -/
-lemma norm_natCast_eq_one_of_ne_two_prime {p : ℕ} [Fact (Nat.Prime p)] (hn : p ≠ 2) :
-    ‖(p : ℚ_[2])‖ = 1 := by
-  sorry
-
 /-- For an odd prime `p` different from 2, the element `p` in ℤ_[2]ˣ is defined. -/
-noncomputable abbrev p2 {p : ℕ} [Fact (Nat.Prime p)] (hn : p ≠ 2) : ℤ_[2]ˣ :=
-  PadicInt.mkUnits (norm_natCast_eq_one_of_ne_two_prime hn)
+noncomputable abbrev p2 (hp : p ≠ 2) : ℤ_[2]ˣ :=
+  PadicInt.mkUnits (Padic.norm_natCast_eq_one_iff.mpr
+    ((Nat.coprime_primes Nat.prime_two Fact.out).mpr hp.symm))
 
 --better name?
 /-- If `p` is a prime, `x, y, z in ℚ_[p]` satisfy `z ^ 2 - p * x ^ 2 - v * y ^ 2`, with `v` nonzero,
 and not all of `x, y, z` are zero, then there exists a nontrivial solution to the same equation with
 `z', y'` units in `ℤ_[p]ˣ` and `x'` in `ℤ_[p]`. -/
-lemma exists_nontrivial_zero {p : ℕ} [hp : Fact (Nat.Prime p)] {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
+lemma exists_nontrivial_zero {v : (ℚ_[p])ˣ} {x y z : ℚ_[p]}
     (hnontriv : (x, y, z) ≠ (0, 0, 0)) (hsol : z ^ 2 - p * x ^ 2 - v * y ^ 2 = 0) :
     ∃ z' y' : ℤ_[p]ˣ, ∃ x' : ℤ_[p],
       (z' : ℚ_[p])^2 - p * (x' : ℚ_[p])^2 - v * (y' : ℚ_[p])^2 = 0 := by
