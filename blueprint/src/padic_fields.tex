@@ -44,6 +44,22 @@ ${\Q_p^\times}^2$ is an open subgroup of $\Q_p^\times$.
 See \cite[\S II.3.3]{Ser73}.
 \end{proof}
 
+\begin{lemma}
+  \label{lem:multivariable_hensel}
+  \lean{PadicInt.multivariable_hensel}
+  \leanok
+Let $p$ be a prime, let $f \in \Z_p[X_1, \cdots, X_m]$ be a polynomial with $p$-adic integer
+coefficients, and let $x \in (\Z/p\Z)^m$ be a zero of $f$ modulo $p^n$, for some positive integer
+$n$. Suppose that, for some $j \in \{1, \cdots, m\}$, the partial derivative
+$\frac{\partial f}{\partial X_j}(x)$ is nonzero modulo $p^k$, where $0 < 2k < n$.
+Then there exists a zero $z$ of $f$ in $\Z_p^m$ whose reduction modulo $p^n$ is $x$, and such that
+$z-x$ is divisible by $p^{n-k}$.
+\end{lemma}
+
+\begin{proof}
+This is in Serre's \cite[\S II.2 Theorem 1]{Ser73}.
+\end{proof}
+
 \section[Units and Legendre symbols]{Units and Legendre symbols}\label{sec:padic_legendre}
 
 \begin{lemma}\label{lem:padic_unit_part_unit}
