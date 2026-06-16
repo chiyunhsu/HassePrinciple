@@ -49,13 +49,40 @@ lemma ne_zero_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b ≠ 0 :=
 
 /-- If `a` and `b` are multiplied by a square, the Hilbert symbol is unchanged. -/
 @[simp]
-lemma mul_square_eq :
+lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
     hilbertSym (a * a'^2) (b * b'^2) = hilbertSym a b := by
-  sorry
+  simp only [hilbertSym, mul_eq_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
+      pow_eq_zero_iff, Prod.mk.injEq, not_and, Int.reduceNeg]
+  by_cases ha : a = 0
+  · simp [ha]
+  · by_cases hb : b = 0
+    · simp [hb]
+    · simp only [mul_eq_zero, ha, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff,
+        false_or, hb, Prod.mk.injEq, not_and, Int.reduceNeg, or_self, ↓reduceIte]
+      rw [if_neg (by aesop)]
+      split_ifs with h h' h'
+      · rfl
+      · obtain ⟨z, x, y, h0, heq⟩ := h
+        exact h' ⟨z, (a' * x), (b' * y), by aesop, by rw [← heq]; ring⟩
+      · obtain ⟨z, x, y, h0, heq⟩ := h'
+        apply h ⟨ z, (1/a'*x), (1/b'*y), by aesop, by field_simp; rw [heq]⟩
+      · rfl
 
 /-- The Hilbert symbol is commutative. -/
 lemma comm : hilbertSym a b = hilbertSym b a := by
-  sorry
+  simp only [hilbertSym, ne_eq, Prod.mk.injEq, not_and, Int.reduceNeg]
+  by_cases ha : a = 0
+  · simp [ha]
+  · by_cases hb : b = 0
+    · simp [hb]
+    · simp only [ha, hb, or_self, ↓reduceIte, Prod.mk.injEq, not_and, Int.reduceNeg]
+      split_ifs with h h' h'
+      · rfl
+      · obtain ⟨z, x, y, h0, heq⟩ := h
+        exact h' ⟨z, y, x, by aesop, by rw [← heq]; ring⟩
+      · obtain ⟨z, x, y, h0, heq⟩ := h'
+        exact h ⟨z, y, x, by aesop, by rw [← heq]; ring⟩
+      · rfl
 
 /-
 # Basic properties of the Hilbert symbol
@@ -215,17 +242,16 @@ noncomputable abbrev atP (a b : ℚ) (p : ℕ) [hp : Fact (Nat.Prime p)] : ℤ :
 noncomputable abbrev atInfty (a b : ℚ) : ℤ := hilbertSym (a : ℝ) (b : ℝ)
 
 /-- The instance that provides the fact that the nth prime is prime. -/
-scoped instance fact_prime_nth_prime (n : ℕ) : Fact (Nat.Prime (Nat.nth Nat.Prime n)) :=
-  fact_iff.mpr (Nat.prime_nth_prime n)
+scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
-    ∀ᶠ (n : ℕ) in Filter.cofinite, atP a b (Nat.nth Nat.Prime n) = 1 := by
+    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, atP a b p = 1 := by
   sorry
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    atInfty a b * ∏ᶠ (n : ℕ), atP a b (Nat.nth Nat.Prime n) = 1 := by
+    atInfty a b * ∏ᶠ (p : Nat.Primes), atP a b p = 1 := by
   sorry
 
 end hilbertSym
