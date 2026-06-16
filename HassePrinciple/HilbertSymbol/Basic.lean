@@ -53,39 +53,36 @@ lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
     hilbertSym (a * a'^2) (b * b'^2) = hilbertSym a b := by
   simp only [hilbertSym, mul_eq_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
       pow_eq_zero_iff, Prod.mk.injEq, not_and, Int.reduceNeg]
-    by_cases ha : a = 0 
-    · simp [ha]
-    · by_cases hb : b = 0 
-      · simp [hb]
-      · simp only [mul_eq_zero, ha, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff,
-          false_or, hb, Prod.mk.injEq, not_and, Int.reduceNeg, or_self, ↓reduceIte]
-        rw [if_neg (by aesop)]
-        split_ifs with h h' h'
-        · rfl 
-        · obtain ⟨z, x, y, h0, heq⟩ := h
-          exact h' ⟨z, (a' * x), (b' * y), by aesop, by rw [← heq]; ring⟩ 
-        · obtain ⟨z, x, y, h0, heq⟩ := h'
-          apply h ⟨ z, (1/a'*x), (1/b'*y), by aesop, by field_simp; rw [heq]⟩
+  by_cases ha : a = 0
+  · simp [ha]
+  · by_cases hb : b = 0
+    · simp [hb]
+    · simp only [mul_eq_zero, ha, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff,
+        false_or, hb, Prod.mk.injEq, not_and, Int.reduceNeg, or_self, ↓reduceIte]
+      rw [if_neg (by aesop)]
+      split_ifs with h h' h'
       · rfl
-      exact h2
-  · rfl
-
+      · obtain ⟨z, x, y, h0, heq⟩ := h
+        exact h' ⟨z, (a' * x), (b' * y), by aesop, by rw [← heq]; ring⟩
+      · obtain ⟨z, x, y, h0, heq⟩ := h'
+        apply h ⟨ z, (1/a'*x), (1/b'*y), by aesop, by field_simp; rw [heq]⟩
+      · rfl
 
 /-- The Hilbert symbol is commutative. -/
 lemma comm : hilbertSym a b = hilbertSym b a := by
   simp only [hilbertSym, ne_eq, Prod.mk.injEq, not_and, Int.reduceNeg]
-    by_cases ha : a = 0 
-    · simp [ha]
-    · by_cases hb : b = 0 
-      · simp [hb]
-      · simp only [ha, hb, or_self, ↓reduceIte, Prod.mk.injEq, not_and, Int.reduceNeg] 
-        split_ifs with h h' h'
-        · rfl
-        · obtain ⟨z, x, y, h0, heq⟩ := h
-          exact h' ⟨z, y, x, by aesop, by rw [← heq]; ring⟩ 
-        · obtain ⟨z, x, y, h0, heq⟩ := h'
-          exact h ⟨z, y, x, by aesop, by rw [← heq]; ring⟩  
-        · rfl
+  by_cases ha : a = 0
+  · simp [ha]
+  · by_cases hb : b = 0
+    · simp [hb]
+    · simp only [ha, hb, or_self, ↓reduceIte, Prod.mk.injEq, not_and, Int.reduceNeg]
+      split_ifs with h h' h'
+      · rfl
+      · obtain ⟨z, x, y, h0, heq⟩ := h
+        exact h' ⟨z, y, x, by aesop, by rw [← heq]; ring⟩
+      · obtain ⟨z, x, y, h0, heq⟩ := h'
+        exact h ⟨z, y, x, by aesop, by rw [← heq]; ring⟩
+      · rfl
 
 /-
 # Basic properties of the Hilbert symbol
