@@ -5,14 +5,14 @@
 The following definition is available in \mathlib under the name \code{QuadraticForm}:
 \begin{definition}\label{def:quadratic_form}
 \mathlibok
-Let $M$ be a module over a commutative ring $A$. A function $f : M \to A$ is called a \emph{quadratic form} on $M$ if 
+Let $M$ be a module over a commutative ring $A$. A function $f : M \to A$ is called a \emph{quadratic form} on $M$ if
 \begin{enumerate}
 \item $f(ax) = a^2f(x)$ for all $a \in A, x \in M$,
 \item The function $(x, y) \mapsto f(x + y) - f(x) - f(y)$ is a bilinear form.
 \end{enumerate}
 \end{definition}
 
-The \code{QuadraticForm} folder of \mathlib contains definitions and results about quadratic forms, including the bilinear map 
+The \code{QuadraticForm} folder of \mathlib contains definitions and results about quadratic forms, including the bilinear map
 \[ (x, y) \mapsto x \cdot y := \frac{1}{2}(f(x + y) - f(x) - f(y))\] associated to a quadratic form (see \code{QuadraticMap.associated}) and the definition and characterization of nondegenerate quadratic forms (see \code{QuadraticMap.Nondegenerate}).
 
 \begin{definition}\label{def:isotropic}
@@ -36,6 +36,7 @@ A quadratic form $f : M \to A$ is called \emph{isotropic} if there exists a nonz
 	Let $R$ be a commutative ring, let $V$ be an $R$-module and let $Q$ be a quadratic form on $V$. Then $Q$ \emph{represents} $0$ if and only if it is isotropic.
 \end{lemma}
 \begin{proof}
+	\leanok
 	This follows immediately from the definitions.
 \end{proof}
 
@@ -49,6 +50,7 @@ Let $Q$ and $Q'$ be two equivalent quadratic forms over $R$ and let $r \in $. Th
 \end{lemma}
 
 \begin{proof}
+\leanok
 By Lemma \ref{lem:represents_zero}, it suffices to prove the first claim, which follows from the definition of equivalence of quadratic forms.
 \end{proof}
 \subsection{Orthogonal basis}\label{subsec:ortho_basis}
@@ -84,7 +86,7 @@ A sequence of bases $(b^{(0)} = b, \cdots, b^{(m)} = b')$ as in Theorem \ref{thm
 \begin{lemma}\label{lem:exists_const}
 \lean{Module.Basis.exists_const}
 \leanok
-Let $V$ be a $K$-vector space of dimension at least $3$, let $Q$ be a nondegenerate quadratic form on $V$, and let $b, b'$ be two $Q$-orthogonal bases of $V$. Assume that 
+Let $V$ be a $K$-vector space of dimension at least $3$, let $Q$ be a nondegenerate quadratic form on $V$, and let $b, b'$ be two $Q$-orthogonal bases of $V$. Assume that
 \[ (b_1 \cdot b_1)(b_i' \cdot b_i') - (b_i' \cdot b_i')^2 = 0 \text{ for } i = 1, 2. \]
 There exists $x \in K$ such that $b_x := b_1' + x b_2'$ is nonisotropic and generates with $b_1$ a nondegenerate plane.
 \end{lemma}
@@ -129,7 +131,7 @@ The restriction of $Q$ to the submodule $U := Rx \oplus Ry$ is the desired hyper
 
 \begin{corollary}\label{cor:represents_iff_sub_sub}
 \lean{QuadraticForm.represents_iff_sub_isotropic}
-\leanok	
+\leanok
 Let $K$ be a field, let $r \in K^\times$ and let $Q$ be a quadratic form on a free $K$-vector space $V$. Then $Q$ represents $r$ if and only if the form $Q' := Q \dotminus rZ$ represents $0$.
 \end{corollary}
 \begin{proof}
@@ -150,16 +152,16 @@ Let $K$ be a field and $Q$ and $Q'$ be nondegenerate quadratic forms over $K$ of
 
 \begin{proof}
 \uses{cor:represents_iff_sub_sub}
-The equivalence (b) $\iff$ (c) follows from Corollary \ref{cor:represents_iff_sub_sub}. The implication (b) $\implies$ (a) is trivial. To show (a) $\implies (b)$, write a nontrivial zero of $Q \dotminus Q'$ in the form $(x, y)$ with $Q(x) = Q'(y)$. If $Q(x) \ne 0$, we are done. If $Q(x) = 0$, then $Q$ represents $0$ and thus by Proposition \ref{prop:sum_hyperbolic} also all elements of $K$. In particular, it represents all nonzero values taken by $Q'$. 
+The equivalence (b) $\iff$ (c) follows from Corollary \ref{cor:represents_iff_sub_sub}. The implication (b) $\implies$ (a) is trivial. To show (a) $\implies (b)$, write a nontrivial zero of $Q \dotminus Q'$ in the form $(x, y)$ with $Q(x) = Q'(y)$. If $Q(x) \ne 0$, we are done. If $Q(x) = 0$, then $Q$ represents $0$ and thus by Proposition \ref{prop:sum_hyperbolic} also all elements of $K$. In particular, it represents all nonzero values taken by $Q'$.
 \end{proof}
 
 \section[Quadratic Forms over the p-adics]{Quadratic Forms over $\Q_p$}\label{sec:quadratic_form_padic}
 
 \begin{definition}\label{def:discr}
-\mathlibok 
+\mathlibok
 \lean{QuadraticForm.discr}
 Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p$. Take a diagonal quadratic form $a_1X_1^2 + \cdots + a_nX_n^2$ which is equivalent to $f$; then the \emph{discriminant} of $f$ is the element $d(f) = a_1 \cdots a_n \in \Q_p^\times/{\Q_p^\times}^2$.
-	
+
 Note that \mathlib contains \code{QuadraticForm.discr}, as an element of $\Q_p$. We might need to adjust some statements and proofs if we really need to regard it as an element in $\Q_p^\times/{\Q_p^\times}^2$.
 \end{definition}
 
@@ -178,12 +180,12 @@ Let $p$ be a prime number and let $f$ be a quadratic form of rank $n$ over $\Q_p
 The value $\epsilon(f)$ does not depend on the choice of diagonal quadratic form equivalent to $f$.
 \end{lemma}
 \begin{proof}
-Let $b = (b_1, \cdots, b_n)$ be an orthogonal basis for $V$ such that $Q(x) = a_1 x_1^2 + \cdots + a_n x_n^2$ for $x = \sum x_i b_i$. We denote  $\epsilon(b) := \prod_{i < j}(a_i, a_j)$. 
+Let $b = (b_1, \cdots, b_n)$ be an orthogonal basis for $V$ such that $Q(x) = a_1 x_1^2 + \cdots + a_n x_n^2$ for $x = \sum x_i b_i$. We denote  $\epsilon(b) := \prod_{i < j}(a_i, a_j)$.
 
-If $n=1$, then $\epsilon(f) = 1$. If $n=2$, then $\epsilon(f) = 1$ if and only if the form $Z^2 - a_1 X^2 - a_2 Y^2$ represents $0$. By Corollary \ref{cor:represents_iff_sub_sub}, this is equivalent to $a_1 X^2 + a_2 Y^2$ representing $1$, which means that there exists $v \in V$ with $Q(v) = 1$; this is independent on $b$. 
-For $n \ge 3$ we use induction on $n$. By Theorem \ref{thm:exists_chain}, it suffices to prove that for any pair of contiguous bases $b$ and $b'$, we have $\epsilon(b) = \epsilon(b')$. 
+If $n=1$, then $\epsilon(f) = 1$. If $n=2$, then $\epsilon(f) = 1$ if and only if the form $Z^2 - a_1 X^2 - a_2 Y^2$ represents $0$. By Corollary \ref{cor:represents_iff_sub_sub}, this is equivalent to $a_1 X^2 + a_2 Y^2$ representing $1$, which means that there exists $v \in V$ with $Q(v) = 1$; this is independent on $b$.
+For $n \ge 3$ we use induction on $n$. By Theorem \ref{thm:exists_chain}, it suffices to prove that for any pair of contiguous bases $b$ and $b'$, we have $\epsilon(b) = \epsilon(b')$.
 Thanks to the symmetry of the Hilbert symbol, $\epsilon(b)$ is unchanged by permutation of the basis elements, so we may assume that $b_1 = b_1'$.
-Then $b_1' \cdot b_1' = a_1$, and we can write 
+Then $b_1' \cdot b_1' = a_1$, and we can write
 \begin{align*}
 	\epsilon(b) &= (a_1, a_2 \cdots a_n) \prod_{2 \le i < j} (a_i, a_j) = \\
 	&= (a_1, d(Q) a_1) \prod_{2 \le i < j} (a_i, a_j).
@@ -217,7 +219,7 @@ $f$ is equivalent to $aX^2 + bY^2 + cZ^2$ for some $a, b, c \in k^\times$, and $
 By the definition of Hilbert symbol, this last form represents $0$ if and only if $(-ca, -cb) = 1$.
 This is equivalent to
 \[ (-1, -1)(-1, a)(-1, b)(c, c)(a, b)(a, c)(b, c) = 1. \]
-By Proposition \ref{prop:hilbert_symbol_properties} (vi), $(c, c) = (-1, c)$, so this can be rewritten as 
+By Proposition \ref{prop:hilbert_symbol_properties} (vi), $(c, c) = (-1, c)$, so this can be rewritten as
 \[ 1 = (-1, -1)(-1, abc)(a, b)(a, c)(b, c) = (-1, -d(f))\epsilon(f), \]
 or equivalently, $(-1, -d(f)) = \epsilon(f)$.
 \end{proof}
@@ -238,7 +240,7 @@ A computation shows that $d(f_a) = -a d(f)$ and $\epsilon(f_a) = (a, -d(f)) \eps
 
 The goal of this section is to prove the Hasse--Minkowski theorem over the rational numbers. To simplify the formalization process, rather than including a single long proof of this theorem, we will split it into smaller lemmas that can be formalized independently.
 
-Denote by $V$ the union of the set of prime numbers and the symbol $\infty$, and denote $\Q_\infty = \R$. 
+Denote by $V$ the union of the set of prime numbers and the symbol $\infty$, and denote $\Q_\infty = \R$.
 
 Let $f$ be a quadratic form over $\Q$. For each $v \in V$, the injection $\Q \to \Q_v$ allows one to view $f$ as a quadratic form over $\Q_v$, which we will denote $f_v$.
 
@@ -253,7 +255,7 @@ A quadratic form $f$ with coefficients in $\Q$ is \emph{everywhere locally isotr
 \lean{QuadraticForm.HasseMinkowski}
 \uses{lem:HM_of_degenerate, lem:ev_loc_isotr_of_isotr,  lem:isotr_of_rk_zero, lem:isotr_of_rk_one, lem:isotr_of_rk_two, lem:isotr_of_rk_three, lem:isotr_of_rk_four, lem:isotr_of_five_le_rk}
 \leanok
-Let $f$ be a quadratic form over $\Q$. Then $f$ is isotropic if and only if $f$ is everywhere locally isotropic. In other words, $f$ has a global zero if and only if $f$ has everywhere a local zero. 
+Let $f$ be a quadratic form over $\Q$. Then $f$ is isotropic if and only if $f$ is everywhere locally isotropic. In other words, $f$ has a global zero if and only if $f$ has everywhere a local zero.
 \end{theorem}
 \begin{proof}
 Follows from the results below.
@@ -263,10 +265,11 @@ Follows from the results below.
 	\lean{QuadraticMap.nondegenerate_of_anisotropic}
 	\uses{def:everywhere_locally_isotropic}
 	\leanok
-	Let $f$ be a degenerate quadratic form over $\Q$. Then $f$ is isotropic if and only if $f$ is everywhere locally isotropic. In other words, $f$ has a global zero if and only if $f$ has everywhere a local zero. 
+	Let $f$ be a degenerate quadratic form over $\Q$. Then $f$ is isotropic if and only if $f$ is everywhere locally isotropic. In other words, $f$ has a global zero if and only if $f$ has everywhere a local zero.
 \end{theorem}
 \begin{proof}
-Follows from the fact that every anisotropic quadratic form is nondegenerate.	
+\leanok
+Follows from the fact that every anisotropic quadratic form is nondegenerate.
 \end{proof}
 
 From now on, given \ref{lem:HM_of_degenerate}, we may assume that $f$ is a nondegenerate quadratic form.
@@ -278,7 +281,7 @@ From now on, given \ref{lem:HM_of_degenerate}, we may assume that $f$ is a nonde
 Let $f$ be an isotropic quadratic form over $\Q$. Then $f$ is everywhere locally isotropic.
 \end{lemma}
 \begin{proof}
-Any nontrivial solution over $Q$ yields a solution over $Q_v$ for any $v \in V$.	
+Any nontrivial solution over $Q$ yields a solution over $Q_v$ for any $v \in V$.
 \end{proof}
 
 \begin{lemma}\label{lem:isotr_of_rk_zero}
@@ -342,7 +345,7 @@ Since $f_p$ represents $0$, $a$ is a square in $\Q_p$, so $v_p(a)$ is even. It f
 	Let $f$ be a quadratic form over $\Q$ of rank three which is everywhere locally isotropic. Then $f$ is isotropic.
 \end{lemma}
 \begin{proof}
-$f$ is equivalent to $X_1^2 - a X_2^2 - b X_3^2$; since we can multiply $a$ and $b$ by squares, we can reduce to the case where $a$ and $b$ are square-free integers. We can also assume $|a| \le |b|$. We use induction on $m := |a| + |b|$. 
+$f$ is equivalent to $X_1^2 - a X_2^2 - b X_3^2$; since we can multiply $a$ and $b$ by squares, we can reduce to the case where $a$ and $b$ are square-free integers. We can also assume $|a| \le |b|$. We use induction on $m := |a| + |b|$.
 
 If $m = 2$, then $f \sim X_1^2 \pm X_2^2 \pm X_3^2$. The case $X_1^2 + X_2^2 + X_3^2$ is excluded by the hypothesis that $f_\infty$ represents zero. In the other cases, $f$ represents zero (take e.g. $(1, 1, 0)$ or $(1, 0, 1)$, respectively).
 
@@ -351,7 +354,7 @@ From $z^2 - a x^2 \equiv 0 \mod p$, we deduce that if $x \equiv 0 \mod p$, then 
 
 Since $\Z / b\Z = \prod_i \Z / p_i \Z$, we also have that $a$ is a square modulo $b$, so there exist integers $t, b'$ such that $bb' = t^2 - a$ and we can choose $t$ so that $|t| \le |b|/2$. Then $bb'$ is a norm of the extension $k(\sqrt{a})/k$ for $k = \Q$, $\R$ or $\Q_p$. From this we conclude that $f$ represents $0$ in $k$ if and only if the same is true for $f' := X_1^2 - a X_2^2 - b' X_3^2$ (see the proof of \cite[\S III.1.1, Proposition 1]{Ser73}).
 
-In particular, $f'$ represents $0$ in each $\Q_v$. But we have 
+In particular, $f'$ represents $0$ in each $\Q_v$. But we have
 \[ |b'| = \left | \frac{t^2 - a}{b} \right | \le \frac{|b|}{4} + 1 < |b| \quad \text{because } |b| \ge 2.  \]
 
 Write $b' = b'' u^2$, with $b'', u$ integers and $b''$ square-free, so $|b''| < |b|$. We can then apply the induction hypothesis to the form $X_1^2 - a X_2^2 - b'' X_3^2$, which is equivalent to $f'$; hence $f'$ represents $0$ in $\Q$ and so does $f$.
@@ -367,10 +370,10 @@ Let $f$ be a quadratic form over $\Q$ of rank four which is everywhere locally i
 \begin{proof}
 Up to equivalence, we may assume $f = aX_1^2 + bX_2^2 - (cX_3^2 + dX_4^2)$. Fix a place $v \in V$. Since $f_v$ represents $0$, Corollary \ref{cor:prod_isotropic_iff} shows that there exists $x_v \in \Q_v^\times$ which is represented both by $aX_1^2 + bX_2^2$ and by  $cX_3^2 + dX_4^2$.
 
-By Lemma \ref{lem:represents_iff_rk_2}, this is equivalent to saying that 
+By Lemma \ref{lem:represents_iff_rk_2}, this is equivalent to saying that
 \[ (x_v, -ab)_v = (a, b)_v \quad \text{and} \quad (x_v, -cd)_v = (c, d)_v \: \text{ for all } v \in V. \]
 
-Since $\displaystyle \prod_{v \in V} (a, b)_v = \prod_{v \in V} (c, d)_v = 1$ by Theorem \ref{thm:product_formula}, we can deduce from Theorem \ref{thm:existence} the existence of $x \in \Q^\times$ such that 
+Since $\displaystyle \prod_{v \in V} (a, b)_v = \prod_{v \in V} (c, d)_v = 1$ by Theorem \ref{thm:product_formula}, we can deduce from Theorem \ref{thm:existence} the existence of $x \in \Q^\times$ such that
 \[ (x, -ab)_v = (a, b)_v \quad \text{and} \quad (x, -cd)_v = (c, d)_v \: \text{ for all } v \in V. \]
 
 This shows that the form $aX_1^2 + bX_2^2 - xZ^2$ represents zero in each $\Q_v$, so by Lemma \ref{lem:isotr_of_rk_three}, it also represents $0$ in $\Q$. By Corollary \ref{cor:represents_iff_sub_sub}, $x$ is represented by $aX_1^2 + bX_2^2$. The same argument shows that $x$ is represented by $cX_1^2 + dX_2^2$. By applying Corollary \ref{cor:prod_isotropic_iff} again, we conclude that $f$ represents $0$.
@@ -385,7 +388,7 @@ Let $f$ be a quadratic form over $\Q$ of rank $n \ge 5$ which is everywhere loca
 \begin{proof}
 The proof uses induction on $n$. Write $f = h - g$, where $h = a_1X_1^2 + a_2X_2^2$, $g = -(a_3X_3^2 + \cdots + a_nX_n^2)$.
 Let $S$ be the finite subset of $V$ consisting of $\infty, 2$, and the primes $p$ such that $v_p(a_i) \ne 0$ for $i \ge 3$.
-Let $v \in S$. Since $f_v$ represents $0$, there exists $c_v \in \Q_v^\times$ which is represented in $\Q_v$ by $h$ and $g$, that is, there exist $x_i^v \in \Q_v$, $i=1, \dots, n$ (with $x_i^v \ne 0$ for $i=1, 2$, and some $i \ge 3$) such that 
+Let $v \in S$. Since $f_v$ represents $0$, there exists $c_v \in \Q_v^\times$ which is represented in $\Q_v$ by $h$ and $g$, that is, there exist $x_i^v \in \Q_v$, $i=1, \dots, n$ (with $x_i^v \ne 0$ for $i=1, 2$, and some $i \ge 3$) such that
 \[ h(x_1^v, x_2^v) = c_v = g(x_3^v, \cdots, x_n^v).\]
 By  Theorem \ref{thm:padic_squares_open}, the squares of $\Q_p^\times$ form an open set. Combining this with the approximation theorem \ref{thm:approximation}, we deduce the existence of $x_1, x_2 \in \Q^\times$ such that, denoting $c := h(x_1, x_2)$, one has $c/c_v \in {\Q_v^\times}^2$ for all $v \in S$.
 

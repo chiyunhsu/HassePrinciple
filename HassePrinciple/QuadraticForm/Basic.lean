@@ -56,13 +56,14 @@ def represents (Q : QuadraticMap R M N) (n : N) : Prop :=
   ∃ x : M, Q x = n ∧ x ≠ 0
 
 lemma represents_zero_iff_isotropic {Q : QuadraticMap R M N} :
-    Q.represents 0 ↔ Q.Isotropic := by
-  sorry
+    Q.represents 0 ↔ Q.Isotropic := by simp [Isotropic, Anisotropic, represents]
 
 lemma Equivalent.represents {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') {n : N}
     (hQ : Q.represents n) :
     Q'.represents n := by
-  sorry
+  rcases h with ⟨f⟩
+  rcases hQ with ⟨x, hxQ, hx0⟩
+  exact ⟨f.toFun x, by simp [hxQ, hx0]⟩
 
 lemma Equivalent.represents_iff {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') (n : N) :
     Q.represents n ↔ Q'.represents n :=
@@ -70,7 +71,8 @@ lemma Equivalent.represents_iff {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q'
 
 lemma Equivalent.isotropic {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') (hQ : Q.Isotropic) :
     Q'.Isotropic := by
-  sorry
+  rw [← represents_zero_iff_isotropic] at hQ ⊢
+  exact Equivalent.represents h hQ
 
 lemma Equivalent.isotropic_iff {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') :
     Q.Isotropic ↔ Q'.Isotropic :=
@@ -83,8 +85,9 @@ section CommRing
 variable {R M N : Type*} [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
 
 lemma nondegenerate_of_anisotropic [Invertible (2 : R)] {Q : QuadraticMap R M N}
-    (hQ : Q.Anisotropic) : Q.Nondegenerate :=
-  sorry
+    (hQ : Q.Anisotropic) : Q.Nondegenerate := by
+  rw [nondegenerate_iff_radical_eq_bot, eq_bot_iff]
+  exact fun m hm ↦ hQ m (mem_radical_iff'.mp hm).1
 
 open QuadraticMap
 
