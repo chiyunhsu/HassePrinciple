@@ -44,35 +44,38 @@ section Represents
 
 section CommSemiring
 
-variable {R M N : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
-  [AddCommMonoid N] [Module R N]
+variable {R M₁ M₂ N : Type*} [CommSemiring R] [AddCommMonoid M₁] [Module R M₁]
+  [AddCommMonoid M₂] [Module R M₂] [AddCommMonoid N] [Module R N]
 
 /-- A quadratic form is isotropic if it vanishes on some nonzero vector. -/
-abbrev Isotropic (Q : QuadraticMap R M N) := ¬ Q.Anisotropic
+abbrev Isotropic (Q : QuadraticMap R M₁ N) := ¬ Q.Anisotropic
 
 /-- `Q : QuadraticMap R M N` represents `n : N` if there exists a nonzero `x : V` such that
   `Q x = 0`. -/
-def represents (Q : QuadraticMap R M N) (n : N) : Prop :=
-  ∃ x : M, Q x = n ∧ x ≠ 0
+def represents (Q : QuadraticMap R M₁ N) (n : N) : Prop :=
+  ∃ x : M₁, Q x = n ∧ x ≠ 0
 
-lemma represents_zero_iff_isotropic {Q : QuadraticMap R M N} :
-    Q.represents 0 ↔ Q.Isotropic := by
-  sorry
+variable {Q : QuadraticMap R M₁ N} {Q' : QuadraticMap R M₂ N}
 
-lemma Equivalent.represents {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') {n : N}
-    (hQ : Q.represents n) :
+lemma represents_zero_iff_isotropic :
+    Q.represents 0 ↔ Q.Isotropic := by simp [Isotropic, Anisotropic, represents]
+
+lemma Equivalent.represents (h : Q.Equivalent Q') {n : N} (hQ : Q.represents n) :
     Q'.represents n := by
-  sorry
+  rcases h with ⟨f⟩
+  rcases hQ with ⟨x, hxQ, hx0⟩
+  exact ⟨f.toFun x, by simp [hxQ, hx0]⟩
 
-lemma Equivalent.represents_iff {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') (n : N) :
+lemma Equivalent.represents_iff (h : Q.Equivalent Q') (n : N) :
     Q.represents n ↔ Q'.represents n :=
   ⟨fun hQ ↦ h.represents hQ, fun hQ ↦ h.symm.represents hQ⟩
 
-lemma Equivalent.isotropic {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') (hQ : Q.Isotropic) :
+lemma Equivalent.isotropic (h : Q.Equivalent Q') (hQ : Q.Isotropic) :
     Q'.Isotropic := by
-  sorry
+  rw [← represents_zero_iff_isotropic] at hQ ⊢
+  exact Equivalent.represents h hQ
 
-lemma Equivalent.isotropic_iff {Q Q' : QuadraticMap R M N} (h : Q.Equivalent Q') :
+lemma Equivalent.isotropic_iff (h : Q.Equivalent Q') :
     Q.Isotropic ↔ Q'.Isotropic :=
   ⟨fun hQ ↦ h.isotropic hQ, fun hQ ↦ h.symm.isotropic hQ⟩
 
@@ -83,8 +86,9 @@ section CommRing
 variable {R M N : Type*} [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
 
 lemma nondegenerate_of_anisotropic [Invertible (2 : R)] {Q : QuadraticMap R M N}
-    (hQ : Q.Anisotropic) : Q.Nondegenerate :=
-  sorry
+    (hQ : Q.Anisotropic) : Q.Nondegenerate := by
+  rw [nondegenerate_iff_radical_eq_bot, eq_bot_iff]
+  exact fun m hm ↦ hQ m (mem_radical_iff'.mp hm).1
 
 open QuadraticMap
 

@@ -317,17 +317,16 @@ noncomputable abbrev atP (a b : ℚ) (p : ℕ) [hp : Fact (Nat.Prime p)] : ℤ :
 noncomputable abbrev atInfty (a b : ℚ) : ℤ := hilbertSym (a : ℝ) (b : ℝ)
 
 /-- The instance that provides the fact that the nth prime is prime. -/
-scoped instance fact_prime_nth_prime (n : ℕ) : Fact (Nat.Prime (Nat.nth Nat.Prime n)) :=
-  fact_iff.mpr (Nat.prime_nth_prime n)
+scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
-    ∀ᶠ (n : ℕ) in Filter.cofinite, atP a b (Nat.nth Nat.Prime n) = 1 := by
+    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, atP a b p = 1 := by
   sorry
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    atInfty a b * ∏ᶠ (n : ℕ), atP a b (Nat.nth Nat.Prime n) = 1 := by
+    atInfty a b * ∏ᶠ (p : Nat.Primes), atP a b p = 1 := by
   sorry
 
 end hilbertSym
