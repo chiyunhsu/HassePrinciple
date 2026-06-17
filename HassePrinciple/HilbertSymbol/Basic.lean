@@ -153,13 +153,9 @@ theorem eq_one_iff (ha : a ≠ 0) (hb : b ≠ 0) (hc : ¬IsSquare b) :
 /-- The Hilbert symbol of a and b (both nonzero) equals 1 if b is a square. -/
 @[simp]
 theorem right_square_eq_one (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a (b ^ 2) = 1 := by
-  unfold hilbertSym
-  split_ifs with h1 h2
-  · aesop
-  · rfl
-  · apply h2
-    use b, 0, 1
-    aesop
+  rw [hilbertSym, if_neg (by aesop), if_pos]
+  use b, 0, 1
+  aesop
 
 
 /-- The Hilbert symbol of a and -a, with a nonzero, equals 1. -/
