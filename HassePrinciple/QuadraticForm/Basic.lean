@@ -139,10 +139,11 @@ theorem isotropic_iff_weightedSumSquares_units_of_nondegenerate {Q : QuadraticFo
   rw [hw₀.isotropic_iff, mul_unit_isotropic_iff (w' := fun i ↦ w₀ 0 * w₀ i) (a := w₀ 0) (by simp),
     hw₁.isotropic_iff]
 
-theorem isotropic_iff_weightedSumSquares_squarefree_units_of_nondegenerate
-    {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) :
-    ∃ (w : Fin (Module.finrank K V) → Kˣ), w (0 : Fin (Module.finrank K V)) = 1 ∧
-      Q.Equivalent (QuadraticMap.weightedSumSquares K w) := by
+theorem isotropic_iff_weightedSumSquares_squarefree_units_of_nondegenerate {V : Type*} [AddCommGroup V] [Module ℚ V] [FiniteDimensional ℚ V] [NeZero (Module.finrank ℚ V)]
+    {Q : QuadraticForm ℚ V} (hQ : Q.Nondegenerate) :
+    ∃ (w : Fin (finrank ℚ V) → ℤ), w (0 : Fin (finrank ℚ V)) = 1 ∧
+      ∀ n, w n ≠ 0 ∧ Squarefree (w n) ∧
+      (Q.Isotropic ↔ (weightedSumSquares ℚ w).Isotropic) := by
   sorry
 
 end NormalizedWeightedSumSquares
