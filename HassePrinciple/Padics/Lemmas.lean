@@ -11,6 +11,8 @@ public import Mathlib.NumberTheory.LegendreSymbol.Basic
 public import Mathlib.NumberTheory.Padics.PadicIntegers
 public import Mathlib.NumberTheory.Padics.RingHoms
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
+public import Mathlib.NumberTheory.Padics.Hensel
+public import Mathlib.Algebra.Polynomial.Basic
 
 /-! # Auxiliary result about padic numbers. -/
 
@@ -67,9 +69,25 @@ end Padic
 
 
 
-/-! # Multivariable Hensel's Lemma. -/
+/-! # Applications and Multivariable Hensel's Lemma. -/
 
 @[expose] public section
+
+
+namespace Polynomial
+
+/-- An element in ℤ_p (p odd) is a square if its reduction modulo p is a square. -/
+lemma squares_in_Zp {p : ℕ} [Fact (Nat.Prime p)] (hodd : p ≠ 2) (m : ℤ_[p]) (n : ℕ)
+    (hmod : m.zmodRepr ≡ n ^ 2 [MOD p]) : ∃ x : ℤ_[p], m = x ^ 2 := by
+  --let F : ℤ_[p][X] := X ^ 2 - m
+  sorry
+
+/-- An element in ℤ_2 is a square if its reduction modulo 8 is a square. -/
+lemma squares_in_Z2 (m : ℤ_[2]) (n : ℕ)
+    (hmod : m.zmodRepr ≡ n ^ 2 [MOD 8]) : ∃ x : ℤ_[2], m = x^2 := by sorry
+
+end Polynomial
+
 
 namespace PadicInt
 

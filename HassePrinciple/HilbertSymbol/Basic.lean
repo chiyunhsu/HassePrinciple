@@ -53,7 +53,7 @@ lemma ne_zero_of_ne_zero (ha : a ≠ 0) (hb : b ≠ 0) : hilbertSym a b ≠ 0 :=
 lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
   hilbertSym (a * a'^2) (b * b'^2) = hilbertSym a b := by
   simp only [hilbertSym, mul_eq_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
-    pow_eq_zero_iff, Prod.mk.injEq, not_and, Int.reduceNeg]
+      pow_eq_zero_iff, Prod.mk.injEq, not_and, Int.reduceNeg]
   by_cases ha : a = 0
   · simp [ha]
   · by_cases hb : b = 0
@@ -68,7 +68,6 @@ lemma mul_square_eq (ha' : a' ≠ 0) (hb' : b' ≠ 0) :
       · obtain ⟨z, x, y, h0, heq⟩ := h'
         apply h ⟨ z, (1/a'*x), (1/b'*y), by aesop, by field_simp; rw [heq]⟩
       · rfl
-
 
 /-- The Hilbert symbol is commutative. -/
 lemma comm : hilbertSym a b = hilbertSym b a := by
