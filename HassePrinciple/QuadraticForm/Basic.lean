@@ -123,25 +123,6 @@ section NormalizedWeightedSumSquares
 
 variable [Invertible (2 : K)] [FiniteDimensional K V] [NeZero (Module.finrank K V)]
 
--- The following three theorems are to be deleted
-theorem equivalent_weightedSumSquares' (Q : QuadraticForm K V) (hQ : Q ≠ 0) :
-    ∃ (w : Fin (Module.finrank K V) → K), w (0 : Fin (Module.finrank K V)) = 1 ∧
-      Q.Equivalent (QuadraticMap.weightedSumSquares K w) := by
-  sorry
-
-theorem equivalent_weightedSumSquares_units_of_nondegenerate_old
-    {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) :
-    ∃ (w : Fin (Module.finrank K V) → Kˣ), w (0 : Fin (Module.finrank K V)) = 1 ∧
-      Q.Equivalent (QuadraticMap.weightedSumSquares K w) := by
-  sorry
-
-theorem equivalent_weightedSumSquares_squarefree_units_of_nondegenerate
-    {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) :
-    ∃ (w : Fin (Module.finrank K V) → Kˣ), w (0 : Fin (Module.finrank K V)) = 1 ∧
-      ∀ n, Squarefree (w n) ∧ Q.Equivalent (QuadraticMap.weightedSumSquares K w) := by
-  sorry
--- The above three theorems are to be deleted
-
 theorem isotropic_iff_weightedSumSquares_units_of_nondegenerate
     {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) :
     ∃ (w : Fin (Module.finrank K V) → Kˣ), w (0 : Fin (Module.finrank K V)) = 1 ∧
@@ -165,6 +146,12 @@ theorem isotropic_iff_weightedSumSquares_units_of_nondegenerate
       exact ⟨QuadraticForm.isometryEquivWeightedSumSquaresWeightedSumSquares
         (w := w₁K) (w' := wK) u (by simp [w₁K, wK, w, u])⟩
     rw [QuadraticMap.Equivalent.isotropic_iff hw₁]
+
+theorem isotropic_iff_weightedSumSquares_squarefree_units_of_nondegenerate
+    {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) :
+    ∃ (w : Fin (Module.finrank K V) → Kˣ), w (0 : Fin (Module.finrank K V)) = 1 ∧
+      ∀ n, Squarefree (w n) ∧
+      (Q.Isotropic ↔ (QuadraticMap.weightedSumSquares K w).Isotropic) := by sorry
 
 end NormalizedWeightedSumSquares
 
