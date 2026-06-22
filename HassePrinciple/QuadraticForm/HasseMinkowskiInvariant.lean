@@ -30,7 +30,7 @@ end Prelim
 
 namespace QuadraticForm
 
-variable {k : Type*} [Field k] [Invertible (2 : k)] --[CharZero k]
+variable {k : Type*} [Field k] --[CharZero k]
 
 -- Let `V` be a `k`-vector space.
 variable {V : Type*} [AddCommGroup V] [Module k V]
@@ -42,12 +42,16 @@ variable (Q : QuadraticForm k V)
 noncomputable def HasseMinkoskiInvariantAux {n : ℕ} (w : Fin n → kˣ) : ℤ :=
   ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2)
 
-lemma HasseMinkoskiInvariant_aux.eq_of_equivalent {n : ℕ} {w w' : Fin n → kˣ}
+lemma HasseMinkoskiInvariantAux_def {n : ℕ} (w : Fin n → kˣ) :
+    HasseMinkoskiInvariantAux w =
+      ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) := rfl
+
+lemma HasseMinkoskiInvariant_aux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' : Fin m → kˣ}
     (h : (QuadraticMap.weightedSumSquares k w).Equivalent (QuadraticMap.weightedSumSquares k w')) :
     HasseMinkoskiInvariantAux w = HasseMinkoskiInvariantAux w' := by
   sorry
 
-variable [FiniteDimensional k V]
+variable [Invertible (2 : k)] [FiniteDimensional k V]
 
 /-- Let `Q` be a quadratic form on `V` such that `Q.associated` is `SeparatingLeft`, and
 suppose that `Q` is equivalent to the diagonal quadratic form `a_1 X_1^2 + ⋯ + a_n X_n ^ 2`.
@@ -61,7 +65,18 @@ noncomputable def HasseMinkoskiInvariant {Q : QuadraticForm k V}
 
 namespace HasseMinkoskiInvariant
 
+open _root_.QuadraticMap
+
 variable {Q Q' : QuadraticForm k V} (hQ : LinearMap.SeparatingLeft Q.associated)
+
+lemma weightedSumSquares {n : ℕ} (w : Fin n → kˣ) :
+    HasseMinkoskiInvariant
+      (nondegenerate_associated_iff.mpr (nondegenerate_weightedSumSquares w)).1 =
+      ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) := by
+  simp only [HasseMinkoskiInvariant, ← HasseMinkoskiInvariantAux_def w]
+  exact HasseMinkoskiInvariant_aux.eq_of_equivalent
+    ((equivalent_weightedSumSquares_units_of_nondegenerate' (QuadraticMap.weightedSumSquares k w))
+      (nondegenerate_associated_iff.mpr (nondegenerate_weightedSumSquares w)).1).choose_spec.symm
 
 lemma eq_of_equivalent_weightedSumSquares {n : ℕ} {w : Fin n → kˣ}
     (h : Q.Equivalent (QuadraticMap.weightedSumSquares k w)) :

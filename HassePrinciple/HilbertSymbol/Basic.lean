@@ -251,7 +251,7 @@ theorem almost_all_one (a b : ℚˣ) :
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
-    atInfty a b * ∏ᶠ (p : Nat.Primes), atP a b p = 1 := by
+    (∏ᶠ (p : Nat.Primes), atP a b p) * atInfty a b = 1 := by
   sorry
 
 end hilbertSym

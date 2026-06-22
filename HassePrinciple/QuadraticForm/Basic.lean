@@ -83,7 +83,8 @@ end CommSemiring
 
 section CommRing
 
-variable {R M N : Type*} [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+variable {R M M' N : Type*} [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup M']
+  [Module R M'] [AddCommGroup N] [Module R N]
 
 lemma nondegenerate_of_anisotropic [Invertible (2 : R)] {Q : QuadraticMap R M N}
     (hQ : Q.Anisotropic) : Q.Nondegenerate := by
@@ -104,6 +105,31 @@ lemma anisotropic_of_rank_one [IsDomain R] [StrongRankCondition R] [Module.IsTor
     (hr : Module.finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
     Q.Anisotropic := by
   sorry
+
+theorem Equivalent.nondegenerate [IsDomain R] [Module.IsTorsionFree R M] [Module.IsTorsionFree R M']
+    [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q')
+    (hQ : Q.Nondegenerate) : Q'.Nondegenerate := by
+  rw [nondegenerate_iff_radical_eq_bot] at hQ ⊢
+  have : Module.Finite R ↥Q.radical := by rw [hQ]; exact Module.Finite.bot R M
+  have : Module.Finite R ↥Q'.radical := by
+    obtain ⟨e⟩ := h
+    rw [← e.map_radical]
+    exact Module.Finite.map Q.radical e.toLinearEquiv.toLinearMap
+  rw [← Submodule.finrank_eq_zero, h.symm.rank_radical_eq, Submodule.finrank_eq_zero]
+  exact hQ
+
+theorem Equivalent.nondegenerate_iff [IsDomain R] [Module.IsTorsionFree R M]
+    [Module.IsTorsionFree R M'] [Invertible (2 : R)] {Q : QuadraticMap R M N}
+    {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q') :
+    Q.Nondegenerate ↔ Q'.Nondegenerate :=
+  ⟨fun hQ ↦ h.nondegenerate hQ, fun hQ' ↦ h.symm.nondegenerate hQ'⟩
+
+lemma nondegenerate_weightedSumSquares {k : Type*} [Field k] [Invertible (2 : k)] {n : ℕ}
+    (w : Fin n → kˣ) : (weightedSumSquares k w).Nondegenerate := by
+  have heq : (weightedSumSquares k w).Equivalent (weightedSumSquares k (fun i ↦ (w i : k))) :=
+    Equivalent.refl (weightedSumSquares k w)
+  apply heq.symm.nondegenerate
+  simp [nondegenerate_iff_radical_eq_bot, QuadraticForm.radical_weightedSumSquares, Pi.spanSubset]
 
 end CommRing
 
@@ -131,11 +157,11 @@ lemma represents_iff_sub_isotropic {Q : QuadraticForm K V} (hQ : Q.Isotropic)
 
 lemma prod_isotropic_iff {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
     (hQ' : Q'.Nondegenerate) :
-    (Q.prod Q').Isotropic ↔ ∃ r : Kˣ, Q.represents r ∧ Q'.represents r := sorry
+    (Q.prod (-Q')).Isotropic ↔ ∃ r : Kˣ, Q.represents r ∧ Q'.represents r := sorry
 
 lemma prod_isotropic_iff' {Q : QuadraticForm K V} (hQ : Q.Nondegenerate) {Q' : QuadraticForm K W}
     (hQ' : Q'.Nondegenerate) :
-    (Q.prod Q').Isotropic ↔ ∃ r : Kˣ,
+    (Q.prod (-Q')).Isotropic ↔ ∃ r : Kˣ,
       (Q.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic ∧
       (Q'.prod (QuadraticMap.weightedSumSquares K ![-r])).Isotropic := sorry
 
