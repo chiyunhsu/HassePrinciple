@@ -128,22 +128,30 @@ end QuadraticMap
 
 namespace QuadraticForm
 
-open _root_.QuadraticMap _root_.QuadraticForm
+open _root_.QuadraticMap LinearMap TensorProduct
+
+lemma baseChange_flip {R A M : Type*} [CommRing R] [CommRing A] [Algebra R A] [AddCommGroup M]
+    [Module R M] {B : LinearMap.BilinForm R M} :
+  LinearMap.flip (B.baseChange A) = (B.flip).baseChange A := by ext; simp
 
 lemma degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    [Module.FaithfullyFlat R A] -- Added FaithfullyFlat assumption.
-    [AddCommGroup M]
-    [Module R M] [Invertible (2 : R)] {Q : QuadraticForm R M}
-    (hQ : ¬ Q.Nondegenerate) :
+    [Module.FaithfullyFlat R A] -- Added FaithfullyFlat assumption. Otherwise the theorem is false. Counterexample: R = ℤ, A = ℤ/3ℤ, M = ℤ, Q : ℤ → ℤ/3ℤ given by Q(x) = x². Then Q is degenerate but Q.baseChange A is nondegenerate.
+    [AddCommGroup M] [Module R M] [Invertible (2 : R)]
+    {Q : QuadraticForm R M} (hQ : ¬ Q.Nondegenerate) :
     ¬ (Q.baseChange A).Nondegenerate := by
   contrapose! hQ
-  have : Invertible (2 : A) := by sorry
-  rw [nondegenerate_iff_radical_eq_bot] at hQ ⊢
-  rw [eq_bot_iff]
-  intro m hm
-  have hxA_mem_rad : 1 ⊗ₜ m ∈ radical (Q.baseChange A) := by sorry
-  rw [hQ, Submodule.mem_bot, Module.FaithfullyFlat.one_tmul_eq_zero_iff R M m] at hxA_mem_rad
-  exact hxA_mem_rad
+  have : Invertible (2 : A) := (Invertible.map (algebraMap R A) 2).copy 2 (map_ofNat _ _).symm
+  rw [← nondegenerate_associated_iff] at hQ ⊢
+  rw [associated_baseChange] at hQ
+  rw [LinearMap.Nondegenerate,
+      separatingLeft_iff_linear_nontrivial, separatingRight_iff_linear_flip_nontrivial] at hQ ⊢
+  constructor
+  · exact fun x hx ↦ (Module.FaithfullyFlat.one_tmul_eq_zero_iff R M x).mp
+                       (hQ.1 _ (AlgebraTensorModule.ext (by simp [hx])))
+  · intro y hy
+    have hy' : BilinForm.flip (associated Q) y = 0 := by simpa [hy]
+    exact (Module.FaithfullyFlat.one_tmul_eq_zero_iff R M y).mp
+            (hQ.2 _ (AlgebraTensorModule.ext (by simp [hy', baseChange_flip])))
 
 section Field
 
