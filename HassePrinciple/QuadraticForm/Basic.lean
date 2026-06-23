@@ -9,6 +9,7 @@ public import Mathlib.Algebra.Squarefree.Basic
 public import Mathlib.LinearAlgebra.QuadraticForm.Prod
 public import Mathlib.LinearAlgebra.QuadraticForm.Radical
 public import Mathlib.LinearAlgebra.QuadraticForm.TensorProduct
+public import Mathlib.RingTheory.Flat.FaithfullyFlat.Basic
 
 /-! # Quadratic forms -/
 
@@ -127,11 +128,22 @@ end QuadraticMap
 
 namespace QuadraticForm
 
-lemma degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A] [Algebra R A] [AddCommGroup M]
+open _root_.QuadraticMap _root_.QuadraticForm
+
+lemma degenerate_baseChange {R A M : Type*} [CommRing R] [CommRing A] [Algebra R A]
+    [Module.FaithfullyFlat R A] -- Added FaithfullyFlat assumption.
+    [AddCommGroup M]
     [Module R M] [Invertible (2 : R)] {Q : QuadraticForm R M}
     (hQ : ¬ Q.Nondegenerate) :
     ¬ (Q.baseChange A).Nondegenerate := by
-  sorry
+  contrapose! hQ
+  have : Invertible (2 : A) := by sorry
+  rw [nondegenerate_iff_radical_eq_bot] at hQ ⊢
+  rw [eq_bot_iff]
+  intro m hm
+  have hxA_mem_rad : 1 ⊗ₜ m ∈ radical (Q.baseChange A) := by sorry
+  rw [hQ, Submodule.mem_bot, Module.FaithfullyFlat.one_tmul_eq_zero_iff R M m] at hxA_mem_rad
+  exact hxA_mem_rad
 
 section Field
 
