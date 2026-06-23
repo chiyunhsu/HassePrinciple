@@ -25,21 +25,26 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
     (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1) :
-    (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, atP x (a i) p = ep i p) ∧ atInfty x (a i) = ereal i) ↔
+    (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
+      hilbertSym (x : ℝ) (a i) = ereal i) ↔
       (∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1) ∧
       (∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
   sorry
 
-theorem exists_rat_with_prescribed_hilbertSym (a : ℚˣ) {ep : Nat.Primes → ℤ} {ereal : ℤ}
-    (hep : ∀ p : Nat.Primes, ep p = 1 ∨ ep p = -1) (hereal : ereal  = 1 ∨ ereal = -1) :
-    (∃ x : ℚˣ, (∀ p : Nat.Primes, atP x a p = ep p) ∧ atInfty x a = ereal) ↔
-      (∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep p = 1) ∧
-      ((∏ᶠ (p : Nat.Primes), ep p) * ereal = 1) ∧
-      (∀ (p : Nat.Primes), ∃ xp : ℚ_[p], hilbertSym xp a = ep p) ∧
-      ∃ xr : ℝ, hilbertSym xr a = ereal := by
-  convert exists_rat_with_finite_prescribed_hilbertSym (I := Unit) (a := fun _ ↦ a)
-    (ep := fun _ ↦ ep) (ereal := fun _ ↦ ereal) (by simp [hep]) (by simp [hereal]) <;> simp
+theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Nat.Primes → ℤ} {er er' : ℤ}
+    (hep : ∀ p : Nat.Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Nat.Primes, ep' p = 1 ∨ ep' p = -1)
+    (her : er  = 1 ∨ er = -1) (her' : er'  = 1 ∨ er' = -1) :
+    (∃ x : ℚˣ, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) a = ep p ∧
+      hilbertSym (x : ℚ_[p]) b = ep' p) ∧ hilbertSym (x : ℝ) a = er ∧ hilbertSym (x : ℝ) b = er') ↔
+      ((∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep p = 1) ∧
+      (∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep' p = 1)) ∧
+     (((∏ᶠ (p : Nat.Primes), ep p) * er = 1) ∧ ((∏ᶠ (p : Nat.Primes), ep' p) * er' = 1)) ∧
+      (∀ (p : Nat.Primes), ∃ xp : ℚ_[p], hilbertSym xp a = ep p ∧ hilbertSym xp b = ep' p) ∧
+      ∃ xr : ℝ, hilbertSym xr a = er ∧ hilbertSym xr b = er':= by
+  convert exists_rat_with_finite_prescribed_hilbertSym (I := Fin 2) (a := ![a, b])
+    (ep := ![ep, ep']) (ereal := ![er, er']) (by simp [hep, hep']) (by simp [her, her']) <;>
+  aesop
 
 end hilbertSym

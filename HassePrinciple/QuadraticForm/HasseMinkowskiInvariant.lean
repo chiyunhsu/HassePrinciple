@@ -46,7 +46,7 @@ lemma HasseMinkoskiInvariantAux_def {n : ℕ} (w : Fin n → kˣ) :
     HasseMinkoskiInvariantAux w =
       ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) := rfl
 
-lemma HasseMinkoskiInvariant_aux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' : Fin m → kˣ}
+lemma HasseMinkoskiInvariantAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' : Fin m → kˣ}
     (h : (QuadraticMap.weightedSumSquares k w).Equivalent (QuadraticMap.weightedSumSquares k w')) :
     HasseMinkoskiInvariantAux w = HasseMinkoskiInvariantAux w' := by
   sorry
@@ -74,7 +74,7 @@ lemma weightedSumSquares {n : ℕ} (w : Fin n → kˣ) :
       (nondegenerate_associated_iff.mpr (nondegenerate_weightedSumSquares w)).1 =
       ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) := by
   simp only [HasseMinkoskiInvariant, ← HasseMinkoskiInvariantAux_def w]
-  exact HasseMinkoskiInvariant_aux.eq_of_equivalent
+  exact HasseMinkoskiInvariantAux.eq_of_equivalent
     ((equivalent_weightedSumSquares_units_of_nondegenerate' (QuadraticMap.weightedSumSquares k w))
       (nondegenerate_associated_iff.mpr (nondegenerate_weightedSumSquares w)).1).choose_spec.symm
 
@@ -92,65 +92,31 @@ lemma eq_of_equivalent (h : Q.Equivalent Q') :
 lemma eq_one_or_neg_one :
     HasseMinkoskiInvariant hQ = 1 ∨ HasseMinkoskiInvariant hQ = 1 := sorry
 
+open Module TensorProduct in
+lemma of_baseChange_weightedSumSquares {R : Type*} (A : Type*) [Field R]
+    [Invertible (2 : R)] [Field A] [Invertible (2 : A)] [Algebra R A] (w : Fin 2 → Rˣ) :
+    HasseMinkoskiInvariant
+      ((nondegenerate_associated_iff.mpr
+        (nondegenerate_baseChange (A := A) (nondegenerate_weightedSumSquares w))).1) =
+      hilbertSym (algebraMap R A (w ⟨0, by omega⟩)) ( algebraMap R A (w ⟨1, by omega⟩)) := by
+  have h2 : finrank A (A ⊗[R] (Fin 2 → R)) = 2 := by simp
+  rw [HasseMinkoskiInvariant.eq_of_equivalent_weightedSumSquares
+    (w := ![Units.map (algebraMap R A) (w ⟨0, by omega⟩),
+       Units.map (algebraMap R A) (w ⟨1, by omega⟩)]) _
+    (((baseChange_weightedSumSquares _ _ _).trans (Equivalent.refl _))),
+    HasseMinkoskiInvariant.weightedSumSquares, Finset.prod_eq_single (⟨0, by omega⟩, ⟨1, by omega⟩)
+      (by grind) (fun h ↦ by simp at h)]
+  simp
+
 end HasseMinkoskiInvariant
+section Field
 
 open Module
-namespace Padic
-
--- Q : Can we unify the `Padic` and `Real` sections?
-
-variable {p : ℕ} [Fact (Nat.Prime p)]
-
-instance invertibleTwo : Invertible (2 : ℚ_[p]) := sorry
-
-variable {V : Type*} [AddCommGroup V] [Module ℚ_[p] V] [FiniteDimensional ℚ_[p] V]
-  {Q : QuadraticForm ℚ_[p] V} (hQ : Q.Nondegenerate)
-
-lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) ℚ_[p] V) :
-    Q.represents 0 ↔
-      hilbertSym (-1) (-Q.discr b) =
-        HasseMinkoskiInvariant (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  sorry
-
-lemma represents_iff_of_rank_two (b : Basis (Fin 2) ℚ_[p] V) (a : ℚ_[p]) :
-    Q.represents a ↔
-      hilbertSym a (-Q.discr b) =
-        HasseMinkoskiInvariant (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  sorry
-
-end Padic
-
-namespace Real
-
-instance : Invertible (2 : ℝ) := sorry
-
-variable {V : Type*} [AddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
-  {Q : QuadraticForm ℝ V} (hQ : Q.Nondegenerate)
-
-lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) ℝ V) :
-    Q.represents 0 ↔
-      hilbertSym (-1) (-Q.discr b) =
-        HasseMinkoskiInvariant (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  sorry
-
-lemma represents_iff_of_rank_two (b : Basis (Fin 2) ℝ V) (a : ℝ) :
-    Q.represents a ↔
-      hilbertSym a (-Q.discr b) =
-        HasseMinkoskiInvariant (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  sorry
-
-end Real
-
-section Field
 
 -- TODO: check that this level of generality works; otherwise split into Padic and Real cases.
 
-variable {K : Type*} [Field K] [Algebra ℚ K]
-
-instance invertibleTwo : Invertible (2 : k) := sorry
-
-variable {V : Type*} [AddCommGroup V] [Module K V] [FiniteDimensional K V]
-  {Q : QuadraticForm K V} (hQ : Q.Nondegenerate)
+variable {K V : Type*} [Field K] [CharZero K] [AddCommGroup V] [Module K V]
+  [FiniteDimensional K V] {Q : QuadraticForm K V} (hQ : Q.Nondegenerate)
 
 lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) K V) :
     Q.represents 0 ↔
