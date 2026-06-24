@@ -7,7 +7,7 @@ module
 
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.NumberTheory.ApproximationTheorem
-
+public import HassePrinciple.Padics.Lemmas
 
 /-!
 # Existence theorem
@@ -16,21 +16,20 @@ public import HassePrinciple.NumberTheory.ApproximationTheorem
 
 namespace hilbertSym
 
-
 /-- The necessary conditions in the Existence Theorem are necessary -/
-lemma necessary_cond
+private lemma necessary_cond
     {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
     (_ : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
     (_ : ∀ i : I, ereal i = 1 ∨ ereal i = -1) (x : ℚˣ)
-    (h : ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
-      hilbertSym (x : ℝ) (a i) = ereal i) :
+    (h : ∀ i : I, (∀ p : Nat.Primes, atP x (a i) p = ep i p) ∧ atInfty x (a i) = ereal i) :
       (∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1) ∧
       (∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
   refine ⟨fun i ↦ (by simp_rw [Filter.eventually_cofinite, ← h i]; exact almost_all_one x (a i)),
-    fun i ↦ (by simp_rw [← h i]; exact prod_eq_one x (a i)),
+    fun i ↦ (by simp_rw [← h i]; rw [mul_comm]; exact prod_eq_one x (a i)),
     fun p ↦ (by use x; simp [h]), (by use x; simp [h])⟩
+
 
 
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
@@ -43,8 +42,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
     (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1) :
-    (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
-      hilbertSym (x : ℝ) (a i) = ereal i) ↔
+    (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, atP x (a i) p = ep i p) ∧ atInfty x (a i) = ereal i) ↔
       (∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1) ∧
       (∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
@@ -134,79 +132,13 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
         · simp [A_ne_zero]
         · simp [Nat.Prime.ne_zero q_prime]
       let x := x_unit.unit'
-
-      have is_int_x : (x.1).den = 1 := by
-        simp [x, xQ]
-        sorry
-
-      have x_int := Rat.coe_int_num_of_den_eq_one is_int_x
-
-      have coe : ∀ b : ℚ, ∀ p : Nat.Primes,
-        hilbertSym (x : ℚ_[p]) b = hilbertSym ((x.1).num : ℚ_[p]) b := by
-          intro b p
-          congr
-          rw [x_int]
-
       use x
-
-
 
 
       intro i
       refine ⟨fun ⟨p,pprime⟩ ↦ ?_, ?_⟩
       · by_cases hp : p = 2
-        · --strategy: x is a square mod 8, so it's a square in ℚ_[2], hence (x,_)₂=1.
-          --Since 2 ∉ T, ep i 2 = 1 as well.
-          have hilbertSym_2 : hilbertSym (x : ℚ_[2]) (a i) = 1 := by
-            --rw [coe (a i) ⟨2, Nat.prime_two⟩]
-            have ⟨xsqrt, hxsqrt⟩ : IsSquare ((x.1).num : ℤ_[2]) := by
-              simp only [IsSquare, ← pow_two]
-              apply Polynomial.squares_in_Z2 _ A
-              have : q ≡ A [MOD M] := by sorry
-              have : q ≡ A [MOD 8] := by sorry
-              have := Nat.ModEq.mul_left A this
-              simp only [IsUnit.val_unit', pow_two, x, xQ]
-
-
-              sorry
-            rw [← x_int] at hxsqrt
-
-            --rw [comm, coe ((a i).1) _, hxsqrt, ← pow_two]
-            --simp [right_square_eq_one]
-            sorry
-          have e2 : ep i ⟨p,pprime⟩ = 1 := by
-            have two_notin_T := disjoint_ST.2.1
-            --maybe this is useful elsewhere, TODO move it.
-            have t_in_T_iff : ∀ t : Nat.Primes , t.1 ∈ T ↔ ∃ j : I, ep j t = -1 := by
-              intro t
-              refine ⟨fun t_in_T ↦ ?_, fun eq_minus_one ↦ ?_⟩
-              · simp only [Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, Subtype.exists,
-                Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T, T'', T', f] at t_in_T
-                obtain ⟨t1, ⟨i, hi⟩, hcoe⟩ := t_in_T
-                use i
-                rw [← (Nat.Primes.coe_nat_inj t1 t).mp hcoe]
-                exact hi
-              · simp only [Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, Subtype.exists,
-                Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T, T'', T', f]
-                use t
-                exact ⟨eq_minus_one, Nat.Primes.coe_pnat_nat t⟩
-            specialize t_in_T_iff ⟨2, Nat.prime_two⟩
-            rw [← not_iff_not] at t_in_T_iff
-            have : ¬ ∃ j, ep j ⟨2, Nat.prime_two⟩ = -1 := by
-              rw [← t_in_T_iff]
-              exact two_notin_T
-            simp only [Int.reduceNeg, not_exists] at this
-            simp_rw [hp]
-            apply (or_iff_left (this i)).mp
-            simp [hep1]
-          rw [e2]
-          rw [← hilbertSym_2]
-          congr
-          · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp)) rfl
-          · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp)) rfl
-          · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp)) rfl
-
-
+        · sorry
         · by_cases hp : p ∈ S
           · sorry
           · by_cases hp : p ∈ T
@@ -216,20 +148,17 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     · sorry
 
 
+theorem exists_rat_with_prescribed_hilbertSym (a : ℚˣ) {ep : Nat.Primes → ℤ} {ereal : ℤ}
+    (hep : ∀ p : Nat.Primes, ep p = 1 ∨ ep p = -1) (hereal : ereal  = 1 ∨ ereal = -1) :
+    (∃ x : ℚˣ, (∀ p : Nat.Primes, atP x a p = ep p) ∧ atInfty x a = ereal) ↔
+      (∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep p = 1) ∧
+      ((∏ᶠ (p : Nat.Primes), ep p) * ereal = 1) ∧
+      (∀ (p : Nat.Primes), ∃ xp : ℚ_[p], hilbertSym xp a = ep p) ∧
+      ∃ xr : ℝ, hilbertSym xr a = ereal := by
+  convert exists_rat_with_finite_prescribed_hilbertSym (I := Unit) (a := fun _ ↦ a)
+    (ep := fun _ ↦ ep) (ereal := fun _ ↦ ereal) (by simp [hep]) (by simp [hereal]) <;> simp
 
 
-theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Nat.Primes → ℤ} {er er' : ℤ}
-    (hep : ∀ p : Nat.Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Nat.Primes, ep' p = 1 ∨ ep' p = -1)
-    (her : er  = 1 ∨ er = -1) (her' : er'  = 1 ∨ er' = -1) :
-    (∃ x : ℚˣ, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) a = ep p ∧
-      hilbertSym (x : ℚ_[p]) b = ep' p) ∧ hilbertSym (x : ℝ) a = er ∧ hilbertSym (x : ℝ) b = er') ↔
-      ((∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep p = 1) ∧
-      (∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep' p = 1)) ∧
-     (((∏ᶠ (p : Nat.Primes), ep p) * er = 1) ∧ ((∏ᶠ (p : Nat.Primes), ep' p) * er' = 1)) ∧
-      (∀ (p : Nat.Primes), ∃ xp : ℚ_[p], hilbertSym xp a = ep p ∧ hilbertSym xp b = ep' p) ∧
-      ∃ xr : ℝ, hilbertSym xr a = er ∧ hilbertSym xr b = er':= by
-  convert exists_rat_with_finite_prescribed_hilbertSym (I := Fin 2) (a := ![a, b])
-    (ep := ![ep, ep']) (ereal := ![er, er']) (by simp [hep, hep']) (by simp [her, her']) <;>
-  aesop
+
 
 end hilbertSym
