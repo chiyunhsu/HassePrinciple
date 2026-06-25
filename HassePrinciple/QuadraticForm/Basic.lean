@@ -226,11 +226,36 @@ Then `s² Q(b) = Q (s • b) = Q (- r • x) = Q (r • x) = r² Q(x) = 0`.
 Because `Q(b) ≠ 0` and N is torsion free, we have `s² = 0`, so `s = 0`.
 Then `r • x = 0` and `r ≠ 0`. Hence `x = 0`.
 -/
-lemma anisotropic_of_rank_one' [IsDomain R] [StrongRankCondition R]
-    [Module.IsTorsionFree R M] [Module.IsTorsionFree R N]
-    (hr : Module.finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
+lemma anisotropic_of_rank_one' [IsDomain R] [StrongRankCondition R] [Module.IsTorsionFree R M]
+    [Module.IsTorsionFree R N] (hr : Module.finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
     Q.Anisotropic := by
-  sorry
+  intro x hx
+  obtain ⟨b, hb⟩ : ∃ m, Q m ≠ 0 := by simpa [Q.ext_iff] using hQ
+  obtain ⟨r, s, hrs, h0⟩ : ∃ (r s : R), r • x + s • b = 0 ∧ (r ≠ 0 ∨ s ≠ 0) := by
+    -- have : b ≠ x := fun hbx => hb (hbx ▸ hx)
+    let v : Fin 2 → M := ![x, b]
+    rw [Module.finrank, Cardinal.toNat_eq_one] at hr
+    have hdep : ¬ LinearIndependent R v :=
+      fun hli ↦ (by simpa [hr] using LinearIndependent.cardinal_lift_le_rank hli)
+    obtain ⟨l, hl_sum, hl_ne_zero⟩ : ∃ l, (Finsupp.linearCombination R v) l = 0 ∧ l ≠ 0 := by
+      simpa [linearIndependent_iff] using hdep
+    simp only [Finsupp.linearCombination, Finsupp.coe_lsum, Finsupp.sum, LinearMap.coe_smulRight,
+      LinearMap.id_coe, id_eq, v] at hl_sum
+    use l 0, l 1
+    refine ⟨?_, (by contrapose! hl_ne_zero; ext i; fin_cases i <;> simp [hl_ne_zero])⟩
+    rw [Finset.sum_subset (Finset.subset_univ _)] at hl_sum
+    · simpa [Fin.sum_univ_two] using hl_sum
+    · intro i _ hi
+      simp [(Finsupp.notMem_support_iff).mp hi, zero_smul]
+  have h : s ^ 2 • Q b = 0 := by
+    calc
+      s ^ 2 • Q b
+        = Q (s • b) := ((pow_two s).symm ▸ (Q.toFun_smul s b)).symm
+      _ = Q (-r • x) := congrArg _ ((neg_smul r x).symm ▸ (eq_neg_of_add_eq_zero_right hrs))
+      _ = 0 := by simp [QuadraticMap.map_smul, hx]
+  have hs : s = 0 := by simpa [hb] using h
+  simp [hs] at hrs
+  tauto
 
 theorem Equivalent.nondegenerate [IsDomain R] [Module.IsTorsionFree R M] [Module.IsTorsionFree R M']
     [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q')
