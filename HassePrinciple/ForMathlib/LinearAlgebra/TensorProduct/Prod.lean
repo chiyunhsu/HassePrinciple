@@ -7,6 +7,8 @@ module
 
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
 
+/-! # Lemmas about tensor products -/
+
 @[expose] public section
 
 namespace TensorProduct

@@ -20,10 +20,12 @@ public import Mathlib.LinearAlgebra.TensorProduct.Pi
 
 namespace QuadraticForm
 
+/-- The product of two quadratic forms. -/
 abbrev prod {R M₁ M₂ : Type*} [CommSemiring R] [AddCommMonoid M₁] [AddCommMonoid M₂] [Module R M₁]
     [Module R M₂] (Q₁ : QuadraticForm R M₁) (Q₂ : QuadraticForm R M₂) : QuadraticForm R (M₁ × M₂) :=
   QuadraticMap.prod Q₁ Q₂
 
+/-- `weightedSumSquares` as a `QuadraticForm` (TODO: update in Mathlib). -/
 abbrev weightedSumSquares {S : Type*} (R : Type*) [CommSemiring R] {ι : Type*}
     [Fintype ι] [Monoid S] [DistribMulAction S R] [SMulCommClass S R R] (w : ι → S) :
     QuadraticForm R (ι → R) :=
