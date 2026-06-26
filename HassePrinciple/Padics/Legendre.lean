@@ -92,27 +92,27 @@ theorem eq_zero_iff : legendreSym a = 0 ↔ ¬ IsUnit a := by sorry
     -- rw [legendreSym, ← not_iff_not, not_not, _root_.legendreSym.eq_zero_iff,
     -- zmodRepr_coe_ne_zero_iff_isUnit]
 
-/-- The Legendre symbol at zero is zero. -/
-@[simp]
-theorem at_zero : legendreSym (0 : ℤ_[p]) = 0 := by
-  simp [legendreSym]
+-- /-- The Legendre symbol at zero is zero. -/
+-- @[simp]
+-- theorem at_zero : legendreSym (0 : ℤ_[p]) = 0 := by
+--   simp [legendreSym]
 
-/-- The Legendre symbol at 1 is 1. -/
-@[simp]
-theorem at_one : legendreSym (1 : ℤ_[p]) = 1 := by
-  simp [legendreSym]
+-- /-- The Legendre symbol at 1 is 1. -/
+-- @[simp]
+-- theorem at_one : legendreSym (1 : ℤ_[p]) = 1 := by
+--   simp [legendreSym]
 
-/-- The Legendre symbol is multiplicative in `a` for `p` fixed. -/
-protected theorem mul : legendreSym (a * b) = legendreSym a * legendreSym b := by
-  simp [legendreSym, map_mul]
+-- /-- The Legendre symbol is multiplicative in `a` for `p` fixed. -/
+-- protected theorem mul : legendreSym (a * b) = legendreSym a * legendreSym b := by
+--   simp [legendreSym, map_mul]
 
 /-- The Legendre symbol is a homomorphism of monoids with zero. -/
 @[simps]
 noncomputable def hom : ℤ_[p] →*₀ ℤ where
   toFun        := legendreSym
-  map_zero'    := at_zero
-  map_one'     := at_one
-  map_mul' _ _ := legendreSym.mul
+  map_zero'    := by simp [legendreSym]
+  map_one'     := by simp [legendreSym]
+  map_mul' _ _ := by simp [legendreSym, map_mul]
 
 /-- The square of the symbol is 1 if `a` is a unit. -/
 theorem sq_one (ha : IsUnit a) : legendreSym a ^ 2 = 1 := by
@@ -120,7 +120,7 @@ theorem sq_one (ha : IsUnit a) : legendreSym a ^ 2 = 1 := by
 
 /-- The Legendre symbol of `a^2` at `p` is 1 if `a` is a unit. -/
 theorem sq_one' (ha : IsUnit a) : legendreSym (a ^ 2) = 1 := by
-  rw [pow_two, legendreSym.mul]
+  rw [pow_two]
   cases eq_one_or_neg_one ha <;> aesop
 
 /-- If `a` is a unit, then `legendreSym a = 1` iff `a` is a square mod `p`. -/
