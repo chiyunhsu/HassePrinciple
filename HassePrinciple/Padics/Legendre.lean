@@ -18,6 +18,8 @@ namespace MulChar
 variable {M M' R F : Type*} [CommMonoid M] [CommMonoid M'] [CommMonoidWithZero R]
   [FunLike F M' M] [MonoidHomClass F M' M]
 
+/-- We define the composition of monoid morphisms as the map composition. It is still a monoid
+morphism. -/
 @[simps]
 def compMonoidHom (χ : MulChar M R) (f : F) [IsLocalHom f] : MulChar M' R where
   toFun m' := χ (f m')
@@ -31,6 +33,8 @@ namespace PadicInt
 
 variable {p : ℕ} [Fact (Nat.Prime p)]
 
+/-- The Legendre symbol of a p-adic integer is the quadratic character on ℤ_[p] precomposed with
+the reduction modulo p. -/
 noncomputable
 def legendreSym : MulChar ℤ_[p] ℤ := (quadraticChar (ZMod p)).compMonoidHom toZMod
 -- -- TODO: PR to Mathlib.NumberTheory.Padics.RingHoms
