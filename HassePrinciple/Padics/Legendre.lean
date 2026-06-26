@@ -94,8 +94,8 @@ theorem eq_zero_iff : legendreSym a = 0 ↔ ¬ IsUnit a := by sorry
 
 /-- The Legendre symbol at zero is zero. -/
 @[simp]
-theorem at_zero : legendreSym (0 : ℤ_[p]) = 0 := by sorry
---  simp [legendreSym, _root_.legendreSym.at_zero p]
+theorem at_zero : legendreSym (0 : ℤ_[p]) = 0 := by
+  simp [legendreSym]
 
 /-- The Legendre symbol at 1 is 1. -/
 @[simp]
@@ -103,8 +103,8 @@ theorem at_one : legendreSym (1 : ℤ_[p]) = 1 := by
   simp [legendreSym]
 
 /-- The Legendre symbol is multiplicative in `a` for `p` fixed. -/
-protected theorem mul : legendreSym (a * b) = legendreSym a * legendreSym b := by sorry
---  simp [legendreSym, _root_.legendreSym, zmodRepr_mul, map_mul]
+protected theorem mul : legendreSym (a * b) = legendreSym a * legendreSym b := by
+  simp [legendreSym, map_mul]
 
 /-- The Legendre symbol is a homomorphism of monoids with zero. -/
 @[simps]
