@@ -249,13 +249,13 @@ namespace Polynomial
 
 /-- An element in ℤ_p (p odd) is a square if its reduction modulo p is a square. -/
 lemma squares_in_Zp {p : ℕ} [Fact (Nat.Prime p)] (hodd : p ≠ 2) (m : ℤ_[p]) (n : ℕ)
-    (hmod : m.zmodRepr ≡ n ^ 2 [MOD p]) : ∃ x : ℤ_[p], m = x ^ 2 := by
+    (hmod : m.toZMod = n ^ 2) : ∃ x : ℤ_[p], m = x ^ 2 := by
   let F : ℤ_[p][X] := X ^ 2 - C m
   sorry
 
 /-- An element in ℤ_2 is a square if its reduction modulo 8 is a square. -/
 lemma squares_in_Z2 (m : ℤ_[2]) (n : ℕ)
-    (hmod : m.zmodRepr ≡ n ^ 2 [MOD 8]) : ∃ x : ℤ_[2], m = x^2 := by sorry
+    (hmod : m.toZModPow 3 = n ^ 2) : ∃ x : ℤ_[2], m = x ^ 2 := by sorry
 
 end Polynomial
 

@@ -8,8 +8,6 @@ module
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.NumberTheory.ApproximationTheorem
 public import HassePrinciple.Padics.Lemmas
-import Mathlib
-
 
 /-!
 # Existence theorem
@@ -17,10 +15,9 @@ import Mathlib
 @[expose] public section
 
 namespace hilbertSym
-
-
 /-- The necessary conditions in the Existence Theorem are necessary -/
-lemma necessary_cond {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
+private lemma necessary_cond
+    {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
     (_ : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
     (_ : ∀ i : I, ereal i = 1 ∨ ereal i = -1) (x : ℚˣ)
     (h : ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
@@ -36,68 +33,62 @@ lemma necessary_cond {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Pr
 
 --define S to be the (finite!) set of primes that divide either the numerator or the denominator
 --of some (a i). N.B. In Serre, S contains also 2 and ∞.
-def SS {I : Type*} [Fintype I] (a : I → ℚˣ) :=
+private def SS {I : Type*} [Fintype I] (a : I → ℚˣ) :=
   Finset.univ.biUnion (fun (i : I) ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors)
 
 --  define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1.
-def T' {I : Type*} [Fintype I] (ep : I → Nat.Primes → ℤ) :=
+private def T' {I : Type*} [Fintype I] (ep : I → Nat.Primes → ℤ) :=
     ⋃ i : I, {p : Nat.Primes | ep i p = -1}
 
-def f {I : Type*} [Fintype I] (ep : I → Nat.Primes → ℤ) := fun (t' : T' ep) ↦ (t' : ℕ)
+private def f {I : Type*} [Fintype I] (ep : I → Nat.Primes → ℤ) := fun (t' : T' ep) ↦ (t' : ℕ)
 
 
-lemma Tfin {I : Type*} [Fintype I] {ep : I → Nat.Primes → ℤ}
+private lemma Tfin {I : Type*} [Fintype I] {ep : I → Nat.Primes → ℤ}
     (h₁ : ∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1) :
     (Set.range (f ep)).Finite := by
-  refine (Set.finite_range_iff ?_).mpr ?_
-  · intro t1 t2 ht
-    unfold f at ht
+  refine (Set.finite_range_iff fun t1 t2 ht ↦ ?_).mpr (Set.finite_iUnion fun i ↦ ?_)
+  · simp only [f, PNat.coe_inj] at ht
     ext
     exact_mod_cast ht
-  · apply Set.finite_iUnion
-    intro i
-    specialize h₁ i
-    simp only [Filter.eventually_cofinite] at h₁
-    have (x : Nat.Primes) : ¬ep i x = 1 ↔ ep i x = -1 := by
-      specialize hep1 i x
+  · specialize h₁ i
+    have (p : Nat.Primes) : ¬ep i p = 1 ↔ ep i p = -1 := by
+      specialize hep1 i p
       lia
-    simp_rw [this] at h₁
+    simp only [Filter.eventually_cofinite, this, Int.reduceNeg] at h₁
     exact h₁
 
 
-noncomputable def TT {I : Type*} [Fintype I] {ep : I → Nat.Primes → ℤ}
+private noncomputable def TT {I : Type*} [Fintype I] {ep : I → Nat.Primes → ℤ}
     (h₁ : ∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1) : Finset ℕ :=
       Set.Finite.toFinset (Tfin h₁ hep1)
 
-lemma existence_disjoint {I : Type*} [Finite I] [Fintype I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
+private lemma existence_disjoint
+    {I : Type*} [Finite I] [Fintype I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
     (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
     (h1 : ∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1)
-    (h3 : (∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p) ∧
-      ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
-      (disjoint_ST : Disjoint (SS a) (TT h1 hep1) ∧ 2 ∉ (TT h1 hep1) ∧ ∀ i : I, ereal i = 1) :
-        (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
-        hilbertSym (x : ℝ) (a i) = ereal i)
-       := by
+    (disjoint_ST : Disjoint (SS a) (TT h1 hep1))
+    (two_notin_T : 2 ∉ (TT h1 hep1))
+    (infty_notin_T : ∀ i : I, ereal i = 1) :
+      (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
+      hilbertSym (x : ℝ) (a i) = ereal i) := by
     let S := SS a
     let T := TT h1 hep1
-    --S and T are made of prime numbers.
-    have primes_S : ∀ s : S, Nat.Prime s := by sorry
-    have primes_T : ∀ t : T, Nat.Prime t := by sorry
-    --   intro t
-    --   have tinT := Subtype.mem t
-    --   simp only [T] at tinT
-    --   have : ∀ x ∈ T, Nat.Prime x := by
-    --     unfold T
-    --     --simp only [Set.mem_range, Subtype.exists, forall_exists_index]
-    --     intro x x_prime _ _
-    --     have : x = x_prime := by aesop
-    --     have : Nat.Prime x_prime := x_prime.2
-    --     aesop
-    --   aesop
+
+    --S and T consist of prime numbers.
+    have primes_S : ∀ s : S, Nat.Prime s := by
+      simp [S, SS]
+      aesop
+    have primes_T : ∀ t : T, Nat.Prime t := by
+      simp only [TT, T', Int.reduceNeg, Subtype.forall, Set.Finite.mem_toFinset, Set.mem_range, f,
+        Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, forall_exists_index, and_imp,
+        T]
+      intro a x i h eq
+      rw [← eq]
+      exact x.2
 
 
     --Define A to be the product of the elements in T, and M to be 8 times the product of the
@@ -118,24 +109,23 @@ lemma existence_disjoint {I : Type*} [Finite I] [Fintype I] (a : I → ℚˣ) {e
       specialize primes_S s
       aesop
 
-    --Following Serre, we first assume that S and T are disjoint (and that 2, ∞ are not in T).
+    --If S and T are disjoint (and 2, ∞ ∉ T), then A and M are coprime.
 
     have coprime_AM : A.Coprime M := by
         rw [Nat.coprime_fintype_prod_left_iff]
         refine fun t ↦ Nat.Coprime.mul_right ?_ ?_
-        · have : Odd (t : ℕ) := by
-            apply Nat.Prime.odd_of_ne_two (primes_T t)
-            have two_notin_T := disjoint_ST.2.1
-            rw [← Finset.forall_mem_not_eq] at two_notin_T
-            apply ne_comm.mp (two_notin_T t (Subtype.mem t))
-          rw [(by omega : 8 = 2^3), Nat.coprime_pow_right_iff (by omega)]
-          exact Odd.coprime_two_right this
+        · rw [(by omega : 8 = 2^3), Nat.coprime_pow_right_iff (by omega)]
+          refine Odd.coprime_two_right (Nat.Prime.odd_of_ne_two (primes_T t) ?_)
+          rw [← Finset.forall_mem_not_eq] at two_notin_T
+          apply ne_comm.mp (two_notin_T t (Subtype.mem t))
         · rw [Nat.coprime_fintype_prod_right_iff]
           intro s
           rw [Nat.coprime_primes (primes_T t) (primes_S s)]
           refine Disjoint.ne_of_mem ?_ (Subtype.mem t) (Subtype.mem s)
-          simp only [Finset.disjoint_coe, (disjoint_ST.1).symm]
-          sorry
+          simp only [Finset.disjoint_coe]
+          exact disjoint_ST.symm
+
+    --We can apply Dirichlet's lemma.
     have dirichlet :=
         Set.Infinite.nonempty (Nat.infinite_setOf_prime_and_modEq M_ne_zero coprime_AM)
     obtain ⟨q, hq⟩ := dirichlet
@@ -150,9 +140,6 @@ lemma existence_disjoint {I : Type*} [Finite I] [Fintype I] (a : I → ℚˣ) {e
     let x := x_unit.unit'
 
 
-    have coe : ∀ b : ℚ, ∀ p : Nat.Primes,
-      hilbertSym (x : ℚ_[p]) b = hilbertSym (x.1 : ℚ_[p]) b := fun b p ↦ by congr
-
     use x
 
 
@@ -161,40 +148,37 @@ lemma existence_disjoint {I : Type*} [Finite I] [Fintype I] (a : I → ℚˣ) {e
     intro i
     refine ⟨fun ⟨p,pprime⟩ ↦ ?_, ?_⟩
     · by_cases hp : p = 2
-      · --strategy: x is a square mod 8, so it's a square in ℚ_[2], hence (x,_)₂=1.
+      · --We compute (x, a i)_2.
+        --Strategy: x is a square mod 8, so it's a square in ℚ_[2], hence (x,_)₂=1.
         --Since 2 ∉ T, ep i 2 = 1 as well.
         have hilbertSym_2 : hilbertSym (x : ℚ_[2]) (a i) = 1 := by
-          rw [coe (a i) ⟨2, Nat.prime_two⟩]
-          have ⟨xsqrt, hxsqrt⟩ : ∃ b : ℤ_[2], xQ = b ^ 2 := by
-            apply Polynomial.squares_in_Z2 _ A
-            have : q ≡ A [MOD M] := by sorry
-            have : q ≡ A [MOD 8] := by sorry
-            have := Nat.ModEq.mul_left A this
-            simp [xQ]
+          have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[2], xQ = b ^ 2 := by
+            have ⟨b, hb⟩ : ∃ b : ℤ_[2], xQ = b ^ 2 := by
+              apply Polynomial.squares_in_Z2 _ A
+              have : (q : ZMod 8) = A := by sorry
+
+              simp [xQ, this]
+              ring
+            use b.1
 
 
-            sorry
-
-          --rw [hxsqrt, right_square_eq_one]
-          sorry
+            sorry --can't cast?
+          simp only [IsUnit.val_unit', Rat.cast_natCast, x]
+          rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one]
+          · sorry
+          · sorry
+        --We compute ep i 2
         have e2 : ep i ⟨p,pprime⟩ = 1 := by
-          have two_notin_T := disjoint_ST.2.1
           --maybe this is useful elsewhere, TODO move it.
           have t_in_T_iff : ∀ t : Nat.Primes , t.1 ∈ T ↔ ∃ j : I, ep j t = -1 := by
+            simp only [TT, T', Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, f,
+              Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T]
             intro t
-            refine ⟨fun t_in_T ↦ ?_, fun eq_minus_one ↦ ?_⟩
-            · simp only [Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, Subtype.exists,
-              Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T, T', f] at t_in_T
-              --obtain ⟨t1, ⟨i, hi⟩, hcoe⟩ := t_in_T
-              use i
-              sorry
-              --rw [← (Nat.Primes.coe_nat_inj t1 t).mp hcoe]
-              --exact hi
-            · simp only [Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, Subtype.exists,
-              Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T, T', f]
-              sorry
-              --use t
-              --exact ⟨eq_minus_one, Nat.Primes.coe_pnat_nat t⟩
+            refine ⟨fun ⟨a, ⟨i, hi⟩, h⟩ ↦ ⟨i, ?_⟩, by aesop⟩
+            rw [← hi]
+            congr
+            exact_mod_cast h.symm
+
           specialize t_in_T_iff ⟨2, Nat.prime_two⟩
           rw [← not_iff_not] at t_in_T_iff
           have : ¬ ∃ j, ep j ⟨2, Nat.prime_two⟩ = -1 := by
@@ -239,7 +223,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
   let S := SS a
   let T := TT h1 hep1
   by_cases disjoint_ST : Disjoint S T ∧ 2 ∉ T ∧ ∀ i : I, ereal i = 1
-  · exact existence_disjoint a hep1 hereal h1 h2 h3 disjoint_ST
+  · exact existence_disjoint a hep1 hereal h1 h2 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
   · sorry
 
 
