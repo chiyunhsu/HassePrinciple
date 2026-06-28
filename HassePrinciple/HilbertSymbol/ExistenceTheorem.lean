@@ -142,6 +142,18 @@ private lemma existence_disjoint
 
     use x
 
+    --maybe this is useful elsewhere, TODO move it.
+    have t_in_T_iff : ∀ t : Nat.Primes , t.1 ∈ T ↔ ∃ j : I, ep j t = -1 := by
+      simp only [TT, T', Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, f,
+        Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T]
+      intro t
+      refine ⟨fun ⟨a, ⟨i, hi⟩, h⟩ ↦ ⟨i, ?_⟩, by aesop⟩
+      rw [← hi]
+      congr
+      exact_mod_cast h.symm
+
+
+
 
 
 
@@ -155,30 +167,21 @@ private lemma existence_disjoint
           have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[2], xQ = b ^ 2 := by
             have ⟨b, hb⟩ : ∃ b : ℤ_[2], xQ = b ^ 2 := by
               apply Polynomial.squares_in_Z2 _ A
-              have : (q : ZMod 8) = A := by sorry
-
+              have : (q : ZMod 8) = A := by
+                apply Nat.ModEq.of_dvd (by omega : 8 ∣ M) at q_cong
+                rw [← ZMod.natCast_eq_natCast_iff] at q_cong
+                exact q_cong
               simp [xQ, this]
               ring
-            use b.1
-
-
-            sorry --can't cast?
+            use b
+            rw_mod_cast [← hb]
+            simp only [PadicInt.coe_natCast]
           simp only [IsUnit.val_unit', Rat.cast_natCast, x]
-          rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one]
-          · sorry
-          · sorry
+          rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one (by aesop)]
+          rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
+          exact_mod_cast isUnit_iff_ne_zero.mp x_unit
         --We compute ep i 2
         have e2 : ep i ⟨p,pprime⟩ = 1 := by
-          --maybe this is useful elsewhere, TODO move it.
-          have t_in_T_iff : ∀ t : Nat.Primes , t.1 ∈ T ↔ ∃ j : I, ep j t = -1 := by
-            simp only [TT, T', Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, f,
-              Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T]
-            intro t
-            refine ⟨fun ⟨a, ⟨i, hi⟩, h⟩ ↦ ⟨i, ?_⟩, by aesop⟩
-            rw [← hi]
-            congr
-            exact_mod_cast h.symm
-
           specialize t_in_T_iff ⟨2, Nat.prime_two⟩
           rw [← not_iff_not] at t_in_T_iff
           have : ¬ ∃ j, ep j ⟨2, Nat.prime_two⟩ = -1 := by
@@ -197,7 +200,41 @@ private lemma existence_disjoint
 
 
       · by_cases hp : p ∈ S
-        · sorry
+        · --strategy: prove both hs and e are 1, for hs use hensel+squares again
+          have p_prime_fact : Fact (Nat.Prime p) := by sorry
+          have hilbertSym_p : hilbertSym (x : ℚ_[p]) (a i) = 1 := by
+            have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[p], xQ = b ^ 2 := by
+              have ⟨b, hb⟩ : ∃ b : ℤ_[p], xQ = b ^ 2 := by
+                apply Polynomial.squares_in_Zp (by aesop) _ A
+                have : (q : ZMod p) = A := by
+                  apply Nat.ModEq.of_dvd (by sorry : p ∣ M) at q_cong
+                  rw [← ZMod.natCast_eq_natCast_iff] at q_cong
+                  exact q_cong
+                simp [xQ, this]
+                ring
+              use b
+              rw_mod_cast [← hb]
+              simp only [PadicInt.coe_natCast]
+            simp only [IsUnit.val_unit', Rat.cast_natCast, x]
+            rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one (by aesop)]
+            · --We compute ep i 2
+
+              specialize t_in_T_iff ⟨p, sorry⟩
+              rw [← not_iff_not] at t_in_T_iff
+              have : ¬ ∃ j, ep j ⟨p, sorry⟩ = -1 := by
+                rw [← t_in_T_iff]
+                sorry
+                --exact p_notin_T
+              simp only [Int.reduceNeg, not_exists] at this
+              --simp_rw [hp]
+              apply (or_iff_left (this i)).mp
+              --simp [hep1]
+              sorry
+          --· rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
+            --  exact_mod_cast isUnit_iff_ne_zero.mp x_unit
+          rw [hilbertSym_p]
+
+          sorry
         · by_cases hp : p ∈ T
           · sorry
           · sorry
@@ -210,7 +247,7 @@ is equal to `e_{i,v}` if and only if
 2) for all `i`, the product of all `e_{i,v}` is 1
 3) for each place `v`, there is some `x_v ∈ Q_v` with `(x,a_i)_v = e_{i,v}`. -/
 theorem exists_rat_with_finite_prescribed_hilbertSym
-    {I : Type*} [Finite I] [Fintype I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
+    {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ}
     (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1) :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
@@ -219,6 +256,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       (∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
+  have := Fintype.ofFinite I
   refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1,h2,h3⟩ ↦ ?_⟩
   let S := SS a
   let T := TT h1 hep1
