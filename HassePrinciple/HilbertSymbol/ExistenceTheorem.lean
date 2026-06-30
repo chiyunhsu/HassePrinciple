@@ -8,7 +8,7 @@ module
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.NumberTheory.ApproximationTheorem
 public import HassePrinciple.Padics.Lemmas
-
+public import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 /-!
 # Existence theorem
 -/
@@ -29,6 +29,160 @@ private lemma necessary_cond
   refine ⟨fun i ↦ (by simp_rw [Filter.eventually_cofinite, ← h i]; exact almost_all_one x (a i)),
     fun i ↦ (by simp_rw [← h i]; exact prod_eq_one x (a i)),
     fun p ↦ (by use x; simp [h]), (by use x; simp [h])⟩
+
+private lemma all_but_one_places_suffice
+    {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Nat.Primes → ℤ} {ereal : I → ℤ} (q : Nat.Primes)
+    (hep1 : ∀ i : I, ∀ p : Nat.Primes, ep i p = 1 ∨ ep i p = -1)
+    (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
+    (h1 : ∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1)
+    (h2 : ∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1)
+    (h3 : ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
+      ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
+    (h4 : ∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, p ≠ q → hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
+      hilbertSym (x : ℝ) (a i) = ereal i) :
+    ∃ x : ℚˣ, ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
+      hilbertSym (x : ℝ) (a i) = ereal i := by
+  obtain ⟨x, hx⟩ := h4
+  use x
+  refine fun i ↦ ⟨fun p ↦ ?_, by simp [hx]⟩
+  by_cases hpq : p = q
+  · rw [hpq]
+    have prodHS := hilbertSym.prod_eq_one x (a i)
+    simp_rw [hx] at prodHS
+    have prodHS_fin_eq_prode_fin :
+      ∏ᶠ (p : Nat.Primes), hilbertSym (x : ℚ_[p]) (a i) = ∏ᶠ (p : Nat.Primes), ep i p := by
+      rw [← mul_left_inj' (by aesop : ereal i ≠ 0), prodHS, h2 i]
+    let HS_supp := (almost_all_one x (a i)).toFinset
+    let ei_supp := (h1 i).toFinset
+    have HS_finprod := finprod_eq_prod _ (almost_all_one x (a i))
+    by_cases hqS : q ∈ HS_supp
+    · have HS_m1 : hilbertSym (x : ℚ_[q]) (a i) = -1 := by
+        simp only [Set.Finite.mem_toFinset, Set.mem_compl_iff, Set.mem_setOf_eq, ne_eq,
+          Rat.cast_eq_zero, Units.ne_zero, not_false_eq_true, ← eq_neg_one_iff_not_one,
+          Int.reduceNeg, HS_supp] at hqS
+        exact hqS
+      by_cases hqE : q ∈ ei_supp
+      · have ei_m1 : ep i q = -1 := by
+          simp only [Set.Finite.mem_toFinset, Set.mem_compl_iff, Set.mem_setOf_eq, ei_supp] at hqE
+          grind
+        aesop
+      · exfalso
+        have ei_finprod := finprod_eq_prod _ (h1 i)
+        rw [← prodHS_fin_eq_prode_fin] at ei_finprod
+        rw [finprod_eq_prod _ (almost_all_one x (a i))] at ei_finprod
+        rw [Finset.prod_eq_prod_sdiff_singleton_mul] at ei_finprod
+        pick_goal 3
+        · use q
+          exact q.2
+        pick_goal 2
+        · exact hqS
+        rw [HS_m1] at ei_finprod
+        have prod_minus_q :
+            ∏ p ∈ HS_supp \ {q}, hilbertSym (x : ℚ_[p]) (a i) = ∏ p ∈ HS_supp \ {q}, ep i p := by
+          apply Finset.prod_congr (by rfl)
+          intro l hlq
+          simp only [Finset.mem_sdiff, Finset.mem_singleton] at hlq
+          exact (hx i).1 l hlq.2
+        sorry
+
+      -- rw [Finset.prod_eq_prod_sdiff_singleton_mul] at HS_finprod
+      -- pick_goal 3
+      -- · use q
+      --   exact q.2
+      -- pick_goal 2
+      -- · exact hqS
+      -- have ei_finprod := finprod_eq_prod _ (h1 i)
+      -- by_cases hqE : q ∈ ei_supp
+      -- · rw [Finset.prod_eq_prod_sdiff_singleton_mul] at ei_finprod
+      --   pick_goal 3
+      --   · use q
+      --     exact q.2
+      --   pick_goal 2
+      --   · exact hqE
+
+      --   sorry
+      -- · sorry
+    · sorry
+
+
+
+
+    -- let HS_supp := (almost_all_one x (a i)).toFinset
+    -- let ei_supp := (h1 i).toFinset
+    -- have eq_supp : HS_supp = ei_supp := by
+    --   ext l
+    --   simp only [Set.Finite.mem_toFinset, Set.mem_compl_iff, Set.mem_setOf_eq, not_iff_not, HS_supp,
+    --     ei_supp]
+    --   by_cases hl : l = q
+    --   · refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+    --     · sorry
+    --     · sorry
+    --   · rw [(hx i).1 l hl]
+
+
+    -- by_contra hdiff
+    -- by_cases HS_1 : hilbertSym (x : ℚ_[q]) (a i) = 1
+    -- · rw [HS_1] at hdiff
+    --   let HSsupp := (almost_all_one x (a i))
+    --   have qnotsupp : q ∉ HSsupp.toFinset := by
+    --     simp [HS_1]
+    --   rw [finprod_eq_prod _ HSsupp, finprod_eq_prod _ (h1 i)] at prodHS_fin_eq_prode_fin
+    --   have : ∏ p ∈ HSsupp.toFinset, ep i p = ∏ p ∈ (h1 i).toFinset, ep i p := by
+    --     have : ∀ l ∈ HSsupp.toFinset, hilbertSym (x : ℚ_[l]) (a i) = ep i l := by
+    --       intro l hl
+    --       have : l ≠ q := by aesop
+    --       exact (hx i).1 l this
+
+
+
+    -- have HSsupp := almost_all_one x (a i)
+    -- simp only [Filter.eventually_cofinite] at HSsupp
+    -- simp only [Filter.eventually_cofinite] at h1
+    -- rw [finprod_eq_prod _ HSsupp, finprod_eq_prod _ (h1 i)] at prodHS_fin_eq_prode_fin
+    -- by_cases hqS : q ∈ HSsupp.toFinset
+    -- · rw [Finset.prod_eq_prod_sdiff_singleton_mul] at prodHS_fin_eq_prode_fin
+    --   pick_goal 3
+    --   · use q
+    --     exact q.2
+    --   pick_goal 2
+    --   · exact hqS
+    --   simp only [Subtype.coe_eta] at prodHS_fin_eq_prode_fin
+    --   have eq : ∀ p ∈ HSsupp.toFinset \ {q}, hilbertSym (x : ℚ_[p]) (a i) = ep i p := by
+    --     simp only [Finset.mem_sdiff, Set.Finite.mem_toFinset, Set.mem_setOf_eq,
+    --       Finset.mem_singleton, and_imp]
+    --     intro p pnotinsupp pneq
+    --     rw [(hx i).1 p]
+    --     exact pneq
+    --   have : HSsupp.toFinset \ {q} = (h1 i).toFinset \ {q} := by
+    --     ext l
+    --     simp only [Finset.mem_sdiff, Set.Finite.mem_toFinset, Set.mem_setOf_eq,
+    --       Finset.mem_singleton, and_congr_left_iff]
+    --     intro hlneq
+    --     have := (hx i).1 l hlneq
+    --     rw [this]
+    --   simp_rw [this] at eq
+
+
+    --   sorry
+
+    -- · sorry
+
+    -- -- have suppeq : HSsupp.toFinset ∪ {q} = (h1 i).toFinset ∪ {q} := by
+    -- --   ext p
+    -- --   simp only [Finset.union_singleton, Finset.mem_insert, Set.Finite.mem_toFinset,
+    -- --     Set.mem_setOf_eq]
+    -- --   by_cases hpq' : p = q
+    -- --   · simp [hpq']
+    -- --   · simp [hpq', (hx i).1 p hpq']
+
+
+
+    -- --rw [Fintype.prod_eq_prod_compl_mul q] at prodHS_fin_eq_prode_fin
+
+  · simp [hx, hpq]
+
+
+
 
 
 --define S to be the (finite!) set of primes that divide either the numerator or the denominator
@@ -70,6 +224,8 @@ private lemma existence_disjoint
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
     (h1 : ∀ i : I, ∀ᶠ (p : Nat.Primes) in Filter.cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Nat.Primes), ep i p) * ereal i = 1)
+    (h3 : ((∀ (p : Nat.Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
+      ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
     (disjoint_ST : Disjoint (SS a) (TT h1 hep1))
     (two_notin_T : 2 ∉ (TT h1 hep1))
     (infty_notin_T : ∀ i : I, ereal i = 1) :
@@ -139,7 +295,7 @@ private lemma existence_disjoint
       simp [A_ne_zero, Nat.Prime.ne_zero q_prime]
     let x := x_unit.unit'
 
-
+    apply all_but_one_places_suffice _ ⟨q,q_prime⟩ hep1 hereal h1 h2 h3
     use x
 
     --maybe this is useful elsewhere, TODO move it.
@@ -158,11 +314,15 @@ private lemma existence_disjoint
 
 
     intro i
-    refine ⟨fun ⟨p,pprime⟩ ↦ ?_, ?_⟩
-    · by_cases hp : p = 2
-      · --We compute (x, a i)_2.
-        --Strategy: x is a square mod 8, so it's a square in ℚ_[2], hence (x,_)₂=1.
+    refine ⟨fun ⟨p,pprime⟩ pneq ↦ ?_, ?_⟩
+    · have pprime_fact : Fact (Nat.Prime p) := by
+        rw [fact_iff]
+        exact pprime
+      by_cases hp2 : p = 2
+      · --Strategy: x is a square mod 8, so it's a square in ℚ_[2], hence (x,_)₂=1.
         --Since 2 ∉ T, ep i 2 = 1 as well.
+
+        --We compute (x, a i)_2.
         have hilbertSym_2 : hilbertSym (x : ℚ_[2]) (a i) = 1 := by
           have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[2], xQ = b ^ 2 := by
             have ⟨b, hb⟩ : ∃ b : ℤ_[2], xQ = b ^ 2 := by
@@ -180,7 +340,7 @@ private lemma existence_disjoint
           rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one (by aesop)]
           rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
           exact_mod_cast isUnit_iff_ne_zero.mp x_unit
-        --We compute ep i 2
+        --We compute ep i 2.
         have e2 : ep i ⟨p,pprime⟩ = 1 := by
           specialize t_in_T_iff ⟨2, Nat.prime_two⟩
           rw [← not_iff_not] at t_in_T_iff
@@ -188,26 +348,30 @@ private lemma existence_disjoint
             rw [← t_in_T_iff]
             exact two_notin_T
           simp only [Int.reduceNeg, not_exists] at this
-          simp_rw [hp]
+          simp_rw [hp2]
           apply (or_iff_left (this i)).mp
           simp [hep1]
         rw [e2]
         rw [← hilbertSym_2]
         congr
-        · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp)) rfl
-        · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp)) rfl
-        · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp)) rfl
+        · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp2)) rfl
+        · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp2)) rfl
+        · exact heq_of_eqRec_eq (congrArg Fact (congrArg Nat.Prime hp2)) rfl
 
-
-      · by_cases hp : p ∈ S
-        · --strategy: prove both hs and e are 1, for hs use hensel+squares again
-          have p_prime_fact : Fact (Nat.Prime p) := by sorry
-          have hilbertSym_p : hilbertSym (x : ℚ_[p]) (a i) = 1 := by
+      · by_cases hpS : p ∈ S
+        · --Strategy: x is a square mod p, so it's a square in ℚ_[p], hence (x,_)ₚ=1.
+          --Since p ∉ T, ep i p = 1 as well.
+          have p_dvd_M : p ∣ M := by
+            simp only [M]
+            refine Nat.dvd_mul_left_of_dvd ?_ 8
+            rw [← Finset.prod_subtype S (by simp) (fun s ↦ s)]
+            exact Finset.dvd_prod_of_mem (fun i ↦ i) hpS
+          have hilbertSym_pS : hilbertSym (x : ℚ_[p]) (a i) = 1 := by
             have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[p], xQ = b ^ 2 := by
               have ⟨b, hb⟩ : ∃ b : ℤ_[p], xQ = b ^ 2 := by
                 apply Polynomial.squares_in_Zp (by aesop) _ A
                 have : (q : ZMod p) = A := by
-                  apply Nat.ModEq.of_dvd (by sorry : p ∣ M) at q_cong
+                  apply Nat.ModEq.of_dvd (p_dvd_M) at q_cong
                   rw [← ZMod.natCast_eq_natCast_iff] at q_cong
                   exact q_cong
                 simp [xQ, this]
@@ -217,26 +381,126 @@ private lemma existence_disjoint
               simp only [PadicInt.coe_natCast]
             simp only [IsUnit.val_unit', Rat.cast_natCast, x]
             rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one (by aesop)]
-            · --We compute ep i 2
+            rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
+            exact_mod_cast isUnit_iff_ne_zero.mp x_unit
+          --We compute ep i p
+          have ep_1 : ep i ⟨p, pprime⟩ = 1 := by
+            specialize t_in_T_iff ⟨p, pprime⟩
+            rw [← not_iff_not] at t_in_T_iff
+            have : ¬ ∃ j, ep j ⟨p, pprime⟩ = -1 := by
+              rw [← t_in_T_iff]
+              simp only
+              exact Disjoint.notMem_of_mem_left_finset disjoint_ST hpS
+            simp only [Int.reduceNeg, not_exists] at this
+            apply (or_iff_left (this i)).mp
+            simp [hep1]
+          rw [hilbertSym_pS, ep_1]
+        · --If p ∉ S, then all the a_i are p-adic units.
 
-              specialize t_in_T_iff ⟨p, sorry⟩
-              rw [← not_iff_not] at t_in_T_iff
-              have : ¬ ∃ j, ep j ⟨p, sorry⟩ = -1 := by
-                rw [← t_in_T_iff]
-                sorry
-                --exact p_notin_T
-              simp only [Int.reduceNeg, not_exists] at this
-              --simp_rw [hp]
-              apply (or_iff_left (this i)).mp
-              --simp [hep1]
-              sorry
-          --· rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
-            --  exact_mod_cast isUnit_iff_ne_zero.mp x_unit
-          rw [hilbertSym_p]
 
-          sorry
-        · by_cases hp : p ∈ T
-          · sorry
+          --can it be removed?
+          have ai_norm_1 : ∀ i : I, ‖((a i).val : ℚ_[p])‖ = 1 := by
+            intro i
+            simp only [Padic.eq_padicNorm, ne_eq, Units.ne_zero, not_false_eq_true,
+              padicNorm.eq_zpow_of_nonzero, zpow_neg, Rat.cast_inv, Rat.cast_zpow, Rat.cast_natCast,
+              inv_eq_one]
+            have : padicValRat p (a i).val = 0 := by
+              rw [padicValRat.multiplicity_sub_multiplicity (Nat.Prime.ne_one pprime) (by simp)]
+              simp only [SS, Finset.mem_biUnion, Finset.mem_univ, Nat.mem_primeFactors, pprime,
+                  ne_eq, mul_eq_zero, Int.natAbs_eq_zero, Rat.num_eq_zero, Units.ne_zero,
+                  Rat.den_ne_zero, or_self, not_false_eq_true, and_true, true_and, not_exists,
+                  S] at hpS
+              specialize hpS i
+              --can these be improved?
+              have val_num_eq_zero : multiplicity (p : ℤ) ((a i).val).num = 0 := by
+                rw [multiplicity_eq_zero]
+                intro ⟨c, hc⟩
+                rw [hc] at hpS
+                apply hpS
+                use c.natAbs * (a i).val.den
+                simp [Int.natAbs_mul]
+                ring
+              have val_den_eq_zero : multiplicity p ((a i).val).den = 0 := by
+                rw [multiplicity_eq_zero]
+                intro ⟨c, hc⟩
+                rw [hc] at hpS
+                apply hpS
+                use (a i).val.num.natAbs * c
+                ring
+              linarith
+            simp only [this, zpow_zero]
+         -- let ai_unit : I → ℤ_[p]ˣ := fun i ↦ PadicInt.mkUnits (ai_norm_1 i)
+          --Using the explicit formula, we prove that (x,a_i)ₚ = (legendreSym p a_i) ^ val_p(a_i)
+          by_cases hpT : p ∈ T
+          · --prob don't need
+            --let ai : ℤ_[p]ˣ := ai_unit i
+            --prob don't need
+            --have : (ai.val : ℚ_[p]) = (a i).val := by simp [ai, ai_unit]
+            have val_ai : ∀ i : I, padicValRat p (a i).val = 0 := by
+              intro i
+              rw [padicValRat.multiplicity_sub_multiplicity (Nat.Prime.ne_one pprime) (by simp)]
+              simp only [SS, Finset.mem_biUnion, Finset.mem_univ, Nat.mem_primeFactors, pprime,
+                  ne_eq, mul_eq_zero, Int.natAbs_eq_zero, Rat.num_eq_zero, Units.ne_zero,
+                  Rat.den_ne_zero, or_self, not_false_eq_true, and_true, true_and, not_exists,
+                  S] at hpS
+              specialize hpS i
+              --can these be improved?
+              have val_num_eq_zero : multiplicity (p : ℤ) ((a i).val).num = 0 := by
+                rw [multiplicity_eq_zero]
+                intro ⟨c, hc⟩
+                rw [hc] at hpS
+                apply hpS
+                use c.natAbs * (a i).val.den
+                simp [Int.natAbs_mul]
+                ring
+              have val_den_eq_zero : multiplicity p ((a i).val).den = 0 := by
+                rw [multiplicity_eq_zero]
+                intro ⟨c, hc⟩
+                rw [hc] at hpS
+                apply hpS
+                use (a i).val.num.natAbs * c
+                ring
+              linarith
+            have val_x : padicValRat p x.val = 1 := by sorry
+            obtain ⟨xp, hxp⟩ := h3.1 ⟨p, pprime⟩
+            have val_xp : Odd xp.valuation := by
+              have ⟨j, hej⟩ := (t_in_T_iff ⟨p,pprime⟩).mp hpT
+              specialize hxp j
+              rw [hej] at hxp
+              qify at hxp
+              rw [padic_odd_eq hp2 (fun xp0 ↦ by (simp only [hilbertSym, xp0, Rat.cast_eq_zero,
+              Units.ne_zero, or_false, ↓reduceIte] at hxp; grind)) (by simp)] at hxp
+              simp only [Padic.valuation_ratCast, val_ai, mul_zero, mul_ite, PadicInt.val_mkUnits,
+                mul_one, ite_self, Int.negOnePow_zero, Units.val_one, Int.cast_one, zpow_zero,
+                one_mul, zpow_eq_neg_one_iff₀] at hxp
+              exact hxp.2
+            rw [← hxp i]
+            qify
+            rw [padic_odd_eq hp2 (by simp) (by simp), padic_odd_eq hp2
+              (fun xp0 ↦ by (simp only [hilbertSym, xp0, Rat.cast_eq_zero,
+              Units.ne_zero, or_false, ↓reduceIte] at hxp; specialize hxp i; grind)) (by simp)]
+            simp only [Padic.valuation_ratCast, val_x, val_ai, mul_zero, mul_ite,
+              PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, Units.val_one,
+              Int.cast_one, zpow_zero, zpow_one, one_mul]
+            --I couldn't come up with a nicer proof of this, but maybe there is
+            have one_or_neg_one_to_odd_eq_self :
+                ∀ b : ℚ, (b = 1 ∨ b = -1) → b = b ^ xp.valuation := by
+              intro b hb
+              cases hb
+              · aesop
+              · expose_names
+                rw [h]
+                symm
+                apply Odd.neg_one_zpow
+                exact val_xp
+            have : IsUnit (Padic.unitPart (Units.mk0 ((a i).val : ℚ_[p]) (by simp))).1 := by
+              simp
+            have := PadicInt.legendreSym.eq_one_or_neg_one this
+            apply one_or_neg_one_to_odd_eq_self
+            exact_mod_cast this
+
+
+
           · sorry
     · sorry
 
@@ -261,7 +525,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
   let S := SS a
   let T := TT h1 hep1
   by_cases disjoint_ST : Disjoint S T ∧ 2 ∉ T ∧ ∀ i : I, ereal i = 1
-  · exact existence_disjoint a hep1 hereal h1 h2 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
+  · exact existence_disjoint a hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
   · sorry
 
 
