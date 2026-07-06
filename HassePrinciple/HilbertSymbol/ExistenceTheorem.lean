@@ -24,12 +24,14 @@ variable {I : Type*} {a : I → ℚˣ} {ep : I → Primes → ℤ} {ereal : I �
 private lemma necessary_cond (x : ℚˣ)
     (h : ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) :
-    (∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1) ∧
+    (∀ i : I, Function.HasFiniteMulSupport (ep i)) ∧
     (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
     (∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p) ∧
-    ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i :=
-  ⟨fun i ↦ by simp [← h i,  almost_all_one x (a i)],
-    fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩, ⟨x, by simp [h]⟩⟩
+    ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
+  refine ⟨fun i ↦ ?_, fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩, ⟨x, by simp [h]⟩⟩
+  have := almost_all_one x (a i)
+  simp_rw [h] at this
+  exact this
 
 /-- From ep i p = 1 or -1, we deduce that ep i p = -1 iff not ep i p = 1. -/
 private lemma ep_eq_neg_one_iff_not_one
@@ -41,7 +43,7 @@ private lemma ep_eq_neg_one_iff_not_one
 hilbertSym x (a i) = ep i p for all but one p, we are done. -/
 private lemma all_but_one_places_suffice (q : Primes)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
-    (h1 : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
+    (h1 : ∀ i : I, Function.HasFiniteMulSupport (ep i))
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
     (h4 : ∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, p ≠ q → hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) :
@@ -58,15 +60,11 @@ private lemma all_but_one_places_suffice (q : Primes)
     have hprod : ∏ᶠ (p : Primes), hilbertSym (x : ℚ_[p]) (a i) = ∏ᶠ (p : Primes), ep i p := by
       rw [← mul_left_inj' (by grind : ereal i ≠ 0)]
       nth_rw 1 [← (hx i).2, prod_eq_one x (a i), h2 i]
-    rw [← mul_finprod_cond_ne q, ← mul_finprod_cond_ne q (f := ep i), hprod',
+    rw [← mul_finprod_cond_ne q (almost_all_one x (a i)), ← mul_finprod_cond_ne q (f := ep i) (h1 i), hprod',
       mul_eq_mul_right_iff, ← hpq] at hprod
-    · apply hprod.resolve_right
-      rw [finprod_cond_ne _ _ (eventually_cofinite.mp (h1 i)), ← ne_eq, Finset.prod_ne_zero_iff]
-      grind
-    -- It might be worth it to restate almost_all_one and h1 using `Function.HasFiniteMulSupport`.
-    -- (These should be inlined)
-    · exact eventually_cofinite.mp (h1 i)
-    · exact eventually_cofinite.mp (almost_all_one x (a i))
+    apply hprod.resolve_right
+    rw [finprod_cond_ne _ _ (h1 i), ← ne_eq, Finset.prod_ne_zero_iff]
+    grind
   · exact (hx i).1 p hpq
 
 variable (a) in
@@ -84,30 +82,29 @@ variable (ep) in
 private def f := fun (t' : T' ep) ↦ (t' : ℕ)
 
 private lemma Tfin [Finite I]
-    (h₁ : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
+    (h₁ : ∀ i : I, Function.HasFiniteMulSupport (ep i))
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) :
     (Set.range (f ep)).Finite := by
   refine (Set.finite_range_iff fun t1 t2 ht ↦ ?_).mpr (Set.finite_iUnion fun i ↦ ?_)
   · simp only [f, PNat.coe_inj] at ht
     ext
     exact_mod_cast ht
-  · specialize h₁ i
-    have (p : Primes) : ¬ep i p = 1 ↔ ep i p = -1 := by
-      specialize hep1 i p
-      lia
-    simp only [Filter.eventually_cofinite, this, Int.reduceNeg] at h₁
-    exact h₁
+  · simp only [Function.HasFiniteMulSupport, Function.mulSupport,
+      ← ep_eq_neg_one_iff_not_one hep1] at h₁
+    exact h₁ i
+
+
 
 private noncomputable def TT [Fintype I]
-    (h₁ : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
+    (h₁ : ∀ i : I, Function.HasFiniteMulSupport (ep i))
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) : Finset ℕ :=
       Set.Finite.toFinset (Tfin h₁ hep1)
 
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
 private lemma existence_disjoint
     [Fintype I] (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
-    (_ : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
-    (h1 : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
+    (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
+    (h1 : ∀ i : I, Function.HasFiniteMulSupport (ep i))
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
     (h3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
@@ -402,7 +399,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1) :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) ↔
-      (∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1) ∧
+      (∀ i : I, Function.HasFiniteMulSupport (ep i)) ∧
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
@@ -413,16 +410,13 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
   · exact existence_disjoint hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
   · sorry
 
-
-
-
 theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Primes → ℤ} {er er' : ℤ}
     (hep : ∀ p : Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Primes, ep' p = 1 ∨ ep' p = -1)
     (her : er  = 1 ∨ er = -1) (her' : er'  = 1 ∨ er' = -1) :
     (∃ x : ℚˣ, (∀ p : Primes, hilbertSym (x : ℚ_[p]) a = ep p ∧
       hilbertSym (x : ℚ_[p]) b = ep' p) ∧ hilbertSym (x : ℝ) a = er ∧ hilbertSym (x : ℝ) b = er') ↔
-      ((∀ᶠ (p : Primes) in Filter.cofinite, ep p = 1) ∧
-      (∀ᶠ (p : Primes) in Filter.cofinite, ep' p = 1)) ∧
+      ((∀ᶠ (p : Primes) in cofinite, ep p = 1) ∧
+      (∀ᶠ (p : Primes) in cofinite, ep' p = 1)) ∧
      (((∏ᶠ (p : Primes), ep p) * er = 1) ∧ ((∏ᶠ (p : Primes), ep' p) * er' = 1)) ∧
       (∀ (p : Primes), ∃ xp : ℚ_[p], hilbertSym xp a = ep p ∧ hilbertSym xp b = ep' p) ∧
       ∃ xr : ℝ, hilbertSym xr a = er ∧ hilbertSym xr b = er':= by

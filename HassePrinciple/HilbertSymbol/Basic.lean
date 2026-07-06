@@ -329,7 +329,7 @@ scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr
 
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
-    ∀ᶠ (p : Nat.Primes) in Filter.cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
+    Function.HasFiniteMulSupport (fun p : Nat.Primes ↦ hilbertSym (a : ℚ_[p]) (b : ℚ_[p])) := by
   sorry
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
