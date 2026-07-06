@@ -18,10 +18,10 @@ namespace hilbertSym
 
 open Filter Nat
 
-variable {I : Type*} (a : I → ℚˣ) {ereal : I → ℤ}
+variable {I : Type*} {a : I → ℚˣ} {ep : I → Primes → ℤ} {ereal : I → ℤ}
 
 /-- The necessary conditions in the Existence Theorem are indeed necessary. -/
-private lemma necessary_cond (x : ℚˣ) (ep : I → Primes → ℤ)
+private lemma necessary_cond (x : ℚˣ)
     (h : ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) :
     (∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1) ∧
@@ -32,14 +32,14 @@ private lemma necessary_cond (x : ℚˣ) (ep : I → Primes → ℤ)
     fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩, ⟨x, by simp [h]⟩⟩
 
 /-- From ep i p = 1 or -1, we deduce that ep i p = -1 iff not ep i p = 1. -/
-private lemma ep_eq_neg_one_iff_not_one (ep : I → Primes → ℤ)
+private lemma ep_eq_neg_one_iff_not_one
     (hep : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) {i : I} {p : Primes} :
     ep i p = -1 ↔ ¬ep i p = 1 :=
   ⟨fun h ↦ by simp [h], fun h ↦ (hep i p).resolve_left h⟩
 
 /-- Using the product formula for the Hilbert symbol and for ep i, if we show that
 hilbertSym x (a i) = ep i p for all but one p, we are done. -/
-private lemma all_but_one_places_suffice (ep : I → Primes → ℤ) (q : Primes)
+private lemma all_but_one_places_suffice (q : Primes)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
     (h1 : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
@@ -69,18 +69,21 @@ private lemma all_but_one_places_suffice (ep : I → Primes → ℤ) (q : Primes
     · exact eventually_cofinite.mp (almost_all_one x (a i))
   · exact (hx i).1 p hpq
 
+variable (a) in
 /-- Define S to be the (finite!) set of primes that divide either the numerator or the denominator
 of some (a i). N.B. In Serre, S contains also 2 and ∞. -/
 private def SS [Fintype I] :=
   Finset.univ.biUnion (fun (i : I) ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors)
 
+variable (ep) in
 /-- Define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1. -/
-private def T' (ep : I → Primes → ℤ) :=
+private def T' :=
     ⋃ i : I, {p : Primes | ep i p = -1}
 
-private def f (ep : I → Primes → ℤ) := fun (t' : T' ep) ↦ (t' : ℕ)
+variable (ep) in
+private def f := fun (t' : T' ep) ↦ (t' : ℕ)
 
-private lemma Tfin [Finite I] (ep : I → Primes → ℤ)
+private lemma Tfin [Finite I]
     (h₁ : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) :
     (Set.range (f ep)).Finite := by
@@ -95,27 +98,27 @@ private lemma Tfin [Finite I] (ep : I → Primes → ℤ)
     simp only [Filter.eventually_cofinite, this, Int.reduceNeg] at h₁
     exact h₁
 
-private noncomputable def TT [Fintype I] (ep : I → Primes → ℤ)
+private noncomputable def TT [Fintype I]
     (h₁ : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) : Finset ℕ :=
-      Set.Finite.toFinset (Tfin ep h₁ hep1)
+      Set.Finite.toFinset (Tfin h₁ hep1)
 
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
 private lemma existence_disjoint
-    [Finite I] [Fintype I](ep : I → Primes → ℤ) (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    [Finite I] [Fintype I] (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
     (h1 : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
     (h3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
-    (disjoint_ST : Disjoint (SS a) (TT ep h1 hep1))
-    (two_notin_T : 2 ∉ (TT ep h1 hep1))
+    (disjoint_ST : Disjoint (SS a) (TT h1 hep1))
+    (two_notin_T : 2 ∉ (TT h1 hep1))
     (infty_notin_T : ∀ i : I, ereal i = 1) :
       (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) := by
   --Properties and definitions regardsing S and T.
   let S := SS a
-  let T := TT ep h1 hep1
+  let T := TT h1 hep1
   --S and T consist of prime numbers.
   have primes_S : ∀ s : S, Prime s := by
     simp [S, SS]
@@ -183,7 +186,7 @@ private lemma existence_disjoint
     simp [A_ne_zero, Nat.Prime.ne_zero q_prime]
   let x := x_unit.unit'
   --We apply lemma all_but_one_places_suffice to exclude dealing with q.
-  apply all_but_one_places_suffice a ep ⟨q, q_prime⟩ hep1 h1 h2
+  apply all_but_one_places_suffice ⟨q, q_prime⟩ hep1 h1 h2
   use x
   --In order to prove that hilbertSym x (a i) and ep i p agree everywhere, we consider separately
   --the cases p = 2, p ∈ S, p ∈ p ∉ S ∪ T, and the real place.
@@ -405,9 +408,9 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
   have := Fintype.ofFinite I
   refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1, h2, h3⟩ ↦ ?_⟩
-  by_cases disjoint_ST : Disjoint (SS a) (TT ep h1 hep1) ∧ 2 ∉ (TT ep h1 hep1) ∧
+  by_cases disjoint_ST : Disjoint (SS a) (TT h1 hep1) ∧ 2 ∉ (TT h1 hep1) ∧
       ∀ i : I, ereal i = 1
-  · exact existence_disjoint a ep hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
+  · exact existence_disjoint hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
   · sorry
 
 
