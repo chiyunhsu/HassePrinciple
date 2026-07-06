@@ -105,8 +105,8 @@ private noncomputable def TT [Fintype I]
 
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
 private lemma existence_disjoint
-    [Finite I] [Fintype I] (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
-    (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
+    [Fintype I] (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (_ : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
     (h1 : ∀ i : I, ∀ᶠ (p : Primes) in Filter.cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
     (h3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
