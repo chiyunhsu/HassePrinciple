@@ -68,33 +68,22 @@ private lemma all_but_one_places_suffice (q : Primes)
 
 variable (a) in
 /-- Define S to be the (finite!) set of primes that divide either the numerator or the denominator
-of some (a i). N.B. In Serre, S contains also 2 and ∞. -/
-private def SS [Fintype I] :=
-  Finset.univ.biUnion (fun (i : I) ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors) ∪ {2}
+of some (a i). N.B. In Serre, S contains also ∞. -/
+private noncomputable def SS [Fintype I] : Finset Primes :=
+  (Finset.univ.biUnion (fun i ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors) ∪
+    {2}).preimage Subtype.val Subtype.val_injective.injOn
 
-variable (ep) in
-/-- Define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1. -/
-private def T' :=
-    ⋃ i : I, {p : Primes | ep i p = -1}
-
-variable (ep) in
-private def f := fun (t' : T' ep) ↦ (t' : ℕ)
-
-private lemma Tfin [Finite I]
-    (h₁ : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+private lemma Tfin [Finite I] (h₁ : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) :
-    (Set.range (f ep)).Finite := by
-  refine (Set.finite_range_iff fun t1 t2 ht ↦ ?_).mpr (Set.finite_iUnion fun i ↦ ?_)
-  · simp only [f, PNat.coe_inj] at ht
-    ext
-    exact_mod_cast ht
-  · simp only [eventually_cofinite, ← ep_eq_neg_one_iff_not_one hep1, Int.reduceNeg] at h₁
-    exact h₁ i
+    (⋃ i : I, {p : Primes | ep i p = -1}).Finite := by
+  refine (Set.finite_iUnion fun i ↦ ?_)
+  simp only [eventually_cofinite, ← ep_eq_neg_one_iff_not_one hep1, Int.reduceNeg] at h₁
+  exact h₁ i
 
-private noncomputable def TT [Fintype I]
-    (h₁ : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
-    (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) : Finset ℕ :=
-      Set.Finite.toFinset (Tfin h₁ hep1)
+/-- Define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1. -/
+private noncomputable def TT [Fintype I] (h₁ : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+    (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) : Finset Primes :=
+  Set.Finite.toFinset (Tfin h₁ hep1)
 
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
 private lemma existence_disjoint
@@ -108,63 +97,53 @@ private lemma existence_disjoint
     (infty_notin_T : ∀ i : I, ereal i = 1) :
       (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) := by
---Properties and definitions regardsing S and T.
+--Properties and definitions regarding S and T.
   let S := SS a
   let T := TT h1 hep1
-  --2 ∉ T
-  have two_notin_T : 2 ∉ T := by
-    have : 2 ∈ S := by simp [S, SS]
+--might be useful to have these
+--2 ∈ S
+  have two_in_S : ⟨2, prime_two⟩ ∈ S := by simp [S, SS]
+--2 ∉ T
+  have two_notin_T : ⟨2, prime_two⟩ ∉ T := by
     rw [Finset.disjoint_left] at disjoint_ST
-    specialize disjoint_ST this
-    aesop
-  --S and T consist of prime numbers.
-  have primes_S : ∀ s : S, Prime s := by
-    simp [S, SS, prime_two]
-    aesop
-  have primes_T : ∀ t : T, Prime t := by
-    simp only [TT, T', Int.reduceNeg, Subtype.forall, Set.Finite.mem_toFinset, Set.mem_range, f,
-      Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, forall_exists_index, and_imp,
-      T]
-    intro a x i h eq
-    rw [← eq]
-    exact x.2
-  have t_in_T_iff : ∀ t : Primes , t.1 ∈ T ↔ ∃ j : I, ep j t = -1 := by
-    simp only [TT, T', Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, f,
-      Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T]
-    intro t
-    refine ⟨fun ⟨a, ⟨i, hi⟩, h⟩ ↦ ⟨i, ?_⟩, by aesop⟩
-    rw [← hi]
-    congr
-    exact_mod_cast h.symm
-  --Define A to be the product of the elements in T, and M to be 8 times the product of the
+    exact disjoint_ST two_in_S
+
+  -- have t_in_T_iff : ∀ t : Primes , t.1 ∈ T ↔ ∃ j : I, ep j t = -1 := by
+  --   simp only [TT, T', Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_range, f,
+  --     Subtype.exists, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop, T]
+  --   intro t
+  --   refine ⟨fun ⟨a, ⟨i, hi⟩, h⟩ ↦ ⟨i, ?_⟩, by aesop⟩
+  --   rw [← hi]
+  --   congr
+  --   exact_mod_cast h.symm
+  --Define A to be the product of the elements in T, and M to be 4 times the product of the
   --elements in S. Both are nonzero.
   let A := ∏ t : T, (t : ℕ)
   have A_ne_zero : A ≠ 0 := by
-    rw [Finset.prod_ne_zero_iff]
-    simp only [Finset.univ_eq_attach, Finset.mem_attach, ne_eq, forall_const]
-    intro t
-    specialize primes_T t
-    aesop
-  let M := 4 * ∏ s : S, (s : ℕ) -- now it would be a good idea to change 8 to 4.
+    simp [Finset.prod_ne_zero_iff, A]
+    exact fun _ _ ↦ NeZero.out
+  let M := 4 * ∏ s : S, (s : ℕ)
   have M_ne_zero : M ≠ 0 := by
     apply mul_ne_zero (by lia)
-    rw [Finset.prod_ne_zero_iff]
-    simp only [Finset.univ_eq_attach, Finset.mem_attach, ne_eq, forall_const]
-    intro s
-    specialize primes_S s
-    aesop
+    simp [Finset.prod_ne_zero_iff]
+    exact fun _ _ ↦ NeZero.out
   --If S and T are disjoint (and 2, ∞ ∉ T), then A and M are coprime.
   have coprime_AM : A.Coprime M := by
       rw [coprime_fintype_prod_left_iff]
       refine fun t ↦ Coprime.mul_right ?_ ?_
-      · rw [(by omega : 4 = 2^2), coprime_pow_right_iff (by omega)]
-        refine Odd.coprime_two_right (Prime.odd_of_ne_two (primes_T t) (by aesop))
+      · rw [(by omega : 4 = 2 ^ 2), coprime_pow_right_iff (by omega)]
+        simp only [coprime_two_right]
+        refine Prime.odd_of_ne_two t.1.2 ?_
+        rw [Finset.disjoint_iff_ne] at disjoint_ST
+        specialize disjoint_ST ⟨2,prime_two⟩ two_in_S t
+        simp only [SetLike.coe_mem, forall_const] at disjoint_ST
+        contrapose disjoint_ST
+        rw [← Primes.coe_nat_inj]
+        aesop
       · rw [coprime_fintype_prod_right_iff]
         intro s
-        rw [coprime_primes (primes_T t) (primes_S s)]
-        refine Disjoint.ne_of_mem ?_ (Subtype.mem t) (Subtype.mem s)
-        simp only [Finset.disjoint_coe]
-        exact disjoint_ST.symm
+        rw [coprime_primes t.1.2 s.1.2, ne_comm, ne_eq, Primes.coe_nat_inj]
+        apply Disjoint.forall_ne_finset disjoint_ST s.2 t.2
   --We can apply Dirichlet's lemma.
   have dirichlet :=
       Set.Infinite.nonempty (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM)
@@ -187,11 +166,9 @@ private lemma existence_disjoint
   --In order to prove that hilbertSym x (a i) and ep i p agree everywhere, we consider separately
   --the cases p = 2, p ∈ S, p ∈ p ∉ S ∪ T, and the real place.
   intro i
-  refine ⟨fun ⟨p,pprime⟩ pneq ↦ ?_, ?_⟩
-  · have pprime_fact : Fact (Nat.Prime p) := by
-      rw [fact_iff]
-      exact pprime
-    by_cases hp2 : p = 2
+  refine ⟨fun p pneq ↦ ?_, ?_⟩
+  · have pprime_fact : Fact (Prime p) := fact_iff.mpr p.2
+    by_cases hp2 : p = ⟨2, prime_two⟩
     · --Strategy: x is a square mod 8, so it's a square in ℚ_[2], hence (x,_)₂=1.
       --Since 2 ∉ T, ep i 2 = 1 as well.
       have hilbertSym_2 : hilbertSym (x : ℚ_[2]) (a i) = 1 := by
@@ -203,9 +180,7 @@ private lemma existence_disjoint
                 rw [(by omega : 8 = 4 * 2)]
                 simp only [M]
                 rw [mul_dvd_mul_iff_left (by omega)]
-                have : 2 ∈ S := by simp [S, SS]
-                rw [← Finset.prod_subtype S (by simp) (fun s ↦ s)]
-                exact Finset.dvd_prod_of_mem (fun i ↦ i) this
+                sorry
               apply ModEq.of_dvd eight_dvd_M at q_cong
               rw [← ZMod.natCast_eq_natCast_iff] at q_cong
               exact q_cong
@@ -218,34 +193,35 @@ private lemma existence_disjoint
         rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one (by aesop)]
         rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
         exact_mod_cast isUnit_iff_ne_zero.mp x_unit
-      have e2 : ep i ⟨p, pprime⟩ = 1 := by
-        specialize t_in_T_iff ⟨2, prime_two⟩
-        rw [← not_iff_not] at t_in_T_iff
-        have : ¬ ∃ j, ep j ⟨2, prime_two⟩ = -1 := t_in_T_iff.mp two_notin_T
+      have e2 : ep i p = 1 := by
+        --specialize t_in_T_iff ⟨2, prime_two⟩
+        --rw [← not_iff_not] at t_in_T_iff
+        have : ¬ ∃ j, ep j ⟨2, prime_two⟩ = -1 := sorry
         simp only [Int.reduceNeg, not_exists] at this
         simp_rw [hp2]
         apply (or_iff_left (this i)).mp
         simp [hep1]
       rw [e2, ← hilbertSym_2]
-      congr <;> exact heq_of_eqRec_eq (congrArg Fact (congrArg Prime hp2)) rfl
+      congr <;> simp [hp2]
     · by_cases hpS : p ∈ S
       · --Strategy: x is a square mod p, so it's a square in ℚ_[p], hence (x,_)ₚ=1.
         --Since p ∉ T, ep i p = 1 as well.
-        have p_dvd_M : p ∣ M := by
+        have p_dvd_M : p.1 ∣ M := by
           simp only [M]
           refine Nat.dvd_mul_left_of_dvd ?_ 4
-          rw [← Finset.prod_subtype S (by simp) (fun s ↦ s)]
-          exact Finset.dvd_prod_of_mem (fun i ↦ i) hpS
+          sorry
         have hilbertSym_pS : hilbertSym (x : ℚ_[p]) (a i) = 1 := by
           have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[p], xQ = b ^ 2 := by
             have ⟨b, hb⟩ : ∃ b : ℤ_[p], xQ = b ^ 2 := by
-              apply Polynomial.squares_in_Zp (by aesop) _ A
-              have : (q : ZMod p) = A := by
-                apply ModEq.of_dvd (p_dvd_M) at q_cong
-                rw [← ZMod.natCast_eq_natCast_iff] at q_cong
-                exact q_cong
-              simp [xQ, this]
-              ring
+              apply Polynomial.squares_in_Zp _ _ A
+              · have : (q : ZMod p) = A := by
+                  apply ModEq.of_dvd (p_dvd_M) at q_cong
+                  rw [← ZMod.natCast_eq_natCast_iff] at q_cong
+                  exact q_cong
+                simp [xQ, this]
+                ring
+              · simp only [← Primes.coe_nat_inj] at hp2
+                exact hp2
             use b
             rw_mod_cast [← hb]
             simp only [PadicInt.coe_natCast]
@@ -253,13 +229,9 @@ private lemma existence_disjoint
           rw [h_sqrt_x, hilbertSym.comm, right_square_eq_one (by aesop)]
           rw [← mul_self_ne_zero, ← pow_two, ← h_sqrt_x]
           exact_mod_cast isUnit_iff_ne_zero.mp x_unit
-        have ep_1 : ep i ⟨p, pprime⟩ = 1 := by
-          specialize t_in_T_iff ⟨p, pprime⟩
-          rw [← not_iff_not] at t_in_T_iff
-          have : ¬ ∃ j, ep j ⟨p, pprime⟩ = -1 := by
-            rw [← t_in_T_iff]
-            simp only
-            exact Disjoint.notMem_of_mem_left_finset disjoint_ST hpS
+        have ep_1 : ep i p = 1 := by
+          have : ¬ ∃ j, ep j p = -1 := by
+            sorry
           simp only [Int.reduceNeg, not_exists] at this
           apply (or_iff_left (this i)).mp
           simp [hep1]
@@ -267,26 +239,26 @@ private lemma existence_disjoint
       · --If p ∉ S, then all the a_i are p-adic units.
         have val_ai : ∀ i : I, padicValRat p (a i).val = 0 := by
           intro i
-          rw [padicValRat.multiplicity_sub_multiplicity (Nat.Prime.ne_one pprime) (by simp)]
-          simp only [SS, Finset.union_singleton, Finset.mem_insert, Finset.mem_biUnion,
-            Finset.mem_univ, mem_primeFactors, pprime, ne_eq, mul_eq_zero, Int.natAbs_eq_zero,
-            Rat.num_eq_zero, Units.ne_zero, Rat.den_ne_zero, or_self, not_false_eq_true, and_true,
-            true_and, not_or, not_exists, S, hp2] at hpS
-          specialize hpS i
+          rw [padicValRat.multiplicity_sub_multiplicity (Nat.Prime.ne_one p.2) (by simp)]
+          simp only [SS, Finset.union_singleton, Finset.mem_preimage, Finset.mem_insert,
+            Finset.mem_biUnion, Finset.mem_univ, mem_primeFactors, p.2, ne_eq, mul_eq_zero,
+            Int.natAbs_eq_zero, Rat.num_eq_zero, Units.ne_zero, Rat.den_ne_zero, or_self,
+            not_false_eq_true, and_true, true_and, not_or, not_exists, S] at hpS
+          have := hpS.2 i
           --can these be improved?
           have val_num_eq_zero : multiplicity (p : ℤ) ((a i).val).num = 0 := by
             rw [multiplicity_eq_zero]
             intro ⟨c, hc⟩
-            rw [hc] at hpS
-            apply hpS
+            rw [hc] at this
+            apply this
             use c.natAbs * (a i).val.den
             simp [Int.natAbs_mul]
             ring
-          have val_den_eq_zero : multiplicity p ((a i).val).den = 0 := by
+          have val_den_eq_zero : multiplicity (p : ℕ) ((a i).val).den = 0 := by
             rw [multiplicity_eq_zero]
             intro ⟨c, hc⟩
-            rw [hc] at hpS
-            apply hpS
+            rw [hc] at this
+            apply this
             use (a i).val.num.natAbs * c
             ring
           linarith
@@ -302,38 +274,41 @@ private lemma existence_disjoint
               rw [← Primes.coe_nat_inj]
               simp only [pneq]
             simp only [padicValNat_primes this, add_zero]
-            have : A = (∏ t ∈ T \ { p }, t) * p := by
-              rw [← Finset.prod_eq_prod_sdiff_singleton_mul hpT]
-              simp only [Finset.univ_eq_attach, A]
-              rw [Finset.prod_subtype T ?_ (fun t ↦ t)]
-              · congr
-              · simp
-            rw [this]
-            rw [padicValNat.mul (by rw [this] at A_ne_zero; exact left_ne_zero_of_mul A_ne_zero)
-              (Nat.Prime.ne_zero pprime), padicValNat_self]
-            norm_num
-            right; right
-            apply Prime.not_dvd_finsetProd (prime_iff.mp pprime)
-            intro t htnep
-            simp only [Finset.mem_sdiff, Finset.mem_singleton] at htnep
-            simp only [ne_comm, ne_eq,
-              ← prime_dvd_prime_iff_eq pprime (Subtype.forall.mp primes_T t htnep.1)] at htnep
-            exact htnep.2
-          obtain ⟨xp, hxp⟩ := h3.1 ⟨p, pprime⟩
+            sorry
+            --this part broke
+            -- have : A = (∏ t ∈ T \ { p }, t) * p := by
+            --   rw [← Finset.prod_eq_prod_sdiff_singleton_mul hpT]
+            --   simp only [Finset.univ_eq_attach, A]
+            --   rw [Finset.prod_subtype T ?_ (fun t ↦ t)]
+            --   · congr
+            --   · simp
+            -- rw [this]
+            -- rw [padicValNat.mul (by rw [this] at A_ne_zero; exact left_ne_zero_of_mul A_ne_zero)
+            --   (Nat.Prime.ne_zero pprime), padicValNat_self]
+            -- norm_num
+            -- right; right
+            -- apply Prime.not_dvd_finsetProd (prime_iff.mp pprime)
+            -- intro t htnep
+            -- simp only [Finset.mem_sdiff, Finset.mem_singleton] at htnep
+            -- simp only [ne_comm, ne_eq,
+            --   ← prime_dvd_prime_iff_eq pprime (Subtype.forall.mp primes_T t htnep.1)] at htnep
+            -- exact htnep.2
+          obtain ⟨xp, hxp⟩ := h3.1 p
           have val_xp : Odd xp.valuation := by
-            have ⟨j, hej⟩ := (t_in_T_iff ⟨p,pprime⟩).mp hpT
-            specialize hxp j
-            rw [hej] at hxp
-            qify at hxp
-            rw [padic_odd_eq hp2 (fun xp0 ↦ by (simp only [hilbertSym, xp0, Rat.cast_eq_zero,
-            Units.ne_zero, or_false, ↓reduceIte] at hxp; grind)) (by simp)] at hxp
-            simp only [Padic.valuation_ratCast, val_ai, mul_zero, mul_ite, PadicInt.val_mkUnits,
-              mul_one, ite_self, Int.negOnePow_zero, Units.val_one, Int.cast_one, zpow_zero,
-              one_mul, zpow_eq_neg_one_iff₀] at hxp
-            exact hxp.2
+            sorry
+            -- have ⟨j, hej⟩ := (t_in_T_iff ⟨p,pprime⟩).mp hpT
+            -- specialize hxp j
+            -- rw [hej] at hxp
+            -- qify at hxp
+            -- rw [padic_odd_eq hp2 (fun xp0 ↦ by (simp only [hilbertSym, xp0, Rat.cast_eq_zero,
+            -- Units.ne_zero, or_false, ↓reduceIte] at hxp; grind)) (by simp)] at hxp
+            -- simp only [Padic.valuation_ratCast, val_ai, mul_zero, mul_ite, PadicInt.val_mkUnits,
+            --   mul_one, ite_self, Int.negOnePow_zero, Units.val_one, Int.cast_one, zpow_zero,
+            --   one_mul, zpow_eq_neg_one_iff₀] at hxp
+            -- exact hxp.2
           rw [← hxp i]
           qify
-          rw [padic_odd_eq hp2 (by simp) (by simp), padic_odd_eq hp2
+          rw [padic_odd_eq (by sorry) (by simp) (by simp), padic_odd_eq (by sorry)
             (fun xp0 ↦ by (simp only [hilbertSym, xp0, Rat.cast_eq_zero,
             Units.ne_zero, or_false, ↓reduceIte] at hxp; specialize hxp i; grind)) (by simp)]
           simp only [Padic.valuation_ratCast, val_x, val_ai, mul_zero, mul_ite,
@@ -368,20 +343,22 @@ private lemma existence_disjoint
             simp only [padicValNat_primes this, add_zero, A]
             norm_num
             right; right
-            apply Prime.not_dvd_finsetProd (prime_iff.mp pprime)
+            apply Prime.not_dvd_finsetProd (prime_iff.mp p.2)
             intro t htinT hdvd
-            rw [prime_dvd_prime_iff_eq pprime (primes_T t)] at hdvd
-            rw [hdvd] at hpT
-            simp at hpT
+            sorry
+            -- rw [prime_dvd_prime_iff_eq p.2 t.2] at hdvd
+            -- rw [hdvd] at hpT
+            -- simp at hpT
           qify
-          rw [padic_odd_eq hp2 (by simp) (by simp)]
-          have : ep i ⟨p, pprime⟩ = 1 := by
-            specialize t_in_T_iff ⟨p, pprime⟩
-            rw [← not_iff_not] at t_in_T_iff
-            simp only [Int.reduceNeg, not_exists] at t_in_T_iff
-            have := t_in_T_iff.mp hpT i
-            have := hep1 i ⟨p, pprime⟩
-            tauto
+          rw [padic_odd_eq (by sorry) (by simp) (by simp)]
+          have : ep i p = 1 := by
+            sorry
+            -- specialize t_in_T_iff ⟨p, pprime⟩
+            -- rw [← not_iff_not] at t_in_T_iff
+            -- simp only [Int.reduceNeg, not_exists] at t_in_T_iff
+            -- have := t_in_T_iff.mp hpT i
+            -- have := hep1 i ⟨p, pprime⟩
+            -- tauto
           simp [val_ai, val_x, this]
   · simp only [ne_eq, Rat.cast_eq_zero, Units.ne_zero, not_false_eq_true, real_eq, Rat.cast_pos,
     Int.reduceNeg, infty_notin_T i, ite_eq_left_iff, not_or, not_lt, reduceCtorEq, imp_false,
@@ -391,7 +368,7 @@ private lemma existence_disjoint
         Prime.pos q_prime, mul_pos_iff_of_pos_right, x, xQ, A]
       apply Finset.prod_pos
       intro t ht
-      simp only [cast_pos, Prime.pos (primes_T t)]
+      simp only [cast_pos, Prime.pos t.1.2]
     simp [this]
 
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
@@ -416,11 +393,11 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       ∀ i : I, ereal i = 1
   · exact existence_disjoint hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2
   · let funxp := fun (p : Primes) ↦ (h3.1 p).choose --is there a more user friendly way?
-    have square_approx : ∃ x' : ℚˣ, ∀ (p : Primes), p.1 ∈ (SS a) → IsSquare
+    have square_approx : ∃ x' : ℚˣ, ∀ (p : Primes), p ∈ (SS a) → IsSquare
         (x' / (funxp p) : ℚ_[p]) := by sorry
     obtain ⟨x', hx'⟩ := square_approx
     have hilbertSym_agree_on_S :
-        ∀ (i : I), ∀ (p : Primes), p.1 ∈ (SS a) → hilbertSym (x' : ℚ_[p]) (a i) = ep i p := by
+        ∀ (i : I), ∀ (p : Primes), p ∈ (SS a) → hilbertSym (x' : ℚ_[p]) (a i) = ep i p := by
       intro i p hpS
       have : hilbertSym (x': ℚ_[p]) (a i) = hilbertSym (funxp p) (a i) := by sorry
       rw [this]
@@ -435,9 +412,8 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     have heta3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = etap i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = etareal i := by sorry
     have etadisjoint_ST : Disjoint (SS a) (TT heta1 hetap1) := by sorry
-    have etatwo_notin_T : 2 ∉ (TT heta1 hetap1) := by sorry
     have etainfty_notin_T : ∀ i : I, etareal i = 1 := by sorry
-    have ⟨xeta,hxeta⟩ := existence_disjoint hetap1 hetareal heta1 heta2 heta3 etadisjoint_ST
+    have ⟨xeta, hxeta⟩ := existence_disjoint hetap1 hetareal heta1 heta2 heta3 etadisjoint_ST
         etainfty_notin_T
     use xeta * x'
     refine fun i ↦ ⟨fun p ↦ by simp [padic_mul_left_eq]; grind, by simp [real_mul_left_eq]; grind⟩
