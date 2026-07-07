@@ -8,6 +8,7 @@ module
 public import HassePrinciple.HilbertSymbol.Basic
 public import HassePrinciple.NumberTheory.ApproximationTheorem
 public import HassePrinciple.Padics.Lemmas
+public import HassePrinciple.Padics.Squares
 public import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 /-!
 # Existence theorem
@@ -28,7 +29,8 @@ private lemma necessary_cond (x : ℚˣ)
     (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
     (∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p) ∧
     ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
-  refine ⟨fun i ↦ ?_, fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩, ⟨x, by simp [h]⟩⟩
+  refine ⟨fun i ↦ ?_, fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩,
+    ⟨x, by simp [h]⟩⟩
   have := almost_all_one x (a i)
   simp_rw [h] at this
   exact this
@@ -60,8 +62,8 @@ private lemma all_but_one_places_suffice (q : Primes)
     have hprod : ∏ᶠ (p : Primes), hilbertSym (x : ℚ_[p]) (a i) = ∏ᶠ (p : Primes), ep i p := by
       rw [← mul_left_inj' (by grind : ereal i ≠ 0)]
       nth_rw 1 [← (hx i).2, prod_eq_one x (a i), h2 i]
-    rw [← mul_finprod_cond_ne q (almost_all_one x (a i)), ← mul_finprod_cond_ne q (f := ep i) (h1 i), hprod',
-      mul_eq_mul_right_iff, ← hpq] at hprod
+    rw [← mul_finprod_cond_ne q (almost_all_one x (a i)),
+      ← mul_finprod_cond_ne q (f := ep i) (h1 i), hprod', mul_eq_mul_right_iff, ← hpq] at hprod
     apply hprod.resolve_right
     rw [finprod_cond_ne _ _ (h1 i), ← ne_eq, Finset.prod_ne_zero_iff]
     grind
@@ -92,8 +94,6 @@ private lemma Tfin [Finite I]
   · simp only [Function.HasFiniteMulSupport, Function.mulSupport,
       ← ep_eq_neg_one_iff_not_one hep1] at h₁
     exact h₁ i
-
-
 
 private noncomputable def TT [Fintype I]
     (h₁ : ∀ i : I, Function.HasFiniteMulSupport (ep i))
