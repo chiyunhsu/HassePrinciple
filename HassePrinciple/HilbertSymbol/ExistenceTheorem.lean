@@ -120,12 +120,14 @@ private lemma existence_disjoint
   --elements in S. Both are nonzero.
   let A := ∏ t : T, (t : ℕ)
   have A_ne_zero : A ≠ 0 := by
-    simp [Finset.prod_ne_zero_iff, A]
+    simp only [Finset.univ_eq_attach, ne_eq, Finset.prod_ne_zero_iff, Finset.mem_attach,
+      forall_const, Subtype.forall, A]
     exact fun _ _ ↦ NeZero.out
   let M := 4 * ∏ s : S, (s : ℕ)
   have M_ne_zero : M ≠ 0 := by
     apply mul_ne_zero (by lia)
-    simp [Finset.prod_ne_zero_iff]
+    simp only [Finset.univ_eq_attach, ne_eq, Finset.prod_ne_zero_iff, Finset.mem_attach,
+      forall_const, Subtype.forall]
     exact fun _ _ ↦ NeZero.out
   --If S and T are disjoint (and 2, ∞ ∉ T), then A and M are coprime.
   have coprime_AM : A.Coprime M := by
