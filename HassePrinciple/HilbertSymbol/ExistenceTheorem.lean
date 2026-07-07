@@ -70,7 +70,7 @@ variable (a) in
 /-- Define S to be the (finite!) set of primes that divide either the numerator or the denominator
 of some (a i). N.B. In Serre, S contains also 2 and ∞. -/
 private def SS [Fintype I] :=
-  Finset.univ.biUnion (fun (i : I) ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors)
+  Finset.univ.biUnion (fun (i : I) ↦ (Int.natAbs (a i).val.num * (a i).val.den).primeFactors) ∪ {2}
 
 variable (ep) in
 /-- Define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1. -/
@@ -105,16 +105,21 @@ private lemma existence_disjoint
     (h3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
     (disjoint_ST : Disjoint (SS a) (TT h1 hep1))
-    (two_notin_T : 2 ∉ (TT h1 hep1))
     (infty_notin_T : ∀ i : I, ereal i = 1) :
       (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) := by
 --Properties and definitions regardsing S and T.
   let S := SS a
   let T := TT h1 hep1
+  --2 ∉ T
+  have two_notin_T : 2 ∉ T := by
+    have : 2 ∈ S := by simp [S, SS]
+    rw [Finset.disjoint_left] at disjoint_ST
+    specialize disjoint_ST this
+    aesop
   --S and T consist of prime numbers.
   have primes_S : ∀ s : S, Prime s := by
-    simp [S, SS]
+    simp [S, SS, prime_two]
     aesop
   have primes_T : ∀ t : T, Prime t := by
     simp only [TT, T', Int.reduceNeg, Subtype.forall, Set.Finite.mem_toFinset, Set.mem_range, f,
@@ -140,7 +145,7 @@ private lemma existence_disjoint
     intro t
     specialize primes_T t
     aesop
-  let M := 8 * ∏ s : S, (s : ℕ) --technically should exclude 2 here but probably not a problem
+  let M := 4 * ∏ s : S, (s : ℕ) -- now it would be a good idea to change 8 to 4.
   have M_ne_zero : M ≠ 0 := by
     apply Nat.mul_ne_zero (by lia)
     rw [Finset.prod_ne_zero_iff]
@@ -152,10 +157,8 @@ private lemma existence_disjoint
   have coprime_AM : A.Coprime M := by
       rw [Nat.coprime_fintype_prod_left_iff]
       refine fun t ↦ Nat.Coprime.mul_right ?_ ?_
-      · rw [(by omega : 8 = 2^3), Nat.coprime_pow_right_iff (by omega)]
-        refine Odd.coprime_two_right (Prime.odd_of_ne_two (primes_T t) ?_)
-        rw [← Finset.forall_mem_not_eq] at two_notin_T
-        apply ne_comm.mp (two_notin_T t (Subtype.mem t))
+      · rw [(by omega : 4 = 2^2), Nat.coprime_pow_right_iff (by omega)]
+        refine Odd.coprime_two_right (Prime.odd_of_ne_two (primes_T t) (by aesop))
       · rw [Nat.coprime_fintype_prod_right_iff]
         intro s
         rw [Nat.coprime_primes (primes_T t) (primes_S s)]
@@ -196,7 +199,14 @@ private lemma existence_disjoint
           have ⟨b, hb⟩ : ∃ b : ℤ_[2], xQ = b ^ 2 := by
             apply Polynomial.squares_in_Z2 _ A
             have : (q : ZMod 8) = A := by
-              apply Nat.ModEq.of_dvd (by omega : 8 ∣ M) at q_cong
+              have eight_dvd_M : 8 ∣ M := by
+                rw [(by omega : 8 = 4 * 2)]
+                simp only [M]
+                rw [mul_dvd_mul_iff_left (by omega)]
+                have : 2 ∈ S := by simp [S, SS]
+                rw [← Finset.prod_subtype S (by simp) (fun s ↦ s)]
+                exact Finset.dvd_prod_of_mem (fun i ↦ i) this
+              apply Nat.ModEq.of_dvd eight_dvd_M at q_cong
               rw [← ZMod.natCast_eq_natCast_iff] at q_cong
               exact q_cong
             simp [xQ, this]
@@ -223,7 +233,7 @@ private lemma existence_disjoint
         --Since p ∉ T, ep i p = 1 as well.
         have p_dvd_M : p ∣ M := by
           simp only [M]
-          refine Nat.dvd_mul_left_of_dvd ?_ 8
+          refine Nat.dvd_mul_left_of_dvd ?_ 4
           rw [← Finset.prod_subtype S (by simp) (fun s ↦ s)]
           exact Finset.dvd_prod_of_mem (fun i ↦ i) hpS
         have hilbertSym_pS : hilbertSym (x : ℚ_[p]) (a i) = 1 := by
@@ -258,10 +268,10 @@ private lemma existence_disjoint
         have val_ai : ∀ i : I, padicValRat p (a i).val = 0 := by
           intro i
           rw [padicValRat.multiplicity_sub_multiplicity (Nat.Prime.ne_one pprime) (by simp)]
-          simp only [SS, Finset.mem_biUnion, Finset.mem_univ, Nat.mem_primeFactors, pprime,
-              ne_eq, mul_eq_zero, Int.natAbs_eq_zero, Rat.num_eq_zero, Units.ne_zero,
-              Rat.den_ne_zero, or_self, not_false_eq_true, and_true, true_and, not_exists,
-              S] at hpS
+          simp only [SS, Finset.union_singleton, Finset.mem_insert, Finset.mem_biUnion,
+            Finset.mem_univ, mem_primeFactors, pprime, ne_eq, mul_eq_zero, Int.natAbs_eq_zero,
+            Rat.num_eq_zero, Units.ne_zero, Rat.den_ne_zero, or_self, not_false_eq_true, and_true,
+            true_and, not_or, not_exists, S, hp2] at hpS
           specialize hpS i
           --can these be improved?
           have val_num_eq_zero : multiplicity (p : ℤ) ((a i).val).num = 0 := by
@@ -334,7 +344,8 @@ private lemma existence_disjoint
               ∀ b : ℚ, (b = 1 ∨ b = -1) → b = b ^ xp.valuation := by
             intro b hb
             cases hb
-            · aesop
+            · subst b
+              rw [one_zpow]
             · expose_names
               rw [h]
               symm
@@ -380,7 +391,7 @@ private lemma existence_disjoint
         Prime.pos q_prime, mul_pos_iff_of_pos_right, x, xQ, A]
       apply Finset.prod_pos
       intro t ht
-      exact_mod_cast Prime.pos (primes_T t)
+      simp only [cast_pos, Prime.pos (primes_T t)]
     simp [this]
 
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
@@ -401,9 +412,9 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
   have := Fintype.ofFinite I
   refine ⟨fun ⟨x,h⟩ ↦ (by apply necessary_cond <;> assumption), fun ⟨h1, h2, h3⟩ ↦ ?_⟩
-  by_cases disjoint_ST : Disjoint (SS a) (TT h1 hep1) ∧ 2 ∉ (TT h1 hep1) ∧
+  by_cases disjoint_ST : Disjoint (SS a) (TT h1 hep1) ∧
       ∀ i : I, ereal i = 1
-  · exact existence_disjoint hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
+  · exact existence_disjoint hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2
   · let funxp := fun (p : Primes) ↦ (h3.1 p).choose
     have square_approx : ∃ x' : ℚˣ, ∀ (p : Primes), IsSquare (x' / (funxp p) : ℚ_[p]) := by sorry
     obtain ⟨x', hx'⟩ := square_approx
@@ -421,7 +432,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     have etatwo_notin_T : 2 ∉ (TT heta1 hetap1) := by sorry
     have etainfty_notin_T : ∀ i : I, etareal i = 1 := by sorry
     have ⟨xeta,hxeta⟩ := existence_disjoint hetap1 hetareal heta1 heta2 heta3 etadisjoint_ST
-        etatwo_notin_T etainfty_notin_T
+        etainfty_notin_T
     use xeta * x'
     refine fun i ↦ ⟨fun p ↦ by simp [padic_mul_left_eq]; grind, by simp [real_mul_left_eq]; grind⟩
 
