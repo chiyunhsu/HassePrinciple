@@ -23,17 +23,14 @@ variable {I : Type*} {a : I → ℚˣ} {ep : I → Primes → ℤ} {ereal : I �
 
 /-- The necessary conditions in the Existence Theorem are indeed necessary. -/
 private lemma necessary_cond (x : ℚˣ)
-    (h : ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
+    (h : ∀ i : I, (∀ p : Nat.Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) :
-    (∀ i : I, Function.HasFiniteMulSupport (ep i)) ∧
-    (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
-    (∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p) ∧
-    ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
-  refine ⟨fun i ↦ ?_, fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩,
-    ⟨x, by simp [h]⟩⟩
-  have := almost_all_one x (a i)
-  simp_rw [h] at this
-  exact this
+    (∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) ∧
+    (∀ i : I, (∏ᶠ p : Primes, ep i p) * ereal i = 1) ∧
+    (∀ p : Primes, ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p) ∧
+    ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i :=
+  ⟨fun i ↦ by simp [← h i,  almost_all_one x (a i)],
+    fun i ↦ by simp [← h i, prod_eq_one x (a i)], fun p ↦ ⟨x, by simp [h]⟩, ⟨x, by simp [h]⟩⟩
 
 /-- From ep i p = 1 or -1, we deduce that ep i p = -1 iff not ep i p = 1. -/
 private lemma ep_eq_neg_one_iff_not_one
@@ -45,7 +42,7 @@ private lemma ep_eq_neg_one_iff_not_one
 hilbertSym x (a i) = ep i p for all but one p, we are done. -/
 private lemma all_but_one_places_suffice (q : Primes)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
-    (h1 : ∀ i : I, Function.HasFiniteMulSupport (ep i))
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
     (h4 : ∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, p ≠ q → hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) :
@@ -63,7 +60,7 @@ private lemma all_but_one_places_suffice (q : Primes)
       rw [← mul_left_inj' (by grind : ereal i ≠ 0)]
       nth_rw 1 [← (hx i).2, prod_eq_one x (a i), h2 i]
     rw [← mul_finprod_cond_ne q (almost_all_one x (a i)),
-      ← mul_finprod_cond_ne q (f := ep i) (h1 i), hprod', mul_eq_mul_right_iff, ← hpq] at hprod
+      ← mul_finprod_cond_ne q (h1 i), hprod', mul_eq_mul_right_iff, ← hpq] at hprod
     apply hprod.resolve_right
     rw [finprod_cond_ne _ _ (h1 i), ← ne_eq, Finset.prod_ne_zero_iff]
     grind
@@ -84,19 +81,18 @@ variable (ep) in
 private def f := fun (t' : T' ep) ↦ (t' : ℕ)
 
 private lemma Tfin [Finite I]
-    (h₁ : ∀ i : I, Function.HasFiniteMulSupport (ep i))
+    (h₁ : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) :
     (Set.range (f ep)).Finite := by
   refine (Set.finite_range_iff fun t1 t2 ht ↦ ?_).mpr (Set.finite_iUnion fun i ↦ ?_)
   · simp only [f, PNat.coe_inj] at ht
     ext
     exact_mod_cast ht
-  · simp only [Function.HasFiniteMulSupport, Function.mulSupport,
-      ← ep_eq_neg_one_iff_not_one hep1] at h₁
+  · simp only [eventually_cofinite, ← ep_eq_neg_one_iff_not_one hep1, Int.reduceNeg] at h₁
     exact h₁ i
 
 private noncomputable def TT [Fintype I]
-    (h₁ : ∀ i : I, Function.HasFiniteMulSupport (ep i))
+    (h₁ : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
     (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1) : Finset ℕ :=
       Set.Finite.toFinset (Tfin h₁ hep1)
 
@@ -104,7 +100,7 @@ private noncomputable def TT [Fintype I]
 private lemma existence_disjoint
     [Fintype I] (hep1 : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
-    (h1 : ∀ i : I, Function.HasFiniteMulSupport (ep i))
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
     (h2 : ∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1)
     (h3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
@@ -113,7 +109,7 @@ private lemma existence_disjoint
     (infty_notin_T : ∀ i : I, ereal i = 1) :
       (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) := by
-  --Properties and definitions regardsing S and T.
+--Properties and definitions regardsing S and T.
   let S := SS a
   let T := TT h1 hep1
   --S and T consist of prime numbers.
@@ -399,7 +395,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1) :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) ↔
-      (∀ i : I, Function.HasFiniteMulSupport (ep i)) ∧
+      (∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) ∧
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
@@ -408,7 +404,26 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
   by_cases disjoint_ST : Disjoint (SS a) (TT h1 hep1) ∧ 2 ∉ (TT h1 hep1) ∧
       ∀ i : I, ereal i = 1
   · exact existence_disjoint hep1 hereal h1 h2 h3 disjoint_ST.1 disjoint_ST.2.1 disjoint_ST.2.2
-  · sorry
+  · let funxp := fun (p : Primes) ↦ (h3.1 p).choose
+    have square_approx : ∃ x' : ℚˣ, ∀ (p : Primes), IsSquare (x' / (funxp p) : ℚ_[p]) := by sorry
+    obtain ⟨x', hx'⟩ := square_approx
+    have hilbertSym_agree_on_S :
+        ∀ (i : I), ∀ (p : Primes), p.1 ∈ (SS a) → hilbertSym (x' : ℚ_[p]) (a i) = ep i p := by sorry
+    let etap : I → Primes → ℤ := fun i p ↦ (ep i p) * hilbertSym (x' : ℚ_[p]) (a i)
+    have hetap1 : ∀ i : I, ∀ p : Primes, etap i p = 1 ∨ etap i p = -1 := by sorry
+    let etareal : I → ℤ := fun i ↦ (ereal i) * hilbertSym (x' : ℝ) (a i)
+    have hetareal : ∀ i : I, etareal i = 1 ∨ etareal i = -1 := by sorry
+    have heta1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, etap i p = 1 := by sorry
+    have heta2 : ∀ i : I, (∏ᶠ (p : Primes), etap i p) * etareal i = 1 := by sorry
+    have heta3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = etap i p)) ∧
+      ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = etareal i := by sorry
+    have etadisjoint_ST : Disjoint (SS a) (TT heta1 hetap1) := by sorry
+    have etatwo_notin_T : 2 ∉ (TT heta1 hetap1) := by sorry
+    have etainfty_notin_T : ∀ i : I, etareal i = 1 := by sorry
+    have ⟨xeta,hxeta⟩ := existence_disjoint hetap1 hetareal heta1 heta2 heta3 etadisjoint_ST etatwo_notin_T
+        etainfty_notin_T
+    use xeta * x'
+    sorry
 
 theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Primes → ℤ} {er er' : ℤ}
     (hep : ∀ p : Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Primes, ep' p = 1 ∨ ep' p = -1)
