@@ -423,9 +423,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
     have ⟨xeta,hxeta⟩ := existence_disjoint hetap1 hetareal heta1 heta2 heta3 etadisjoint_ST
         etatwo_notin_T etainfty_notin_T
     use xeta * x'
-    refine fun i ↦ ⟨fun p ↦ ?_, ?_⟩
-    · sorry
-    · sorry
+    refine fun i ↦ ⟨fun p ↦ by simp [padic_mul_left_eq]; grind, by simp [real_mul_left_eq]; grind⟩
 
 theorem exists_rat_with_two_prescribed_hilbertSym (a b : ℚˣ) {ep ep' : Primes → ℤ} {er er' : ℤ}
     (hep : ∀ p : Primes, ep p = 1 ∨ ep p = -1) (hep' : ∀ p : Primes, ep' p = 1 ∨ ep' p = -1)
