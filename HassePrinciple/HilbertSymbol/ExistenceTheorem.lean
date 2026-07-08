@@ -167,9 +167,9 @@ private lemma existence_disjoint
               have eight_dvd_M : 8 ∣ M := by
                 rw [(by omega : 8 = 4 * 2)]
                 simp only [M]
-                rw [mul_dvd_mul_iff_left (by omega)]
-                simp only [Finset.prod_coe_sort_eq_attach, Finset.prod_attach]
-                sorry
+                rw [mul_dvd_mul_iff_left (by omega),
+                  ← Finset.prod_subtype S (by simp) (fun s ↦ (s : ℕ))]
+                exact Finset.dvd_prod_of_mem Subtype.val (by simp [S, SS] : ⟨2, prime_two⟩ ∈ S)
               apply ModEq.of_dvd eight_dvd_M at q_cong
               rw [← ZMod.natCast_eq_natCast_iff] at q_cong
               exact q_cong
@@ -194,7 +194,8 @@ private lemma existence_disjoint
         have p_dvd_M : p.1 ∣ M := by
           simp only [M]
           refine Nat.dvd_mul_left_of_dvd ?_ 4
-          sorry
+          rw [← Finset.prod_subtype S (by simp) (fun s ↦ (s : ℕ))]
+          exact Finset.dvd_prod_of_mem Subtype.val hpS
         have hilbertSym_pS : hilbertSym (x : ℚ_[p]) (a i) = 1 := by
           have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[p], A * q = b ^ 2 := by
             have ⟨b, hb⟩ : ∃ b : ℤ_[p], A * q = b ^ 2 := by
@@ -256,26 +257,20 @@ private lemma existence_disjoint
               contrapose pneq;
               rw [← Primes.coe_nat_inj]
               simp only [pneq]
-            simp only [padicValNat_primes this, add_zero]
-            sorry
-            --this part broke
-            -- have : A = (∏ t ∈ T \ { p }, t) * p := by
-            --   rw [← Finset.prod_eq_prod_sdiff_singleton_mul hpT]
-            --   simp only [Finset.univ_eq_attach, A]
-            --   rw [Finset.prod_subtype T ?_ (fun t ↦ t)]
-            --   · congr
-            --   · simp
-            -- rw [this]
-            -- rw [padicValNat.mul (by rw [this] at A_ne_zero; exact left_ne_zero_of_mul A_ne_zero)
-            --   (Nat.Prime.ne_zero pprime), padicValNat_self]
-            -- norm_num
-            -- right; right
-            -- apply Prime.not_dvd_finsetProd (prime_iff.mp pprime)
-            -- intro t htnep
-            -- simp only [Finset.mem_sdiff, Finset.mem_singleton] at htnep
-            -- simp only [ne_comm, ne_eq,
-            --   ← prime_dvd_prime_iff_eq pprime (Subtype.forall.mp primes_T t htnep.1)] at htnep
-            -- exact htnep.2
+            simp only [padicValNat_primes this, add_zero, A]
+            rw [← Finset.prod_subtype T (by simp) (fun t ↦ (t : ℕ)),
+              (by grind : T = (T \ {p}) ∪ {p}), Finset.prod_union (by simp),
+              Finset.prod_singleton, padicValNat.mul _ (Nat.Prime.ne_zero p.2), padicValNat_self]
+            · norm_num
+              right; right
+              apply Prime.not_dvd_finsetProd (prime_iff.mp p.2)
+              intro t ht
+              simp only [Finset.mem_sdiff, Finset.mem_singleton] at ht
+              rw [Nat.prime_dvd_prime_iff_eq p.2 t.2, Primes.coe_nat_inj, ← ne_eq, ne_comm]
+              exact ht.2
+            · simp only [implies_true, ← Finset.prod_subtype T _ (fun t ↦ (t : ℕ)), A] at A_ne_zero
+              rw [(by grind : T = (T \ {p}) ∪ {p}), Finset.prod_union (by simp)] at A_ne_zero
+              grind
           obtain ⟨xp, hxp⟩ := h3.1 p
           have val_xp : Odd xp.valuation := by
             simp only [TT, Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_iUnion, Set.mem_setOf_eq,
