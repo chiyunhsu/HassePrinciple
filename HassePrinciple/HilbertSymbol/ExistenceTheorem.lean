@@ -288,40 +288,30 @@ private lemma existence_disjoint
             · simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2
           rw [← hxp i]
           qify
-          rw [padic_odd_eq _ (by simp) (by simp), padic_odd_eq _
+          rw [padic_odd_eq (by simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2) (by simp)
+            (by simp), padic_odd_eq (by simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2)
             (fun xp0 ↦ by (simp only [hilbertSym, xp0, Rat.cast_eq_zero,
             Units.ne_zero, or_false, ↓reduceIte] at hxp; specialize hxp i; grind)) (by simp)]
-          pick_goal 2
-          · simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2
-          pick_goal 2
-          · simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2
-          · simp only [Padic.valuation_ratCast, val_x, val_ai, mul_zero, mul_ite,
-              PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, Units.val_one,
-              Int.cast_one, zpow_zero, zpow_one, one_mul]
-          --I couldn't come up with a nicer proof of this, but maybe there is
-            have one_or_neg_one_to_odd_eq_self :
-                ∀ b : ℚ, (b = 1 ∨ b = -1) → b = b ^ xp.valuation := by
-              intro b hb
-              cases hb
-              · subst b
-                rw [one_zpow]
-              · expose_names
-                rw [h]
-                symm
-                apply Odd.neg_one_zpow
-                exact val_xp
-            have : IsUnit (Padic.unitPart (Units.mk0 ((a i).val : ℚ_[p]) (by simp))).1 := by
-              simp
-            have := PadicInt.legendreSym.eq_one_or_neg_one this
-            apply one_or_neg_one_to_odd_eq_self
-            exact_mod_cast this
-        · --In this case, the exponent is 0, so (x,a_i)ₚ = 1. Since p ∉ T, ep i p = 1 as well.
+          simp only [Padic.valuation_ratCast, val_x, val_ai, mul_zero, mul_ite,
+            PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, Units.val_one,
+            Int.cast_one, zpow_zero, zpow_one, one_mul]
+          --is there a simp or at least simple mathlib lemmma for this? I couldn't shorten further.
+          have aux (c : ℤ) (hodd : Odd c) : ∀ b : ℚ, (b = 1 ∨ b = -1) → b = b ^ c := by
+            intro b hb
+            cases hb
+            · subst b; simp
+            · subst b; rw [Odd.neg_one_zpow hodd]
+          have : IsUnit (Padic.unitPart (Units.mk0 ((a i).val : ℚ_[p]) (by simp))).1 := by
+            simp
+          apply aux xp.valuation val_xp
+          exact_mod_cast PadicInt.legendreSym.eq_one_or_neg_one this
+        · --If p ∉ T, the exponent is 0, so (x,a_i)ₚ = 1. Also, ep i p = 1.
           have val_x : padicValRat p x.val = 0 := by
             simp only [IsUnit.val_unit', x]
             rw [← Rat.natCast_mul, ← padicValRat_of_nat, cast_eq_zero]
             rw [padicValNat.mul A_ne_zero (Nat.Prime.ne_zero q_prime)]
             have : p ≠ q := by
-              contrapose pneq;
+              contrapose pneq
               rw [← Primes.coe_nat_inj]
               simp only [pneq]
             simp only [padicValNat_primes this, add_zero, A]
@@ -332,25 +322,15 @@ private lemma existence_disjoint
             simp_rw [Nat.prime_dvd_prime_iff_eq p.2 t.1.2, Primes.coe_nat_inj] at hdvd
             simp only [hdvd, SetLike.coe_mem, not_true_eq_false] at hpT
           qify
-          rw [padic_odd_eq _ (by simp) (by simp)]
-          swap
-          · simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2
-          · have : ep i p = 1 := by
-              simp only [TT, Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_iUnion,
-                Set.mem_setOf_eq, not_exists, T] at hpT
-              specialize hpT i
-              simp [ep_eq_neg_one_iff_not_one hep1] at hpT
-              tauto
-            simp [val_ai, val_x, this]
+          rw [padic_odd_eq (by simp_rw [← Primes.coe_nat_inj] at hp2; exact hp2) (by simp)
+            (by simp)]
+          simp only [TT, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep1, Set.Finite.mem_toFinset,
+            Set.mem_iUnion, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
+          simp [val_ai, val_x, hpT]
   · simp only [ne_eq, Rat.cast_eq_zero, Units.ne_zero, not_false_eq_true, real_eq, Rat.cast_pos,
     Int.reduceNeg, infty_not_mem_T i, ite_eq_left_iff, not_or, not_lt, reduceCtorEq, imp_false,
     not_and, not_le]
-    have : 0 < x.val := by
-      simp only [Finset.univ_eq_attach, cast_prod, IsUnit.val_unit', cast_pos, Prime.pos q_prime,
-        mul_pos_iff_of_pos_right, x, A]
-      apply Finset.prod_pos
-      intro t ht
-      simp [Prime.pos t.1.2]
+    have : 0 < x.val := by simp [IsUnit.val_unit', x, pos_of_ne_zero, A_ne_zero, pos_of_neZero q]
     simp [this]
 
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
