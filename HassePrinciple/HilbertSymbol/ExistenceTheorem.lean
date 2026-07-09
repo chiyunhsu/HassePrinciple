@@ -302,7 +302,7 @@ is equal to `e_{i,v}` if and only if
 2) for all `i`, the product of all `e_{i,v}` is 1
 3) for each place `v`, there is some `x_v ∈ Q_v` with `(x_v,a_i)_v = e_{i,v}`. -/
 theorem exists_rat_with_finite_prescribed_hilbertSym
-    {I : Type*} [Finite I] (a : I → ℚˣ) {ep : I → Primes → ℤ} {ereal : I → ℤ}
+    {I : Type*} [Finite I] [Nonempty I] (a : I → ℚˣ) {ep : I → Primes → ℤ} {ereal : I → ℤ}
     (hep : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
     (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1) :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
@@ -316,14 +316,36 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
   by_cases disjoint_ST : Disjoint (SS a) (TT h1 hep) ∧
       ∀ i : I, ereal i = 1
   · exact existence_disjoint hep h1 h2 h3 disjoint_ST.1 disjoint_ST.2
-  · let funxp := fun (p : Primes) ↦ (h3.1 p).choose --is there a more user friendly way?
+  · let funxp := fun (p : Primes) ↦ (h3.1 p).choose
+    have funxp_eq : ∀ p : Primes, ∀ (i : I), hilbertSym (funxp p) (a i) = ep i p := fun p ↦
+      Exists.choose_spec (h3.1 p)
+    have xp_ne_zero : ∀ p : Primes, funxp p ≠ 0 := by
+      intro p hp
+      specialize funxp_eq p
+      simp only [hilbertSym, hp, Rat.cast_eq_zero, Units.ne_zero, or_false, ↓reduceIte] at funxp_eq
+      --Seriously?
+      have : ∀ i : I, 0 = 1 ∨ 0 = -1 := by
+        intro i
+        specialize hep i p
+        specialize funxp_eq i
+        grind
+      simp at this
     have square_approx : ∃ x' : ℚˣ, ∀ (p : Primes), p ∈ (SS a) → IsSquare
-        (x' / (funxp p) : ℚ_[p]) := by sorry
+        (x' / (funxp p) : ℚ_[p]) := by
+
+          sorry
     obtain ⟨x', hx'⟩ := square_approx
     have hilbertSym_agree_on_S :
         ∀ (i : I), ∀ (p : Primes), p ∈ (SS a) → hilbertSym (x' : ℚ_[p]) (a i) = ep i p := by
       intro i p hpS
-      have : hilbertSym (x': ℚ_[p]) (a i) = hilbertSym (funxp p) (a i) := by sorry
+      have : hilbertSym (x': ℚ_[p]) (a i) = hilbertSym (funxp p) (a i) := by
+        have ⟨c, hc⟩ : ∃ c, x' = funxp p * c ^ 2 := by
+          specialize hx' p hpS
+          obtain ⟨c', hc'⟩ := hx'
+          use c'
+          rw [pow_two, ← hc']
+          field_simp [xp_ne_zero]
+        rw [hc, mul_left_square_eq (by aesop)]
       rw [this]
       simp [funxp]
       sorry
