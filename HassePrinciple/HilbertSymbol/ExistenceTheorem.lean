@@ -128,12 +128,10 @@ private lemma is_unit_ai_of_p_not_mem_S [Fintype I] {p : Primes} (hpS : p ∉ SS
   linarith
 
 --is there a simp or at least simple mathlib lemmma for this? I couldn't shorten further.
+--Edit: I did shorten further, but now I don't know where to put this.
 private lemma _root_.eq_self_of_unit_to_odd_power (c : ℤ) (hodd : Odd c) :
     ∀ b : ℚ, (b = 1 ∨ b = -1) → b = b ^ c := by
-  intro b hb
-  cases hb
-  · subst b; simp
-  · subst b; rw [Odd.neg_one_zpow hodd]
+  norm_num; rw [Odd.neg_one_zpow hodd]
 
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
 private lemma existence_disjoint
