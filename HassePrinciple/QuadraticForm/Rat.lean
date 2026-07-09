@@ -10,6 +10,8 @@ public import Mathlib.Algebra.CharP.Invertible
 public import Mathlib.Analysis.RCLike.Basic
 public import Mathlib.NumberTheory.Padics.PadicNumbers
 
+public import Mathlib.RingTheory.UniqueFactorizationDomain.Finsupp
+
 /-! # Quadratic forms over ℚ -/
 
 @[expose] public section
@@ -61,8 +63,50 @@ lemma isotropic_of_rank_one (hr : finrank ℚ V = 1) (hQ : Q.EverywhereLocallyIs
   simpa [isotropic_iff_zero_of_rank_one hr, baseChange_ext_iff, Q.ext_iff] using
     (isotropic_iff_zero_of_rank_one (by simp [hr])).mp hQ.2
 
+lemma LocalGlobal (a : ℚ) (hpos : a > 0) (h : ∀ (p : ℕ) [inst : Fact (Nat.Prime p)], IsSquare (a : ℚ_[p])) : IsSquare a := by
+  rw [Rat.isSquare_iff]
+  have num_pos : a.num > 0 := Rat.num_pos.mpr hpos
+  let a_num := a.num.toNat
+  #check Padic.valuation_pow
+  #check Padic.valuation_ratCast
+  #check Nat.eq_of_factorization_eq'
+  #check associated_of_factorization_eq
+  #check factorization_mul
+  have : a_num = a.num := Int.toNat_of_nonneg (le_of_lt num_pos)
+  have : ∀ (p : ℕ) [inst : Fact (Nat.Prime p)], Even (padicValRat p a) := by sorry
+  constructor
+  · sorry
+  · sorry
+
+
+
 lemma isotropic_of_rank_two [FiniteDimensional ℚ V] (hr : finrank ℚ V = 2) (hQ : Q.Nondegenerate)
-    (hQ' : Q.EverywhereLocallyIsotropic) : Q.Isotropic := by sorry
+    (hQ' : Q.EverywhereLocallyIsotropic) : Q.Isotropic := by
+  -- obtain ⟨w, hw⟩ := QuadraticForm.equivalent_weightedSumSquares Q
+  have : NeZero (Module.finrank ℚ V) := by sorry
+  obtain ⟨w, hw⟩ := Q.equivalent_weightedSumSquares_units_of_nondegenerate'
+    (QuadraticMap.nondegenerate_associated_iff.mpr hQ).1
+  change Equivalent Q (QuadraticMap.weightedSumSquares ℚ (fun i => (w i : ℚ))) at hw
+  obtain ⟨hQ'P, hQ'R⟩ := hQ'
+  rw [← represents_zero_iff_isotropic] at *
+  rw [Equivalent.represents_iff hw]
+  have heq := (Equivalent.baseChange ℝ hw).trans (QuadraticForm.baseChange_weightedSumSquares ℚ ℝ fun i => (w i : ℚ))
+  rw [Equivalent.represents_iff heq] at hQ'R
+  --
+  obtain ⟨x, hx⟩ : ∃ (x : ℚ), x ^ 2 = -w 1 / w 0 := by sorry
+  rw [hr] at w
+  use fun i => if i = 0 then x else 1
+  simp
+
+  #check Padic.valuation
+  #check Rat.padicValuation
+  #check padicValRat --Good
+  #check Nat.ordProj_mul
+  #check Nat.factorization
+
+  -- obtain ⟨x, hx⟩ := hQ'R
+  -- simp only [eq_ratCast, weightedSumSquares_apply, smul_eq_mul] at hx
+  sorry
 
 end EverywhereLocallyIsotropic
 
