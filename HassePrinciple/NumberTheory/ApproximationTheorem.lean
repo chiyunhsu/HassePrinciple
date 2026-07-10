@@ -46,9 +46,9 @@ theorem approximation (S : Finset Nat.Primes) :
 
 
 /-- The finite embedding of ℚ into the product of the completions of ℚ at a finite set of places
-(which includes ℝ) (or maybe not). -/
-abbrev finiteEmbedding'' (S : Finset Nat.Primes) (x : ℚˣ) : Π p : S, ℚ_[p]ˣ :=
-  fun p ↦ Units.map (algebraMap ℚ ℚ_[p]) x
+(which includes ℝ). -/
+abbrev finiteEmbedding'' (S : Finset Nat.Primes) (x : ℚˣ) : ℝˣ × Π p : S, ℚ_[p]ˣ :=
+  ⟨Units.map (algebraMap ℚ ℝ) x, fun p ↦ Units.map (algebraMap ℚ ℚ_[p]) x⟩
 
 /-- The approximation theorem can be restated as saying that the finite embedding is dense. -/
 theorem approximation'' (S : Finset Nat.Primes) :
