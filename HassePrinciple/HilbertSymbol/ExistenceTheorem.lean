@@ -123,22 +123,19 @@ private lemma Rat.zpow_odd_eq_self (c : ℤ) (hodd : Odd c) :
     ∀ b : ℚ, (b = 1 ∨ b = -1) → b ^ c = b := by
   norm_num; rw [Odd.neg_one_zpow hodd]
 
-include ha h2 h3 in
-/-- We first prove the Existence Theorem when S and T are disjoint. -/
-private lemma existence_disjoint [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1)) (infty_not_mem_T : ∀ i : I, ereal i = 1) :
-    (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
-      hilbertSym (x : ℝ) (a i) = ereal i) := by
-  --Abbreviations for S and T.
-  let S := S a
-  let T := T hep h1
-  --Define A to be the product of the elements in T, and M to be 4 times the product of the
-  --elements in S. Both are nonzero.
-  let A := ∏ t : T, (t : ℕ)
-  have A_ne_zero : A ≠ 0 := by simp [prod_ne_zero_iff, A, NeZero.out]
-  let M := 4 * ∏ s : S, (s : ℕ)
+private noncomputable abbrev A [Fintype I] : ℕ := ∏ t : T hep h1, (t : ℕ)
+
+variable (a) in
+private noncomputable abbrev M [Fintype I] := 4 * ∏ s : S a, (s : ℕ)
+
+/-- The definition of q when S and T are disjoint using Dirichlet. -/
+private lemma q_existence [Fintype I] [Nonempty I]
+    (disjoint_ST : Disjoint (S a) (T hep h1)) :
+    ∃ q : ℕ, Nat.Prime q ∧ q ≡ ∏ t : T hep h1, (t : ℕ) [MOD 4 * ∏ s : S a, (s : ℕ)]
+    := by
+  let A := hilbertSym.A hep h1
+  let M := hilbertSym.M a
   have M_ne_zero : M ≠ 0 := mul_ne_zero (by omega) (by simp [prod_ne_zero_iff, NeZero.out])
-  --If S and T are disjoint, then A and M are coprime.
   have coprime_AM : A.Coprime M := by
     rw [coprime_fintype_prod_left_iff]
     refine fun t ↦ Coprime.mul_right ?_ ?_
@@ -152,9 +149,25 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
       simp [coprime_primes t.1.2 s.1.2, Primes.coe_nat_inj,
         (disjoint_ST.forall_ne_finset s.2 t.2).symm]
   --We can apply Dirichlet's lemma.
-  obtain ⟨q, q_prime, q_cong⟩ := (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM).nonempty
+  exact (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM).nonempty
+
+/-- Definition of q. -/
+private noncomputable abbrev q [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+    ℕ := (q_existence hep h1 disjoint_ST).choose
+
+include ha h2 h3 in
+/-- We first prove the Existence Theorem when S and T are disjoint. -/
+private lemma existence_disjoint [Fintype I] [Nonempty I]
+    (disjoint_ST : Disjoint (S a) (T hep h1)) (infty_not_mem_T : ∀ i : I, ereal i = 1) :
+    (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
+      hilbertSym (x : ℝ) (a i) = ereal i) := by
+  obtain ⟨q, q_prime, q_cong⟩ := q_existence hep h1 disjoint_ST
   have : Fact (Nat.Prime q) := ⟨q_prime⟩
   --We define x to be A * q, which is a nonzero (positive) rational number.
+  let A := ∏ t : T hep h1, (t : ℕ)
+  have A_ne_zero : A ≠ 0 := by simp [prod_ne_zero_iff, A, NeZero.out]
+  let M := 4 * ∏ s : S a, (s : ℕ)
+  have M_ne_zero : M ≠ 0 := mul_ne_zero (by omega) (by simp [prod_ne_zero_iff, NeZero.out])
   let x := mk0 (A * q : ℚ) (by simp [A_ne_zero, q_prime.ne_zero])
   have hx : x.val = A * q := by simp [x]
   have xpos : 0 < x.val := by simp [x, pos_of_ne_zero, A_ne_zero, pos_of_neZero q]
@@ -165,7 +178,7 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
   --the cases p ∈ S, p ∈ T, p ∉ S ∪ T, and the real place (which is trivial since x > 0).
   refine fun i ↦ ⟨fun p pneq ↦ ?_, (by rw [real_eq (by simp) (by simp [ha i]),
     if_pos (Or.inl (Rat.cast_pos.mpr xpos)), infty_not_mem_T])⟩
-  by_cases hpS : p ∈ S
+  by_cases hpS : p ∈ S a
   · --Strategy: x is a square mod p, so it's a square in ℚ_[p], hence (x,_)ₚ=1.
     --Since p ∉ T, ep i p = 1 as well.
     rw [ep_eq_one_of_mem_S_disjoint hep h1 hpS disjoint_ST i]
@@ -177,9 +190,9 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
           apply ModEq.of_dvd at q_cong
           · rw [← ZMod.natCast_eq_natCast_iff] at q_cong
             exact q_cong
-          · simp only [(by omega : 8 = 4 * 2), M]
-            rw [mul_dvd_mul_iff_left (by omega), ← prod_subtype S (by simp) (fun s ↦ (s : ℕ))]
-            exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S)
+          · simp only [(by omega : 8 = 4 * 2)]
+            rw [mul_dvd_mul_iff_left (by omega), ← prod_subtype (S a) (by simp) (fun s ↦ (s : ℕ))]
+            exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S a)
         simp [this, pow_two]
       · apply Polynomial.squares_in_Zp (by rw [← Primes.coe_nat_inj] at hp2; exact hp2) _ A
         have : (q : ZMod p) = A := by
@@ -187,7 +200,7 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
           · rw [← ZMod.natCast_eq_natCast_iff] at q_cong
             exact q_cong
           · refine Nat.dvd_mul_left_of_dvd ?_ 4
-            rw [← prod_subtype S (by simp) (fun s ↦ (s : ℕ))]
+            rw [← prod_subtype (S a) (by simp) (fun s ↦ (s : ℕ))]
             exact dvd_prod_of_mem Subtype.val hpS
         simp [this, pow_two]
     have ⟨sqrt_x, h_sqrt_x⟩ : ∃ b : ℚ_[p], A * q = b ^ 2 := ⟨b, by rw_mod_cast [← hb]; simp⟩
@@ -200,22 +213,23 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
       rw [ne_eq, Primes.coe_nat_inj p ⟨2, prime_two⟩]
       exact fun h2 ↦ by simp [h2, S, hilbertSym.S] at hpS
     rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (by simp) (by simp [ha])]
-    by_cases hpT : p ∈ T
+    by_cases hpT : p ∈ T hep h1
     -- If p ∈ T, the exponent is 1.
     · have val_x : padicValRat p x.val = 1 := by
         rw [hx, ← Rat.natCast_mul, ← padicValRat_of_nat, cast_eq_one,
           padicValNat.mul A_ne_zero (Nat.Prime.ne_zero q_prime)]
         simp only [padicValNat_primes (by revert pneq; simp [← Primes.coe_nat_inj] : p ≠ q),
           add_zero, A]
-        have hTp : T = (T \ {p}) ∪ {p} := by rw [union_singleton, insert_sdiff_self_of_mem hpT]
-        rw [← prod_subtype T (by simp) (fun t ↦ (t : ℕ)), hTp, prod_union (by simp),
+        have hTp : T hep h1 = (T hep h1 \ {p}) ∪ {p} := by
+          rw [union_singleton, insert_sdiff_self_of_mem hpT]
+        rw [← prod_subtype (T hep h1) (by simp) (fun t ↦ (t : ℕ)), hTp, prod_union (by simp),
           prod_singleton, padicValNat.mul _ (Nat.Prime.ne_zero p.2), padicValNat_self]
         · rw [Nat.add_eq_right, padicValNat.eq_zero_iff]
           apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
           intro t
           simp [mem_singleton, ← ne_eq, ne_comm, prime_dvd_prime_iff_eq p.2 t.2,
             Primes.coe_nat_inj]
-        · simp only [implies_true, ← prod_subtype T _ (fun t ↦ (t : ℕ)), A] at A_ne_zero
+        · simp only [implies_true, ← prod_subtype (T hep h1) _ (fun t ↦ (t : ℕ)), A] at A_ne_zero
           rw [hTp, prod_union sdiff_disjoint] at A_ne_zero
           simp only [prod_singleton, ne_eq, mul_eq_zero, not_or] at A_ne_zero
           simp [A_ne_zero]
