@@ -179,6 +179,8 @@ private lemma x_pos [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T he
   · exact_mod_cast A_pos hep h1
   · exact_mod_cast Nat.Prime.pos (q_prime hep h1 disjoint_ST)
 
+--this one is slower!
+set_option trace.profiler true in
 private lemma x_square [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
     (p : Primes) (hpS : p ∈ S a) : ∃ b : ℤ_[p], (A hep h1) * (q hep h1 disjoint_ST) = b ^ 2 := by
   let A := hilbertSym.A hep h1
@@ -205,6 +207,8 @@ private lemma x_square [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T
         exact dvd_prod_of_mem Subtype.val hpS
     simp [q, A, this, pow_two]
 
+--this too!
+set_option trace.profiler true in
 private lemma x_square_of_p_mem_S [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
     (p : Primes) (hpS : p ∈ S a) : ∃ b : ℚ_[p], x hep h1 disjoint_ST = b ^ 2 := by
   have ⟨b, hb⟩ := x_square hep h1 disjoint_ST p hpS
@@ -241,6 +245,28 @@ private lemma val_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
     simp only [prod_singleton, ne_eq, mul_eq_zero, not_or] at this
     simp [this]
 
+private lemma val_x_eq_one_of_p_not_mem_T [Fintype I] [Nonempty I]
+    (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
+    (hpT : p ∉ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 0 := by
+  let q := hilbertSym.q hep h1 disjoint_ST
+  have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
+  have : Fact (Nat.Prime q) := ⟨q_prime⟩
+  simp only [x, cast_prod, mk0_mul, val_mul, val_mk0]
+  rw [padicValRat.mul (by exact_mod_cast A_ne_zero hep h1) (by simp [Nat.Prime.ne_zero q_prime]),
+    padicValRat.of_nat]
+  simp only [ne_eq, pneq, not_false_eq_true, padicValNat_primes, CharP.cast_eq_zero,
+    add_zero]
+  rw_mod_cast [← prod_subtype (T hep h1) (by simp) (fun t ↦ (t : ℕ))]
+  simp only [padicValNat.eq_zero_iff]
+  apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
+  intro t ht
+  simp only [prime_dvd_prime_iff_eq p.2 t.2, Primes.coe_nat_inj, ← ne_eq]
+  intro hpt
+  subst p
+  contradiction
+
+--this is slow too!
+set_option trace.profiler true in
 include ha h2 h3 in
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
 private lemma existence_disjoint [Fintype I] [Nonempty I]
@@ -252,31 +278,29 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
   have : Fact (Nat.Prime q) := ⟨q_prime⟩
   let x := x hep h1 disjoint_ST
   use x
-  --We apply lemma all_but_one_places_suffice to avoid dealing with q.
+  --We apply lemma all_but_one_places_suffice to avoid dealing with q. Then we consider separately
+  --the cases of p ∈ S, p ∈ T, p ∉ S ∪ T.
   apply all_but_one_places_suffice ha hep h1 h2 ⟨q, q_prime⟩ x
-  --In order to prove that hilbertSym x (a i) and ep i p agree everywhere, we consider separately
-  --the cases p ∈ S, p ∈ T, p ∉ S ∪ T, and the real place (which is trivial since x > 0).
   refine fun i ↦ ⟨fun p pneq ↦ ?_,
     (by rw [real_eq (by simp) (by simp [ha]), infty_not_mem_T]; simp [x, x_pos hep h1 disjoint_ST])⟩
-  have pval_ne_q : p ≠ q := by simp only [ne_eq, ← Primes.coe_nat_inj] at pneq; exact pneq
+  have hpq : p.1 ≠ q := by simp only [ne_eq, ← Primes.coe_nat_inj] at pneq; exact pneq
   by_cases hpS : p ∈ S a
-  · --Strategy: x is a square mod p, so it's a square in ℚ_[p], hence (x,_)ₚ=1.
-    --Since p ∉ T, ep i p = 1 as well.
+  · --case p ∈ S: LHR = 1 because x is a square, RHS = 1 because p ∉ T.
     have ⟨sqrt_x, hx⟩ := x_square_of_p_mem_S hep h1 disjoint_ST p hpS
-    simp only [x, hx, comm]
-    rw [ep_eq_one_of_mem_S_disjoint hep h1 hpS disjoint_ST i, right_square_eq_one (by simp [ha]) ?_]
+    simp only [x, hx, comm, ep_eq_one_of_mem_S_disjoint hep h1 hpS disjoint_ST i]
+    rw [right_square_eq_one (by simp [ha]) ?_]
     rw [← pow_ne_zero_iff two_ne_zero, ← hx]
     simp
-  · --Using the explicit formula, if p ∉ S, (x,a_i)ₚ = (legendreSym p a_i) ^ val_p(x).
+  · --case p ∉ S: (x, a_i)ₚ = (legendreSym p a_i) ^ val_p(x).
     have hp2 : p.1 ≠ 2 := by
       rw [ne_eq, Primes.coe_nat_inj p ⟨2, prime_two⟩]
       exact fun h2 ↦ by simp [h2, S, hilbertSym.S] at hpS
     rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (by simp) (by simp [ha])]
     by_cases hpT : p ∈ T hep h1
-    -- If p ∈ T, the exponent is 1.
+      --case p ∈ T: val_p(x) = 1.
     · have val_x : padicValRat p x.val = 1 :=
-        val_x_eq_one_of_p_mem_T hep h1 disjoint_ST p pval_ne_q hpT
-      --We use h3 to obtain a padic xp with the prescribed hilbertSym.
+        val_x_eq_one_of_p_mem_T hep h1 disjoint_ST p hpq hpT
+      --we extract xp from h3 and use it.
       obtain ⟨xp, hxp⟩ := h3.1 p
       have val_xp : Odd xp.valuation := by
         simp only [hilbertSym.T, Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_iUnion,
@@ -308,25 +332,12 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
           specialize hep i p
           grind
         simp at this
-    · --If p ∉ T, the exponent is 0, so (x,a_i)ₚ = 1. Also, ep i p = 1.
-      have val_x : padicValRat p x.val = 0 := by sorry
-        -- rw [← Rat.natCast_mul, ← padicValRat_of_nat, cast_eq_zero, padicValNat.mul
-        --   (A_ne_zero hep h1) (Nat.Prime.ne_zero q_prime)]
-        -- have : p ≠ q := by simp [ne_eq, Primes.coe_nat_inj p ⟨q, q_prime⟩, pneq]
-        -- simp only [padicValNat_primes this, add_zero, padicValNat.eq_zero_iff]
-        -- apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
-        -- intro t htinT hdvd
-        -- simp_rw [prime_dvd_prime_iff_eq p.2 t.1.2, Primes.coe_nat_inj] at hdvd
-        -- simp [hdvd] at hpT
+    · --case p ∉ T: val_p(x) = 0, so LHR = 1 = RHS.
+      have val_x : padicValRat p x.val = 0 :=
+        val_x_eq_one_of_p_not_mem_T hep h1 disjoint_ST p hpq hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
         Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
       simpa [is_unit_ai_of_p_notMem_S ha hpS, val_x] using (Int.cast_inj.mpr (hpT i).symm)
-
-
-
-
-
-
 
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
