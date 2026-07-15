@@ -215,8 +215,31 @@ private lemma x_square_of_p_mem_S [Fintype I] [Nonempty I] (disjoint_ST : Disjoi
   simp
 
 private lemma val_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (hpS : p ∈ T hep h1) :
-    padicValRat p (x hep h1 disjoint_ST).val = 1 := by sorry
+    (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
+    (hpT : p ∈ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 1 := by
+  let q := hilbertSym.q hep h1 disjoint_ST
+  have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
+  have : Fact (Nat.Prime q) := ⟨q_prime⟩
+  simp only [x, cast_prod, mk0_mul, val_mul, val_mk0]
+  rw [padicValRat.mul (by exact_mod_cast A_ne_zero hep h1) (by simp [Nat.Prime.ne_zero q_prime]),
+    padicValRat.of_nat]
+  simp only [ne_eq, pneq, not_false_eq_true, padicValNat_primes, CharP.cast_eq_zero,
+    add_zero]
+  have hTp : T hep h1 = (T hep h1 \ {p}) ∪ {p} := by
+    rw [union_singleton, insert_sdiff_self_of_mem hpT]
+  rw_mod_cast [← prod_subtype (T hep h1) (by simp) (fun t ↦ (t : ℕ)), hTp, prod_union (by simp),
+    prod_singleton, padicValNat.mul _ (Nat.Prime.ne_zero p.2), padicValNat_self]
+  · rw [Nat.add_eq_right, padicValNat.eq_zero_iff]
+    apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
+    intro t
+    simp [mem_singleton, ← ne_eq, ne_comm, prime_dvd_prime_iff_eq p.2 t.2,
+      Primes.coe_nat_inj]
+  · have := A_ne_zero hep h1
+    simp only [implies_true, ← prod_subtype (T hep h1) _ (fun t ↦ (t : ℕ)),
+      hilbertSym.A] at this
+    rw [hTp, prod_union sdiff_disjoint] at this
+    simp only [prod_singleton, ne_eq, mul_eq_zero, not_or] at this
+    simp [this]
 
 include ha h2 h3 in
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
@@ -226,18 +249,16 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
       hilbertSym (x : ℝ) (a i) = ereal i) := by
   let q := hilbertSym.q hep h1 disjoint_ST
   have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
-  have q_cong := hilbertSym.q_cong hep h1 disjoint_ST
   have : Fact (Nat.Prime q) := ⟨q_prime⟩
-  let A := hilbertSym.A hep h1
-  let M := hilbertSym.M a
   let x := x hep h1 disjoint_ST
-  --We apply lemma all_but_one_places_suffice to avoid dealing with q.
   use x
+  --We apply lemma all_but_one_places_suffice to avoid dealing with q.
   apply all_but_one_places_suffice ha hep h1 h2 ⟨q, q_prime⟩ x
   --In order to prove that hilbertSym x (a i) and ep i p agree everywhere, we consider separately
   --the cases p ∈ S, p ∈ T, p ∉ S ∪ T, and the real place (which is trivial since x > 0).
   refine fun i ↦ ⟨fun p pneq ↦ ?_,
-    (by rw [real_eq (by simp) (by simp [ha]), infty_not_mem_T]; simp [x, x_pos hep h1 disjoint_ST])⟩ --(by rw [real_eq (by simp) (by simp [ha i]), if_pos (Or.inl (Rat.cast_pos.mpr (_))), infty_not_mem_T])⟩
+    (by rw [real_eq (by simp) (by simp [ha]), infty_not_mem_T]; simp [x, x_pos hep h1 disjoint_ST])⟩
+  have pval_ne_q : p ≠ q := by simp only [ne_eq, ← Primes.coe_nat_inj] at pneq; exact pneq
   by_cases hpS : p ∈ S a
   · --Strategy: x is a square mod p, so it's a square in ℚ_[p], hence (x,_)ₚ=1.
     --Since p ∉ T, ep i p = 1 as well.
@@ -253,26 +274,8 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
     rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (by simp) (by simp [ha])]
     by_cases hpT : p ∈ T hep h1
     -- If p ∈ T, the exponent is 1.
-    · have val_x : padicValRat p x.val = 1 := by
-        simp [x, ← Rat.natCast_mul, ← padicValRat_of_nat, cast_eq_one,
-          padicValNat.mul (A_ne_zero hep h1) (Nat.Prime.ne_zero q_prime)]
-        simp only [padicValNat_primes (by revert pneq; simp [← Primes.coe_nat_inj] : p ≠ q),
-          add_zero, hilbertSym.A]
-        have hTp : T hep h1 = (T hep h1 \ {p}) ∪ {p} := by
-          rw [union_singleton, insert_sdiff_self_of_mem hpT]
-        rw [← prod_subtype (T hep h1) (by simp) (fun t ↦ (t : ℕ)), hTp, prod_union (by simp),
-          prod_singleton, padicValNat.mul _ (Nat.Prime.ne_zero p.2), padicValNat_self]
-        · rw [Nat.add_eq_right, padicValNat.eq_zero_iff]
-          apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
-          intro t
-          simp [mem_singleton, ← ne_eq, ne_comm, prime_dvd_prime_iff_eq p.2 t.2,
-            Primes.coe_nat_inj]
-        · have := A_ne_zero hep h1
-          simp only [implies_true, ← prod_subtype (T hep h1) _ (fun t ↦ (t : ℕ)),
-            hilbertSym.A] at this
-          rw [hTp, prod_union sdiff_disjoint] at this
-          simp only [prod_singleton, ne_eq, mul_eq_zero, not_or] at this
-          simp [this]
+    · have val_x : padicValRat p x.val = 1 :=
+        val_x_eq_one_of_p_mem_T hep h1 disjoint_ST p pval_ne_q hpT
       --We use h3 to obtain a padic xp with the prescribed hilbertSym.
       obtain ⟨xp, hxp⟩ := h3.1 p
       have val_xp : Odd xp.valuation := by
@@ -306,15 +309,15 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
           grind
         simp at this
     · --If p ∉ T, the exponent is 0, so (x,a_i)ₚ = 1. Also, ep i p = 1.
-      have val_x : padicValRat p x.val = 0 := by
-        rw [hx, ← Rat.natCast_mul, ← padicValRat_of_nat, cast_eq_zero, padicValNat.mul
-          (A_ne_zero hep h1) (Nat.Prime.ne_zero q_prime)]
-        have : p ≠ q := by simp [ne_eq, Primes.coe_nat_inj p ⟨q, q_prime⟩, pneq]
-        simp only [padicValNat_primes this, add_zero, padicValNat.eq_zero_iff]
-        apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
-        intro t htinT hdvd
-        simp_rw [prime_dvd_prime_iff_eq p.2 t.1.2, Primes.coe_nat_inj] at hdvd
-        simp [hdvd] at hpT
+      have val_x : padicValRat p x.val = 0 := by sorry
+        -- rw [← Rat.natCast_mul, ← padicValRat_of_nat, cast_eq_zero, padicValNat.mul
+        --   (A_ne_zero hep h1) (Nat.Prime.ne_zero q_prime)]
+        -- have : p ≠ q := by simp [ne_eq, Primes.coe_nat_inj p ⟨q, q_prime⟩, pneq]
+        -- simp only [padicValNat_primes this, add_zero, padicValNat.eq_zero_iff]
+        -- apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
+        -- intro t htinT hdvd
+        -- simp_rw [prime_dvd_prime_iff_eq p.2 t.1.2, Primes.coe_nat_inj] at hdvd
+        -- simp [hdvd] at hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
         Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
       simpa [is_unit_ai_of_p_notMem_S ha hpS, val_x] using (Int.cast_inj.mpr (hpT i).symm)
