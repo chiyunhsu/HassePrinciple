@@ -207,16 +207,18 @@ private lemma x_square [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T
         exact dvd_prod_of_mem Subtype.val hpS
     simp [q, A, this, pow_two]
 
---this too!
+--this too! (I removed the simps)
 set_option trace.profiler true in
 private lemma x_square_of_p_mem_S [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
     (p : Primes) (hpS : p ∈ S a) : ∃ b : ℚ_[p], x hep h1 disjoint_ST = b ^ 2 := by
   have ⟨b, hb⟩ := x_square hep h1 disjoint_ST p hpS
   use b
   rw_mod_cast [x, ← hb]
-  norm_num
+  simp only [cast_mul, cast_prod, univ_eq_attach, mk0_mul, val_mul, val_mk0, Rat.cast_mul,
+    Rat.cast_prod, Rat.cast_natCast, PadicInt.coe_mul, PadicInt.coe_natCast, mul_eq_mul_right_iff,
+    cast_eq_zero]
   rw [← PadicInt.algebraMap_apply]
-  simp
+  simp only [map_prod, map_natCast, true_or]
 
 private lemma val_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
     (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
