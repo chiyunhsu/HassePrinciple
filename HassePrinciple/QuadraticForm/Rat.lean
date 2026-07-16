@@ -67,12 +67,17 @@ lemma LocalGlobal (a : ℚ) (hpos : a > 0) (h : ∀ (p : ℕ) [inst : Fact (Nat.
   rw [Rat.isSquare_iff]
   have num_pos : a.num > 0 := Rat.num_pos.mpr hpos
   let a_num := a.num.toNat
+  #check Padic.valuation --preferred
+  #check padicValRat
+
+
   #check Padic.valuation_pow
   #check Padic.valuation_ratCast
   #check Nat.eq_of_factorization_eq'
   #check associated_of_factorization_eq
   #check factorization_mul
   have : a_num = a.num := Int.toNat_of_nonneg (le_of_lt num_pos)
+  #check UniqueFactorizationMonoid.induction_on_prime
   have : ∀ (p : ℕ) [inst : Fact (Nat.Prime p)], Even (padicValRat p a) := by sorry
   constructor
   · sorry
