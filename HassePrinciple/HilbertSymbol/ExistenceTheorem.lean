@@ -179,7 +179,7 @@ private lemma x_pos [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T he
   · exact_mod_cast A_pos hep h1
   · exact_mod_cast Nat.Prime.pos (q_prime hep h1 disjoint_ST)
 
---this one is slower!
+--this one is slower! (I removed some simps)
 set_option trace.profiler true in
 private lemma x_square [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
     (p : Primes) (hpS : p ∈ S a) : ∃ b : ℤ_[p], (A hep h1) * (q hep h1 disjoint_ST) = b ^ 2 := by
@@ -205,7 +205,7 @@ private lemma x_square [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T
       · refine Nat.dvd_mul_left_of_dvd ?_ 4
         rw [← prod_subtype (S a) (by simp) (fun s ↦ (s : ℕ))]
         exact dvd_prod_of_mem Subtype.val hpS
-    simp [q, A, this, pow_two]
+    simp only [cast_prod, univ_eq_attach, map_mul, map_prod, map_natCast, this, pow_two, A, q]
 
 --this too! (I removed the simps)
 set_option trace.profiler true in
@@ -267,7 +267,7 @@ private lemma val_x_eq_zero_of_p_not_mem_T [Fintype I] [Nonempty I]
   subst p
   contradiction
 
---this is slow too!
+--this is slow too! (more simps removed)
 set_option trace.profiler true in
 include ha h2 h3 in
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
@@ -292,12 +292,13 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
     simp only [x, hx, comm, ep_eq_one_of_mem_S_disjoint hep h1 hpS disjoint_ST i]
     rw [right_square_eq_one (by simp [ha]) ?_]
     rw [← pow_ne_zero_iff two_ne_zero, ← hx]
-    simp
+    simp only [ne_eq, Rat.cast_eq_zero, ne_zero, not_false_eq_true]
   · --case p ∉ S: (x, a_i)ₚ = (legendreSym p a_i) ^ val_p(x).
     have hp2 : p.1 ≠ 2 := by
       rw [ne_eq, Primes.coe_nat_inj p ⟨2, prime_two⟩]
       exact fun h2 ↦ by simp [h2, S, hilbertSym.S] at hpS
-    rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (by simp) (by simp [ha])]
+    rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (by simp only [ne_eq, Rat.cast_eq_zero,
+      ne_zero, not_false_eq_true]) (by simp only [ne_eq, Int.cast_eq_zero, ha, not_false_eq_true])]
     by_cases hpT : p ∈ T hep h1
       --case p ∈ T: val_p(x) = 1.
     · have val_x : padicValRat p x.val = 1 :=
@@ -325,8 +326,8 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
           mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
           val_one, Int.cast_one, zpow_zero, one_mul]
         rw [Rat.zpow_odd_eq_self xp.valuation val_xp]
-        exact_mod_cast PadicInt.legendreSym.eq_one_or_neg_one (by simp : IsUnit (Padic.unitPart
-          (mk0 ((a i) : ℚ_[p]) _)).1)
+        exact_mod_cast PadicInt.legendreSym.eq_one_or_neg_one (by simp only [Units.isUnit] :
+          IsUnit (Padic.unitPart (mk0 ((a i) : ℚ_[p]) _)).1)
       · simp only [hilbertSym, xp0] at hxp
       --Seriously?
         have : ∀ i : I, 0 = 1 ∨ 0 = -1 := by
@@ -339,7 +340,10 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
         val_x_eq_zero_of_p_not_mem_T hep h1 disjoint_ST p hpq hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
         Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
-      simpa [is_unit_ai_of_p_notMem_S ha hpS, val_x] using (Int.cast_inj.mpr (hpT i).symm)
+      simpa only [Padic.valuation_ratCast, val_x, Padic.valuation_intCast,
+        is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero, mul_zero, mul_ite,
+        PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, val_one, Int.cast_one,
+        zpow_zero] using (Int.cast_inj.mpr (hpT i).symm)
 
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
