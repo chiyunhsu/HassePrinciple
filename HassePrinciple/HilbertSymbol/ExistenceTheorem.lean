@@ -245,7 +245,7 @@ private lemma val_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
     simp only [prod_singleton, ne_eq, mul_eq_zero, not_or] at this
     simp [this]
 
-private lemma val_x_eq_one_of_p_not_mem_T [Fintype I] [Nonempty I]
+private lemma val_x_eq_zero_of_p_not_mem_T [Fintype I] [Nonempty I]
     (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
     (hpT : p ∉ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 0 := by
   let q := hilbertSym.q hep h1 disjoint_ST
@@ -334,7 +334,7 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
         simp at this
     · --case p ∉ T: val_p(x) = 0, so LHR = 1 = RHS.
       have val_x : padicValRat p x.val = 0 :=
-        val_x_eq_one_of_p_not_mem_T hep h1 disjoint_ST p hpq hpT
+        val_x_eq_zero_of_p_not_mem_T hep h1 disjoint_ST p hpq hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
         Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
       simpa [is_unit_ai_of_p_notMem_S ha hpS, val_x] using (Int.cast_inj.mpr (hpT i).symm)
