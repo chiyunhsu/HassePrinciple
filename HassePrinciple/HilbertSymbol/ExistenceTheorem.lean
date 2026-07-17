@@ -345,6 +345,8 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
         PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, val_one, Int.cast_one,
         zpow_zero] using (Int.cast_inj.mpr (hpT i).symm)
 
+--this is bad
+set_option trace.profiler true in
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
 there exists a rational number `x` such that the Hilbert symbols `(x,a_i)_v` at each place `v`
@@ -372,11 +374,12 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Finite I] [Nonempty
       specialize funxp_eq p
       simp only [hilbertSym, hp, Int.cast_eq_zero, true_or, ↓reduceIte] at funxp_eq
       --Seriously?
+      --Can this be simplified? It's also used in several places in some variants.
       have : ∀ i : I, 0 = 1 ∨ 0 = -1 := by
         intro i
         specialize hep i p
         specialize funxp_eq i
-        grind
+        grind only
       simp at this
     let funxr := h3.2.choose
     have funxr_eq : ∀ (i : I), hilbertSym (funxr) (a i) = ereal i := Exists.choose_spec h3.2
@@ -394,7 +397,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Finite I] [Nonempty
         (x' / (funxp p) : ℚ_[p])) ∧ IsSquare (x' / h3.2.choose):= by
       have := Rat.approximation'' (S a)
       rw [dense_iff_inter_open] at this
-      --let U : Set (Π p : S a, ℚ_[p]ˣ) := Π p, Padic.squares p
+      --let U : Set (Π p : S a, ℚ_[p]ˣ) := Π p, sorry
       --have hU : IsOpen U :=
       --???
       sorry
@@ -414,7 +417,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Finite I] [Nonempty
           field_simp [xp_ne_zero]
         rw [hc, mul_left_square_eq (by aesop)]
       simp [this, funxp]
-      grind
+      grind only
     have hilbertSym_agree_on_infty :
         ∀ (i : I), hilbertSym (x' : ℝ) (a i) = ereal i := by
       intro i
@@ -424,7 +427,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Finite I] [Nonempty
           use c'
           rw [pow_two, ← hc']
           field_simp [xr_ne_zero]
-          grind
+          grind only
         rw [hc, mul_left_square_eq (by aesop)]
       simp [this]
       grind
@@ -478,8 +481,8 @@ theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Finite I] [Nonempty
     have ⟨xeta, hxeta⟩ := existence_disjoint ha hetap1 heta1 heta2 heta3 etadisjoint_ST
       etainfty_not_mem_T
     use xeta * x'
-    refine fun i ↦ ⟨fun p ↦ by simp [padic_mul_left_eq]; grind, by simp [real_mul_left_eq]; grind⟩
-
+    refine fun i ↦ ⟨fun p ↦ by simp [padic_mul_left_eq, hxeta i, etap]; grind only, by simp
+      [real_mul_left_eq, hxeta i, etainfty_not_mem_T i, hilbertSym_agree_on_infty i]⟩
 end Integer
 
 theorem exists_rat_with_finite_prescribed_hilbertSym
