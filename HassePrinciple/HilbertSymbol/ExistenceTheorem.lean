@@ -203,7 +203,7 @@ private lemma isSquare_x [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) 
 private lemma isSquare_x_of_p_mem_S [Fintype I] [Nonempty I]
     (disjoint_ST : Disjoint (S a) (T hep h1))
     {p : Primes} (hpS : p ∈ S a) :  IsSquare (x hep h1 disjoint_ST : ℚ_[p]) := by
-  have ⟨b, hb⟩ :=  (isSquare_iff_exists_mul_self _).mp (x_square hep h1 disjoint_ST hpS)
+  have ⟨b, hb⟩ :=  (isSquare_iff_exists_mul_self _).mp (isSquare_x hep h1 disjoint_ST hpS)
   use b
   simp only [x, cast_prod, mk0_mul, val_mul, val_mk0, Rat.cast_mul, Rat.cast_prod,
     Rat.cast_natCast, ← PadicInt.coe_mul, ← hb]
@@ -265,10 +265,10 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
   have hpq : p.1 ≠ q := by simp only [ne_eq, ← Primes.coe_nat_inj] at pneq; exact pneq
   by_cases hpS : p ∈ S a
   · --case p ∈ S: LHR = 1 because x is a square, RHS = 1 because p ∉ T.
-    have ⟨sqrt_x, hx⟩ := x_square_of_p_mem_S hep h1 disjoint_ST p hpS
-    simp only [x, hx, comm, ep_eq_one_of_mem_S_disjoint hep h1 hpS disjoint_ST i]
+    have ⟨sqrt_x, hx⟩ := isSquare_x_of_p_mem_S hep h1 disjoint_ST hpS
+    simp only [x, hx, ← pow_two, comm, ep_eq_one_of_mem_S_disjoint hep h1 hpS disjoint_ST i]
     rw [right_square_eq_one (by simp [ha]) ?_]
-    rw [← pow_ne_zero_iff two_ne_zero, ← hx]
+    rw [← pow_ne_zero_iff two_ne_zero, pow_two, ← hx]
     simp only [ne_eq, Rat.cast_eq_zero, ne_zero, not_false_eq_true]
   · --case p ∉ S: (x, a_i)ₚ = (legendreSym p a_i) ^ val_p(x).
     have hp2 : p.1 ≠ 2 := by
@@ -279,7 +279,7 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
     by_cases hpT : p ∈ T hep h1
       --case p ∈ T: val_p(x) = 1.
     · have val_x : padicValRat p x.val = 1 :=
-        val_x_eq_one_of_p_mem_T hep h1 disjoint_ST p hpq hpT
+        padicValRat_x_eq_one_of_p_mem_T hep h1 disjoint_ST p hpq hpT
       --we extract xp from h3 and use it.
       obtain ⟨xp, hxp⟩ := h3.1 p
       have val_xp : Odd xp.valuation := by
@@ -314,7 +314,7 @@ private lemma existence_disjoint [Fintype I] [Nonempty I]
         simp at this
     · --case p ∉ T: val_p(x) = 0, so LHR = 1 = RHS.
       have val_x : padicValRat p x.val = 0 :=
-        val_x_eq_zero_of_p_not_mem_T hep h1 disjoint_ST p hpq hpT
+        padicValRat_x_eq_zero_of_p_notMem_T hep h1 disjoint_ST hpq hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
         Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
       simpa only [Padic.valuation_ratCast, val_x, Padic.valuation_intCast,

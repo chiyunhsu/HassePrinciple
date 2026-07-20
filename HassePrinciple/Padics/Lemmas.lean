@@ -257,8 +257,6 @@ lemma isSquare_of_zmod {p : ℕ} [Fact (Nat.Prime p)] (hodd : p ≠ 2) {m : ℤ_
 /-- An element in ℤ_2 is a square if its reduction modulo 8 is a square. -/
 lemma isSquare_of_zmodPow {m : ℤ_[2]} (hmod : IsSquare (m.toZModPow 3)) : IsSquare m := by sorry
 
-end Polynomial
-
 
 /-! ## Multivariable Hensel's Lemma -/
 
