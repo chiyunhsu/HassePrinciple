@@ -119,11 +119,11 @@ private lemma is_unit_ai_of_p_notMem_S [Fintype I] {p : Primes} (hpS : p ∉ S a
 
 --is there a simp or at least simple mathlib lemmma for this? I couldn't shorten further.
 --Edit: I did shorten further, but now I don't know where to put this.
-private lemma Rat.zpow_odd_eq_self (c : ℤ) (hodd : Odd c) :
+private lemma _root_.Rat.zpow_odd_eq_self (c : ℤ) (hodd : Odd c) :
     ∀ b : ℚ, (b = 1 ∨ b = -1) → b ^ c = b := by
   norm_num; rw [Odd.neg_one_zpow hodd]
 
-private noncomputable abbrev A [Fintype I] : ℕ := ∏ t : T hep h1, (t : ℕ)
+private noncomputable abbrev A [Fintype I] : ℕ := ∏ t ∈ T hep h1, (t : ℕ)
 
 private lemma A_ne_zero [Fintype I] : A hep h1 ≠ 0 := by simp [prod_ne_zero_iff, A, NeZero.out]
 
@@ -136,23 +136,22 @@ private lemma M_ne_zero [Fintype I] : M a ≠ 0 :=
   mul_ne_zero (by omega) (by simp [prod_ne_zero_iff, NeZero.out])
 
 /-- The definition of q when S and T are disjoint using Dirichlet. -/
-private lemma q_existence [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1)) :
-    ∃ q : ℕ, Nat.Prime q ∧ q ≡ ∏ t : T hep h1, (t : ℕ) [MOD 4 * ∏ s : S a, (s : ℕ)] := by
+private lemma q_existence [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+    ∃ q : ℕ, Nat.Prime q ∧ q ≡ ∏ t ∈ T hep h1, (t : ℕ) [MOD 4 * ∏ s : S a, (s : ℕ)] := by
   let A := hilbertSym.A hep h1
   let M := hilbertSym.M a
   have coprime_AM : A.Coprime M := by
-    rw [coprime_fintype_prod_left_iff]
-    refine fun t ↦ Coprime.mul_right ?_ ?_
+    rw [coprime_prod_left_iff]
+    refine fun t ht ↦ Coprime.mul_right ?_ ?_
     · have h2 : (⟨2, prime_two⟩ : Primes) = (2 : ℕ) := rfl
       rw [(by omega : 4 = 2 ^ 2), coprime_pow_right_iff (by omega), coprime_two_right]
-      apply Prime.odd_of_ne_two t.1.2
+      apply Prime.odd_of_ne_two t.2
       rw [← h2, ne_eq, Primes.coe_nat_inj, eq_comm]
-      exact (disjoint_iff_ne.mp disjoint_ST) ⟨2,prime_two⟩ (by simp [hilbertSym.S]) t t.2
+      exact (disjoint_iff_ne.mp disjoint_ST) ⟨2,prime_two⟩ (by simp [hilbertSym.S]) t ht
     · rw [coprime_fintype_prod_right_iff]
       intro s
-      simp [coprime_primes t.1.2 s.1.2, Primes.coe_nat_inj,
-        (disjoint_ST.forall_ne_finset s.2 t.2).symm]
+      simp [coprime_primes t.2 s.1.2, Primes.coe_nat_inj,
+        (disjoint_ST.forall_ne_finset s.2 ht).symm]
   --We can apply Dirichlet's lemma.
   exact (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM).nonempty
 
@@ -164,108 +163,86 @@ private lemma q_prime [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T 
     Nat.Prime (q hep h1 disjoint_ST) := (q_existence hep h1 disjoint_ST).choose_spec.1
 
 private lemma q_cong [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
-    q hep h1 disjoint_ST ≡ ∏ t : T hep h1, (t : ℕ) [MOD 4 * ∏ s : S a, (s : ℕ)] :=
+    q hep h1 disjoint_ST ≡ ∏ t ∈ T hep h1, (t : ℕ) [MOD 4 * ∏ s : S a, (s : ℕ)] :=
   (q_existence hep h1 disjoint_ST).choose_spec.2
 
 private noncomputable def x [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :=
   mk0 ((A hep h1) * (q hep h1 disjoint_ST) : ℚ) (by
-    simp only [ne_eq, _root_.mul_eq_zero, cast_eq_zero, not_or]; refine
-      ⟨A_ne_zero hep h1, Nat.Prime.ne_zero (q_prime hep h1 disjoint_ST)⟩)
+  simp only [ne_eq, _root_.mul_eq_zero, cast_eq_zero, not_or]
+  exact ⟨A_ne_zero hep h1, (q_prime hep h1 disjoint_ST).ne_zero⟩)
 
 private lemma x_pos [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
     0 < (x hep h1 disjoint_ST).val := by
-  simp only [x, A, univ_eq_attach, cast_prod, mk0_mul, val_mul, val_mk0]
-  refine mul_pos ?_ ?_
-  · exact_mod_cast A_pos hep h1
-  · exact_mod_cast Nat.Prime.pos (q_prime hep h1 disjoint_ST)
+  simp only [x, val_mk0, ← cast_mul, cast_pos,
+  mul_pos (A_pos hep h1) (q_prime hep h1 disjoint_ST).pos]
 
---this one is slower! (I removed some simps)
-set_option trace.profiler true in
-private lemma x_square [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
-    (p : Primes) (hpS : p ∈ S a) : ∃ b : ℤ_[p], (A hep h1) * (q hep h1 disjoint_ST) = b ^ 2 := by
-  let A := hilbertSym.A hep h1
-  let q := hilbertSym.q hep h1 disjoint_ST
+private lemma isSquare_x [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
+    {p : Primes} (hpS : p ∈ S a) : IsSquare ((A hep h1) * (q hep h1 disjoint_ST) : ℤ_[p]) := by
+  set A := hilbertSym.A hep h1
+  set q := hilbertSym.q hep h1 disjoint_ST
   have q_cong := hilbertSym.q_cong hep h1 disjoint_ST
   by_cases hp2 : p = ⟨2, prime_two⟩
   · rw [hp2]
-    apply Polynomial.squares_in_Z2 _ A
+    apply PadicInt.isSquare_of_zmodPow
     have : (q : ZMod 8) = A := by
       apply ModEq.of_dvd at q_cong
-      · rw [← ZMod.natCast_eq_natCast_iff] at q_cong
-        exact q_cong
+      · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
       · simp only [(by omega : 8 = 4 * 2)]
         rw [mul_dvd_mul_iff_left (by omega), ← prod_subtype (S a) (by simp) (fun s ↦ (s : ℕ))]
         exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S a)
-    simp [q, A, this, pow_two]
-  · apply Polynomial.squares_in_Zp (by rw [← Primes.coe_nat_inj] at hp2; exact hp2) _ A
+    simp [this]
+  · apply PadicInt.isSquare_of_zmod (by rw [← Primes.coe_nat_inj] at hp2; exact hp2)
     have : (q : ZMod p) = A := by
       apply ModEq.of_dvd at q_cong
-      · rw [← ZMod.natCast_eq_natCast_iff] at q_cong
-        exact q_cong
+      · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
       · refine Nat.dvd_mul_left_of_dvd ?_ 4
         rw [← prod_subtype (S a) (by simp) (fun s ↦ (s : ℕ))]
         exact dvd_prod_of_mem Subtype.val hpS
-    simp only [cast_prod, univ_eq_attach, map_mul, map_prod, map_natCast, this, pow_two, A, q]
-
---this too! (I removed the simps)
-set_option trace.profiler true in
-private lemma x_square_of_p_mem_S [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
-    (p : Primes) (hpS : p ∈ S a) : ∃ b : ℚ_[p], x hep h1 disjoint_ST = b ^ 2 := by
-  have ⟨b, hb⟩ := x_square hep h1 disjoint_ST p hpS
-  use b
-  rw_mod_cast [x, ← hb]
-  simp only [cast_mul, cast_prod, univ_eq_attach, mk0_mul, val_mul, val_mk0, Rat.cast_mul,
-    Rat.cast_prod, Rat.cast_natCast, PadicInt.coe_mul, PadicInt.coe_natCast, mul_eq_mul_right_iff,
-    cast_eq_zero]
-  rw [← PadicInt.algebraMap_apply]
-  simp only [map_prod, map_natCast, true_or]
-
-private lemma val_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
-    (hpT : p ∈ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 1 := by
-  let q := hilbertSym.q hep h1 disjoint_ST
-  have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
-  have : Fact (Nat.Prime q) := ⟨q_prime⟩
-  simp only [x, cast_prod, mk0_mul, val_mul, val_mk0]
-  rw [padicValRat.mul (by exact_mod_cast A_ne_zero hep h1) (by simp [Nat.Prime.ne_zero q_prime]),
-    padicValRat.of_nat]
-  simp only [ne_eq, pneq, not_false_eq_true, padicValNat_primes, CharP.cast_eq_zero,
-    add_zero]
-  have hTp : T hep h1 = (T hep h1 \ {p}) ∪ {p} := by
-    rw [union_singleton, insert_sdiff_self_of_mem hpT]
-  rw_mod_cast [← prod_subtype (T hep h1) (by simp) (fun t ↦ (t : ℕ)), hTp, prod_union (by simp),
-    prod_singleton, padicValNat.mul _ (Nat.Prime.ne_zero p.2), padicValNat_self]
-  · rw [Nat.add_eq_right, padicValNat.eq_zero_iff]
-    apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
-    intro t
-    simp [mem_singleton, ← ne_eq, ne_comm, prime_dvd_prime_iff_eq p.2 t.2,
-      Primes.coe_nat_inj]
-  · have := A_ne_zero hep h1
-    simp only [implies_true, ← prod_subtype (T hep h1) _ (fun t ↦ (t : ℕ)),
-      hilbertSym.A] at this
-    rw [hTp, prod_union sdiff_disjoint] at this
-    simp only [prod_singleton, ne_eq, mul_eq_zero, not_or] at this
     simp [this]
 
-private lemma val_x_eq_zero_of_p_not_mem_T [Fintype I] [Nonempty I]
+private lemma isSquare_x_of_p_mem_S [Fintype I] [Nonempty I]
+    (disjoint_ST : Disjoint (S a) (T hep h1))
+    {p : Primes} (hpS : p ∈ S a) :  IsSquare (x hep h1 disjoint_ST : ℚ_[p]) := by
+  have ⟨b, hb⟩ :=  (isSquare_iff_exists_mul_self _).mp (x_square hep h1 disjoint_ST hpS)
+  use b
+  simp only [x, cast_prod, mk0_mul, val_mul, val_mk0, Rat.cast_mul, Rat.cast_prod,
+    Rat.cast_natCast, ← PadicInt.coe_mul, ← hb]
+  simp [← PadicInt.algebraMap_apply]
+
+private lemma padicValRat_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
     (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
-    (hpT : p ∉ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 0 := by
-  let q := hilbertSym.q hep h1 disjoint_ST
+    (hpT : p ∈ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 1 := by
+  --let q := hilbertSym.q hep h1 disjoint_ST
   have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
-  have : Fact (Nat.Prime q) := ⟨q_prime⟩
+  have : Fact (Nat.Prime (q hep h1 disjoint_ST)) := ⟨q_prime⟩
+  have hTp : T hep h1 = (T hep h1 \ {p}) ∪ {p} := by
+    rw [union_singleton, insert_sdiff_self_of_mem hpT]
   simp only [x, cast_prod, mk0_mul, val_mul, val_mk0]
-  rw [padicValRat.mul (by exact_mod_cast A_ne_zero hep h1) (by simp [Nat.Prime.ne_zero q_prime]),
+  rw [padicValRat.mul (by exact_mod_cast A_ne_zero hep h1) (by simp [q_prime.ne_zero]),
     padicValRat.of_nat]
-  simp only [ne_eq, pneq, not_false_eq_true, padicValNat_primes, CharP.cast_eq_zero,
-    add_zero]
-  rw_mod_cast [← prod_subtype (T hep h1) (by simp) (fun t ↦ (t : ℕ))]
-  simp only [padicValNat.eq_zero_iff]
-  apply Or.inr (Or.inr (Prime.not_dvd_finsetProd (prime_iff.mp p.2) ?_))
+  simp only [ne_eq, pneq, not_false_eq_true, padicValNat_primes, CharP.cast_eq_zero, add_zero]
+  rw [← cast_prod, hTp, prod_union (by simp), prod_singleton, padicValRat.of_nat,
+    padicValNat.mul ?_ (by simp [p.2.ne_zero]), padicValNat_self, cast_add, cast_one, add_eq_right]
+  · rw [Int.natCast_eq_zero, padicValNat.eq_zero_iff]
+    apply Or.inr (Or.inr ((prime_iff.mp p.2).not_dvd_finsetProd fun t ↦ ?_))
+    simp [ne_comm, prime_dvd_prime_iff_eq p.2 t.2, Primes.coe_nat_inj]
+  · have := A_ne_zero hep h1
+    rw [hilbertSym.A, hTp, prod_union sdiff_disjoint, mul_ne_zero_iff] at this
+    exact this.1
+
+private lemma padicValRat_x_eq_zero_of_p_notMem_T [Fintype I] [Nonempty I]
+    (disjoint_ST : Disjoint (S a) (T hep h1)) {p : Primes} (pneq : p ≠ q hep h1 disjoint_ST)
+    (hpT : p ∉ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 0 := by
+  have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
+  have : Fact (Nat.Prime (q hep h1 disjoint_ST)) := ⟨q_prime⟩
+  simp only [x, cast_prod, mk0_mul, val_mul, val_mk0]
+  rw [padicValRat.mul (by exact_mod_cast A_ne_zero hep h1) (by simp [q_prime.ne_zero])]
+  simp only [← cast_prod, padicValRat.of_nat, ne_eq, pneq, not_false_eq_true, padicValNat_primes,
+    CharP.cast_eq_zero, add_zero, Int.natCast_eq_zero, padicValNat.eq_zero_iff]
+  apply Or.inr (Or.inr ((prime_iff.mp p.2).not_dvd_finsetProd ?_))
   intro t ht
-  simp only [prime_dvd_prime_iff_eq p.2 t.2, Primes.coe_nat_inj, ← ne_eq]
-  intro hpt
-  subst p
-  contradiction
+  rw [prime_dvd_prime_iff_eq p.2 t.2, Primes.coe_nat_inj, ← ne_eq]
+  aesop
 
 --this is slow too! (more simps removed)
 set_option trace.profiler true in

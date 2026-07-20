@@ -245,22 +245,20 @@ end Padic
 @[expose] public section
 
 
-namespace Polynomial
+namespace PadicInt
+open Polynomial
 
 /-- An element in ℤ_p (p odd) is a square if its reduction modulo p is a square. -/
-lemma squares_in_Zp {p : ℕ} [Fact (Nat.Prime p)] (hodd : p ≠ 2) (m : ℤ_[p]) (n : ℕ)
-    (hmod : m.toZMod = n ^ 2) : ∃ x : ℤ_[p], m = x ^ 2 := by
+lemma isSquare_of_zmod {p : ℕ} [Fact (Nat.Prime p)] (hodd : p ≠ 2) {m : ℤ_[p]}
+    (hmod : IsSquare m.toZMod) : IsSquare m := by
   let F : ℤ_[p][X] := X ^ 2 - C m
   sorry
 
 /-- An element in ℤ_2 is a square if its reduction modulo 8 is a square. -/
-lemma squares_in_Z2 (m : ℤ_[2]) (n : ℕ)
-    (hmod : m.toZModPow 3 = n ^ 2) : ∃ x : ℤ_[2], m = x ^ 2 := by sorry
+lemma isSquare_of_zmodPow {m : ℤ_[2]} (hmod : IsSquare (m.toZModPow 3)) : IsSquare m := by sorry
 
 end Polynomial
 
-
-namespace PadicInt
 
 /-! ## Multivariable Hensel's Lemma -/
 
