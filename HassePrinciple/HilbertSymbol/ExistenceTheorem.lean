@@ -78,39 +78,44 @@ lemma all_but_one_places_suffice (q : Primes) (x : ℚˣ)
     · exact almost_all_one x (afun i)
   · exact (h4 i).1 p hpq
 
+variable [Finite I]
+
 variable (a) in
 /-- Define S to be the (finite!) set of primes that divide either the numerator or the denominator
 of some (a i). N.B. In Serre, S contains also ∞. -/
-private noncomputable def S [Fintype I] : Finset Primes :=
+private noncomputable def S : Finset Primes :=
+  have : Fintype I := by exact Fintype.ofFinite I
   (univ.biUnion (fun i ↦ (a i).natAbs.primeFactors) ∪ {2}).preimage Subtype.val
     Subtype.val_injective.injOn
 
 include hep h1 in
-private lemma Tfin [Finite I] :
+private lemma Tfin :
     (⋃ i : I, {p : Primes | ep i p = -1}).Finite := by
   refine (Set.finite_iUnion fun i ↦ ?_)
   simp only [eventually_cofinite, ← ep_eq_neg_one_iff_not_one hep, Int.reduceNeg] at h1
   exact h1 i
 
 /-- Define T to be the (finite!) set of primes such that at least one of the e_{i,v} is -1. -/
-private noncomputable def T [Finite I] : Finset Primes := (Tfin hep h1).toFinset
+private noncomputable def T : Finset Primes := (Tfin hep h1).toFinset
 
-private lemma ep_eq_one_of_not_mem_T [Finite I] {p : Primes} (hpT : p ∉ T hep h1) (i : I) :
+private lemma ep_eq_one_of_not_mem_T {p : Primes} (hpT : p ∉ T hep h1) (i : I) :
     ep i p = 1 := by
   simp only [T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.Finite.mem_toFinset,
     Set.mem_iUnion, Set.mem_setOf_eq, not_exists, Decidable.not_not] at hpT
   exact hpT i
 
-private lemma ep_eq_one_iff_not_mem_T [Finite I] (p : Primes) :
+private lemma ep_eq_one_iff_not_mem_T (p : Primes) :
     p ∉ T hep h1 ↔ ∀ i : I, ep i p = 1 :=
   ⟨fun h i ↦ ep_eq_one_of_not_mem_T hep h1 h i, fun h ↦ by simp [T]; grind⟩
 
-private lemma ep_eq_one_of_mem_S_disjoint [Fintype I] (disjoint_ST : Disjoint (S a) (T hep h1))
+--variable (disjoint_ST : Disjoint (S a) (T hep h1))
+
+private lemma ep_eq_one_of_mem_S_disjoint (disjoint_ST : Disjoint (S a) (T hep h1))
     {p : Primes} (hpS : p ∈ S a) (i : I) : ep i p = 1 := by
   exact ep_eq_one_of_not_mem_T hep h1 (disjoint_left.mp disjoint_ST hpS) i
 
 include ha in
-private lemma is_unit_ai_of_p_notMem_S [Fintype I] {p : Primes} (hpS : p ∉ S a) (i : I) :
+private lemma is_unit_ai_of_p_notMem_S {p : Primes} (hpS : p ∉ S a) (i : I) :
     padicValInt p (a i) = 0 := by
   simp only [S, union_singleton, mem_preimage, mem_insert, mem_biUnion, mem_univ, mem_primeFactors,
     p.2, ne_eq, Int.natAbs_eq_zero, true_and, not_or, not_exists, not_and, Decidable.not_not, ha,
@@ -123,20 +128,20 @@ private lemma _root_.Rat.zpow_odd_eq_self (c : ℤ) (hodd : Odd c) :
     ∀ b : ℚ, (b = 1 ∨ b = -1) → b ^ c = b := by
   norm_num; rw [Odd.neg_one_zpow hodd]
 
-private noncomputable abbrev A [Fintype I] : ℕ := ∏ t ∈ T hep h1, (t : ℕ)
+private noncomputable abbrev A : ℕ := ∏ t ∈ T hep h1, (t : ℕ)
 
-private lemma A_ne_zero [Fintype I] : A hep h1 ≠ 0 := by simp [prod_ne_zero_iff, A, NeZero.out]
+private lemma A_ne_zero : A hep h1 ≠ 0 := by simp [prod_ne_zero_iff, A, NeZero.out]
 
-private lemma A_pos [Fintype I] : 0 < A hep h1 := by simp [A, pos_of_neZero]
+private lemma A_pos : 0 < A hep h1 := by simp [A, pos_of_neZero]
 
 variable (a) in
-private noncomputable abbrev M [Fintype I] := 4 * ∏ s ∈ S a, (s : ℕ)
+private noncomputable abbrev M := 4 * ∏ s ∈ S a, (s : ℕ)
 
-private lemma M_ne_zero [Fintype I] : M a ≠ 0 :=
+private lemma M_ne_zero : M a ≠ 0 :=
   mul_ne_zero (by omega) (by simp [prod_ne_zero_iff, NeZero.out])
 
 /-- The definition of q when S and T are disjoint using Dirichlet. -/
-private lemma q_existence [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+private lemma q_existence (disjoint_ST : Disjoint (S a) (T hep h1)) :
     ∃ q : ℕ, Nat.Prime q ∧ q ≡ ∏ t ∈ T hep h1, (t : ℕ) [MOD 4 * ∏ s ∈ S a, (s : ℕ)] := by
   let A := hilbertSym.A hep h1
   let M := hilbertSym.M a
@@ -156,27 +161,27 @@ private lemma q_existence [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a)
   exact (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM).nonempty
 
 /-- Definition of q. -/
-private noncomputable abbrev q [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+private noncomputable abbrev q (disjoint_ST : Disjoint (S a) (T hep h1)) :
     ℕ := (q_existence hep h1 disjoint_ST).choose
 
-private lemma q_prime [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+private lemma q_prime (disjoint_ST : Disjoint (S a) (T hep h1)) :
     Nat.Prime (q hep h1 disjoint_ST) := (q_existence hep h1 disjoint_ST).choose_spec.1
 
-private lemma q_cong [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+private lemma q_cong (disjoint_ST : Disjoint (S a) (T hep h1)) :
     q hep h1 disjoint_ST ≡ ∏ t ∈ T hep h1, (t : ℕ) [MOD 4 * ∏ s ∈ S a, (s : ℕ)] :=
   (q_existence hep h1 disjoint_ST).choose_spec.2
 
-private noncomputable def x [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :=
+private noncomputable def x (disjoint_ST : Disjoint (S a) (T hep h1)) :=
   mk0 ((A hep h1) * (q hep h1 disjoint_ST) : ℚ) (by
   simp only [ne_eq, _root_.mul_eq_zero, cast_eq_zero, not_or]
   exact ⟨A_ne_zero hep h1, (q_prime hep h1 disjoint_ST).ne_zero⟩)
 
-private lemma x_pos [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1)) :
+private lemma x_pos (disjoint_ST : Disjoint (S a) (T hep h1)) :
     0 < (x hep h1 disjoint_ST).val := by
   simp only [x, val_mk0, ← cast_mul, cast_pos,
   mul_pos (A_pos hep h1) (q_prime hep h1 disjoint_ST).pos]
 
-private lemma isSquare_x [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) (T hep h1))
+private lemma isSquare_x (disjoint_ST : Disjoint (S a) (T hep h1))
     {p : Primes} (hpS : p ∈ S a) : IsSquare ((A hep h1) * (q hep h1 disjoint_ST) : ℤ_[p]) := by
   set A := hilbertSym.A hep h1
   set q := hilbertSym.q hep h1 disjoint_ST
@@ -199,8 +204,7 @@ private lemma isSquare_x [Fintype I] [Nonempty I] (disjoint_ST : Disjoint (S a) 
         exact dvd_prod_of_mem Subtype.val hpS
     simp [this]
 
-private lemma isSquare_x_of_p_mem_S [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1))
+private lemma isSquare_x_of_p_mem_S (disjoint_ST : Disjoint (S a) (T hep h1))
     {p : Primes} (hpS : p ∈ S a) :  IsSquare (x hep h1 disjoint_ST : ℚ_[p]) := by
   have ⟨b, hb⟩ :=  (isSquare_iff_exists_mul_self _).mp (isSquare_x hep h1 disjoint_ST hpS)
   use b
@@ -208,9 +212,9 @@ private lemma isSquare_x_of_p_mem_S [Fintype I] [Nonempty I]
     Rat.cast_natCast, ← PadicInt.coe_mul, ← hb]
   simp [← PadicInt.algebraMap_apply]
 
-private lemma padicValRat_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes) (pneq : p ≠ q hep h1 disjoint_ST)
-    (hpT : p ∈ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 1 := by
+private lemma padicValRat_x_eq_one_of_p_mem_T (disjoint_ST : Disjoint (S a) (T hep h1)) (p : Primes)
+    (pneq : p ≠ q hep h1 disjoint_ST) (hpT : p ∈ T hep h1) :
+      padicValRat p (x hep h1 disjoint_ST).val = 1 := by
   --let q := hilbertSym.q hep h1 disjoint_ST
   have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
   have : Fact (Nat.Prime (q hep h1 disjoint_ST)) := ⟨q_prime⟩
@@ -229,9 +233,9 @@ private lemma padicValRat_x_eq_one_of_p_mem_T [Fintype I] [Nonempty I]
     rw [hilbertSym.A, hTp, prod_union sdiff_disjoint, mul_ne_zero_iff] at this
     exact this.1
 
-private lemma padicValRat_x_eq_zero_of_p_notMem_T [Fintype I] [Nonempty I]
-    (disjoint_ST : Disjoint (S a) (T hep h1)) {p : Primes} (pneq : p ≠ q hep h1 disjoint_ST)
-    (hpT : p ∉ T hep h1) : padicValRat p (x hep h1 disjoint_ST).val = 0 := by
+private lemma padicValRat_x_eq_zero_of_p_notMem_T (disjoint_ST : Disjoint (S a) (T hep h1))
+    {p : Primes} (pneq : p ≠ q hep h1 disjoint_ST) (hpT : p ∉ T hep h1) :
+      padicValRat p (x hep h1 disjoint_ST).val = 0 := by
   have q_prime := hilbertSym.q_prime hep h1 disjoint_ST
   have : Fact (Nat.Prime (q hep h1 disjoint_ST)) := ⟨q_prime⟩
   simp only [x, cast_prod, mk0_mul, val_mul, val_mk0]
@@ -245,7 +249,7 @@ private lemma padicValRat_x_eq_zero_of_p_notMem_T [Fintype I] [Nonempty I]
 
 include ha h2 h3 in
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
-private lemma existence_disjoint [Fintype I] [Nonempty I]
+private lemma existence_disjoint [Nonempty I]
     (disjoint_ST : Disjoint (S a) (T hep h1)) (infty_not_mem_T : ∀ i : I, ereal i = 1) :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) := by
@@ -325,7 +329,7 @@ is equal to `e_{i,v}` if and only if
 1) for all `i`, almost all `e_{i,v}` are 1
 2) for all `i`, the product of all `e_{i,v}` is 1
 3) for each place `v`, there is some `x_v ∈ Q_v` with `(x_v,a_i)_v = e_{i,v}`. -/
-theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Finite I] [Nonempty I] :
+theorem exists_rat_with_finite_prescribed_hilbertSym_of_int [Nonempty I] :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) ↔
       (∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) ∧
@@ -345,7 +349,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
-  have : Fintype I := Fintype.ofFinite I
+  have Ifin : Fintype I := by exact Fintype.ofFinite I
   let d := ∏ i, (a i).1.den
   have hd : d ≠ 0 := by simp [d, Finset.prod_ne_zero_iff]
   have heq (i : I) : ((a i).1 * d ^ 2).den = 1 := by
