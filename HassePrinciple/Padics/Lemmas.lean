@@ -259,11 +259,9 @@ lemma squares_in_Z2 (m : ℤ_[2]) (n : ℕ)
 
 end Polynomial
 
-
 namespace PadicInt
 
 /-! ## Multivariable Hensel's Lemma -/
-
 
 /-- Serre's generalization of Hensel's lemma to a multivariable polynomial over ℤ_[p]. If a
 polynomial f in m variables has a solution a modulo p^n, and a is a zero modulo p^k of one of its
