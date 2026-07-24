@@ -416,5 +416,3 @@ theorem prod_eq_one (a b : ℚˣ) :
   sorry
 
 end hilbertSym
-
-#lint
