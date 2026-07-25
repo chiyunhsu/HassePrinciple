@@ -6,6 +6,8 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 module
 
 public import HassePrinciple.HilbertSymbol.Basic
+public import HassePrinciple.ForMathlib.Algebra.Ring.Int.Parity
+
 /-!
 # Existence theorem
 -/
@@ -115,11 +117,6 @@ private lemma is_unit_ai_of_p_notMem_S {p : Primes} (hpS : p ∉ S a) (i : I) :
     p.2, ne_eq, Int.natAbs_eq_zero, true_and, not_or, not_exists, not_and, Decidable.not_not, ha,
     imp_false, ← Int.natCast_dvd] at hpS
   simp [ha, hpS]
-
---is there a simp or at least simple mathlib lemmma for this? I couldn't shorten further.
---Edit: I did shorten further, but now I don't know where to put this.
-private lemma _root_.Rat.zpow_odd_eq_self (c : ℤ) (hodd : Odd c) :
-    ∀ b : ℚ, (b = 1 ∨ b = -1) → b ^ c = b := by norm_num; rw [Odd.neg_one_zpow hodd]
 
 private noncomputable abbrev A : ℕ := ∏ t ∈ T hep h1, (t : ℕ)
 
@@ -313,7 +310,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
       · simp only [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero,
           mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
           val_one, Int.cast_one, zpow_zero, one_mul]
-        rw [Rat.zpow_odd_eq_self xp.valuation val_xp]
+        rw [Int.zpow_odd_one_or_neg_one_eq_self val_xp]
         exact_mod_cast PadicInt.legendreSym.eq_one_or_neg_one (by simp only [Units.isUnit] :
           IsUnit (Padic.unitPart (mk0 ((a i) : ℚ_[p]) _)).1)
       · simp only [hilbertSym, xp0] at hxp
