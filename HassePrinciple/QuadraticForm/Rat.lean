@@ -56,7 +56,7 @@ lemma isotropic_of_rank_zero [Module.Finite ℚ V] (hr : finrank ℚ V = 0)
     (hQ' : Q.EverywhereLocallyIsotropic) : Q.Isotropic := by
   have h' := hQ'.2
   contrapose! h'
-  exact QuadraticMap.anisotropic_of_rank_zero (by simp [hr])
+  exact anisotropic_of_rank_zero (by simp [hr])
 
 lemma isotropic_of_rank_one (hr : finrank ℚ V = 1) (hQ : Q.EverywhereLocallyIsotropic) :
     Q.Isotropic := by
@@ -94,7 +94,7 @@ lemma isotropic_of_rank_two [FiniteDimensional ℚ V] (hr : finrank ℚ V = 2) (
   simp only [← represents_zero_iff_isotropic] at *
   -- Q is equivalent to Q(w)
   obtain ⟨w, hw⟩ := Q.equivalent_weightedSumSquares_units_of_nondegenerate 2 hr
-    (QuadraticMap.nondegenerate_associated_iff.mpr hQ).1
+    (nondegenerate_associated_iff.mpr hQ).1
   -- Q_v is equivalent to Q(w)_v
   have heqR : (Q.baseChange ℝ).Equivalent (weightedSumSquares ℝ (fun i ↦ (w i : ℚ))) :=
       (hw.baseChange ℝ).trans (baseChange_weightedSumSquares ℚ ℝ fun i ↦ (w i : ℚ))
