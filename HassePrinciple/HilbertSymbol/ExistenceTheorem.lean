@@ -354,7 +354,7 @@ theorem exists_rat_with_finite_prescribed_hilbertSym
       (∀ i : I, (∏ᶠ (p : Primes), ep i p) * ereal i = 1) ∧
       ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
       ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i := by
-  have Ifin : Fintype I := by exact Fintype.ofFinite I
+  have Ifin : Fintype I := Fintype.ofFinite I
   let d := ∏ i, (a i).1.den
   have hd : d ≠ 0 := by simp [d, Finset.prod_ne_zero_iff]
   have heq (i : I) : ((a i).1 * d ^ 2).den = 1 := by
