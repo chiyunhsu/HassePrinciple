@@ -303,20 +303,13 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
         is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero, mul_zero, mul_ite,
         PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, val_one, Int.cast_one,
         zpow_zero, zpow_one, one_mul, ← hxp, Int.cast_inj]
-      rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (fun xp0 ↦ ?_) (by simp [ha])]
-      · simp only [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero,
-          mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
-          val_one, Int.cast_one, zpow_zero, one_mul]
-        rw [zpow_odd_one_or_neg_one_eq_self val_xp]
-        exact_mod_cast PadicInt.legendreSym.eq_one_or_neg_one (by simp only [Units.isUnit] :
-          IsUnit (Padic.unitPart (mk0 ((a i) : ℚ_[p]) _)).1)
-      · simp only [hilbertSym, xp0] at hxp
-      --Seriously?
-        have : ∀ i : I, 0 = 1 ∨ 0 = -1 := by
-          intro i
-          specialize hep i p
-          grind
-        simp at this
+      rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (fun xp0 ↦ by aesop) (by simp [ha])]
+      simp only [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero,
+        mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
+        val_one, Int.cast_one, zpow_zero, one_mul]
+      rw [zpow_odd_one_or_neg_one_eq_self val_xp]
+      simp only [Int.cast_inj, ← Int.cast_one (R := ℚ), ← Int.cast_neg]
+      exact PadicInt.legendreSym.eq_one_or_neg_one (by simp)
     · --case p ∉ T: val_p(x) = 0, so LHR = 1 = RHS.
       have val_x : padicValRat p x.val = 0 :=
         padicValRat_x_eq_zero_of_p_notMem_T hep h1 disjoint_ST hpq hpT
