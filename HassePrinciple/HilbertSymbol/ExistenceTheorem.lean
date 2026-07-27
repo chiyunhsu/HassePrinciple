@@ -19,7 +19,7 @@ open Filter Finset Nat Units
 
 section Integer
 
-variable {I : Type*} [Finite I] {a : I → ℤ} (ha : ∀ i, a i ≠ 0) {ep : I → Primes → ℤ}
+variable {I : Type*} {a : I → ℤ} (ha : ∀ i, a i ≠ 0) {ep : I → Primes → ℤ}
   (hep : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
   {ereal : I → ℤ} (hereal : ∀ i : I, ereal i = 1 ∨ ereal i = -1)
   -- h1, h2, h3 are assumed in the hard direction of the existence theorem.
@@ -28,7 +28,6 @@ variable {I : Type*} [Finite I] {a : I → ℤ} (ha : ∀ i, a i ≠ 0) {ep : I 
   (h3 : ((∀ (p : Primes), ∃ xp : ℚ_[p], ∀ i : I, hilbertSym xp (a i) = ep i p)) ∧
     ∃ xr : ℝ, ∀ i : I, hilbertSym xr (a i) = ereal i)
 
-omit [Finite I] in
 include ha in
 /-- The necessary conditions in the Existence Theorem are indeed necessary. -/
 private lemma necessary_cond (x : ℚˣ)
@@ -43,14 +42,12 @@ private lemma necessary_cond (x : ℚˣ)
     fun i ↦ by simp only [← h i]; exact prod_eq_one x (mk0 (a i) (by simp [ha])),
     fun p ↦ ⟨x, by simp [h]⟩, x, by simp [h]⟩
 
-omit [Finite I] in
 include hep in
 /-- From ep i p = 1 or -1, we deduce that ep i p = -1 iff not ep i p = 1. -/
 private lemma ep_eq_neg_one_iff_not_one {i : I} {p : Primes} :
     ep i p = -1 ↔ ¬ep i p = 1 :=
   ⟨fun h ↦ by simp [h], fun h ↦ (hep i p).resolve_left h⟩
 
-omit [Finite I] in
 include ha hep h1 h2 in
 /-- Using the product formula for the Hilbert symbol and for ep i, if we show that
 hilbertSym x (a i) = ep i p for all but one p, we are done. -/
@@ -78,6 +75,8 @@ lemma all_but_one_places_suffice (q : Primes) (x : ℚˣ)
       grind
     · exact almost_all_one x (afun i)
   · exact (h4 i).1 p hpq
+
+variable [Finite I]
 
 variable (a) in
 /-- Define S to be the (finite!) set of primes that divide either the numerator or the denominator
@@ -145,8 +144,7 @@ private lemma q_existence :
       exact (disjoint_iff_ne.mp disjoint_ST) ⟨2,prime_two⟩ (by simp [hilbertSym.S]) t ht
     · rw [coprime_prod_right_iff]
       intro s hs
-      simp [coprime_primes t.2 s.2, Primes.coe_nat_inj,
-        (disjoint_ST.forall_ne_finset hs ht).symm]
+      simp [coprime_primes t.2 s.2, Primes.coe_nat_inj, (disjoint_ST.forall_ne_finset hs ht).symm]
   --We can apply Dirichlet's lemma.
   exact (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM).nonempty
 
@@ -208,8 +206,7 @@ private lemma isSquare_x {p : Primes} (hpS : p ∈ S a) (hpq : p ≠ q hep h1 di
     have : (q : ZMod p) = A := by
       apply ModEq.of_dvd at q_cong
       · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
-      · refine Nat.dvd_mul_left_of_dvd ?_ 4
-        exact dvd_prod_of_mem Subtype.val hpS
+      · exact Nat.dvd_mul_left_of_dvd (dvd_prod_of_mem Subtype.val hpS) 4
     simp [q, A, this]
 
 include disjoint_ST in
@@ -310,7 +307,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
       · simp only [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero,
           mul_zero, mul_ite, PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero,
           val_one, Int.cast_one, zpow_zero, one_mul]
-        rw [Int.zpow_odd_one_or_neg_one_eq_self val_xp]
+        rw [zpow_odd_one_or_neg_one_eq_self val_xp]
         exact_mod_cast PadicInt.legendreSym.eq_one_or_neg_one (by simp only [Units.isUnit] :
           IsUnit (Padic.unitPart (mk0 ((a i) : ℚ_[p]) _)).1)
       · simp only [hilbertSym, xp0] at hxp
