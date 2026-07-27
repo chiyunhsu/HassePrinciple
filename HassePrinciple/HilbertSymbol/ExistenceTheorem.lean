@@ -322,10 +322,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
         padicValRat_x_eq_zero_of_p_notMem_T hep h1 disjoint_ST hpq hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
         Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
-      simpa only [Padic.valuation_ratCast, val_x, Padic.valuation_intCast,
-        is_unit_ai_of_p_notMem_S ha hpS, CharP.cast_eq_zero, mul_zero, mul_ite,
-        PadicInt.val_mkUnits, mul_one, ite_self, Int.negOnePow_zero, val_one, Int.cast_one,
-        zpow_zero] using (Int.cast_inj.mpr (hpT i).symm)
+      simpa [val_x, is_unit_ai_of_p_notMem_S ha hpS,] using (Int.cast_inj.mpr (hpT i).symm)
 
 include ha hep hereal in
 /-- Given a finite set of rational numbers `{a_i}_{i ∈ I}` and numbers `e_{i,v} ∈ {± 1}`,
