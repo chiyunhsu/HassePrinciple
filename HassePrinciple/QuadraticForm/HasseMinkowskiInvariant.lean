@@ -219,11 +219,43 @@ lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) k V) :
         exact LinearEquiv.det_toMatrix_ne_zero _ _ _
       _ = s * ε := by simp [s, discr_three b fw, u, a₀, a₁, a₂]
 
-lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : k) :
+-- Up to equivalence, we may assume $f = X^2 + bY^2$ for some $b \in k^\times$. By Corollary \ref{cor:prod_isotropic_iff}, $f$ represents $a$ if and only if $f_a := f \dotminus aZ^2$ represents $0$, which by Lemma \ref{lem:represents_zero_iff_rk_3} is equivalent to $(-1, -d(f_a)) = \epsilon(f_a)$.
+
+-- A computation shows that $d(f_a) = -a d(f)$ and $\epsilon(f_a) = (a, -d(f)) \epsilon (f)$. Combining this with Proposition \ref{prop:hilbert_symbol_properties}, we conclude the result.
+
+lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     Q.represents a ↔
-      hilbertSym a (-Q.discr b) =
+      hilbertSym a.val (-Q.discr b) =
         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  sorry
+  obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_units_of_nondegenerate 2
+    (by simp [finrank_eq_card_basis b]) (Q.nondegenerate_associated_iff.mpr hQ).1
+  have hQw := Equivalent.nondegenerate hw hQ
+  let fa := (weightedSumSquares k w).prod (-weightedSumSquares k ![a])
+  constructor
+  · intro hrep
+    have hrepw := Equivalent.represents hw hrep
+    have hfa_iso : fa.Isotropic := (prod_isotropic_iff hQw (nondegenerate_weightedSumSquares
+      ![a])).mpr ⟨a, hrepw, ⟨1, by simp [Units.smul_def]⟩⟩
+    have : (-weightedSumSquares k ![a]).Nondegenerate := by sorry
+    have hfa_nondeg : fa.Nondegenerate := nondegenerate_prod hQw this
+    have : Finite ((Fin 2 ⊕ Fin 1 → k) ≃ₗ[k] Fin 3 → k) := by sorry
+    let b' := Basis.ofEquivFun ((LinearEquiv.sumArrowLequivProdArrow (Fin 2) (Fin 1) k k).symm.trans
+      (LinearEquiv.piCongrLeft k (fun _ : Fin 3 => k) (finSumFinEquiv (m := 2) (n := 1))))
+    rw [represents_zero_iff_of_rank_three hfa_nondeg b'] at hfa_iso
+
+
+-- Basis (Fin 3) k ((Fin 2 → k) × (Fin (Nat.succ 0) → k))
+-- def Basis.ofEquivFun [Finite ι] (e : M ≃ₗ[R] ι → R) : Basis ι R M :=
+-- Need e : ((Fin 2 → k) × (Fin (Nat.succ 0) → k)) ≃ₗ[k] (Fin 3 → k)
+
+
+-- lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) k V) :
+--     Q.Isotropic ↔
+--       hilbertSym (-1) (-Q.discr b) =
+--         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1
+    sorry
+  · intro heq
+    sorry
 
 end HasBilinHilbertSym
 
