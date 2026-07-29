@@ -236,12 +236,47 @@ lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     have hrepw := Equivalent.represents hw hrep
     have hfa_iso : fa.Isotropic := (prod_isotropic_iff hQw (nondegenerate_weightedSumSquares
       ![a])).mpr ⟨a, hrepw, ⟨1, by simp [Units.smul_def]⟩⟩
-    have : (-weightedSumSquares k ![a]).Nondegenerate := by sorry
+    have : (-weightedSumSquares k ![a]).Nondegenerate := by
+      sorry
     have hfa_nondeg : fa.Nondegenerate := nondegenerate_prod hQw this
     have : Finite ((Fin 2 ⊕ Fin 1 → k) ≃ₗ[k] Fin 3 → k) := by sorry
     let b' := Basis.ofEquivFun ((LinearEquiv.sumArrowLequivProdArrow (Fin 2) (Fin 1) k k).symm.trans
       (LinearEquiv.piCongrLeft k (fun _ : Fin 3 => k) (finSumFinEquiv (m := 2) (n := 1))))
+    let b_prod := (Pi.basisFun k (Fin 2)).prod (Pi.basisFun k (Fin 1))
     rw [represents_zero_iff_of_rank_three hfa_nondeg b'] at hfa_iso
+
+
+    have hdisc' : fa.discr b_prod = - (Q.discr b * a) := by
+      rw [discr_prod]
+      #check weightedSumSquares_discr
+      sorry
+    have hdisc : fa.discr b' = - (Q.discr b * a) := by
+      sorry
+    let ε := hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1
+    have hHM : hasseMinkoskiInv (fa.nondegenerate_associated_iff.mpr hfa_nondeg).1 =
+      hilbertSym ((-1) * a.val) ((-1) * -Q.discr b) * ε := by
+      sorry
+
+    -- Simplify left hand side to (-1, d) * (a, -1)
+    simp only [hdisc, Nat.succ_eq_add_one, Nat.reduceAdd, neg_neg, mul_right_eq,
+      comm (a := -1) (b := a.val)] at hfa_iso
+    -- Simplify right hand side to (-1, d) * (a, -1) * (a, -d) * ε
+    simp only [hHM, mul_left_eq] at hfa_iso
+    nth_rw 1 [mul_neg, neg_mul, one_mul, neg_neg] at hfa_iso
+    rw [mul_right_eq] at hfa_iso
+    -- Cancel out (-1, d) * (a, -1) from both sides to get 1 = (a, -d) * ε
+    have hnezero :  hilbertSym (-1) (discr b Q) ≠ 0 := ne_zero_of_ne_zero (by simp)
+      ((nondegenerate_iff_discr_ne_zero b).mp hQ)
+    have hnezero' : hilbertSym a.val (-1) ≠ 0 := ne_zero_of_ne_zero (by simp) (by simp)
+    simp only [mul_assoc, mul_eq_mul_left_iff, ne_eq, hnezero', not_false_eq_true, left_eq_mul₀,
+      hnezero, or_false] at hfa_iso
+    symm at hfa_iso
+    -- Using the fact that (a, -d) = ±1, we conclude that (a, -d) = ε
+    have one_neg_one : hilbertSym (↑a) (-discr b Q) = 1 ∨ hilbertSym (↑a) (-discr b Q) = -1 :=
+      eq_one_or_neg_one_of_ne_zero (by simp)
+      (neg_ne_zero.mpr ((nondegenerate_iff_discr_ne_zero b).mp hQ))
+    exact one_neg_one.elim (fun h ↦ by simpa [h] using hfa_iso)
+      (fun h ↦ by simpa [h, neg_eq_iff_eq_neg] using hfa_iso)
 
 
 -- Basis (Fin 3) k ((Fin 2 → k) × (Fin (Nat.succ 0) → k))
@@ -253,7 +288,6 @@ lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
 --     Q.Isotropic ↔
 --       hilbertSym (-1) (-Q.discr b) =
 --         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1
-    sorry
   · intro heq
     sorry
 
