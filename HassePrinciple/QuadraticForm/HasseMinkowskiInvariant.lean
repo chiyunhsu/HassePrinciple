@@ -39,6 +39,23 @@ variable {V W : Type*} [AddCommGroup V] [Module k V] [AddCommGroup W] [Module k 
 -- Let `Q` be a quadratic form on `V`.
 variable (Q : QuadraticForm k V)
 
+-- Also defined in RankFour.lean
+private noncomputable def finThreeLinearEquivProd :
+    (Fin 3 → k) ≃ₗ[k] (Fin 2 → k) × (Fin 1 → k) where
+  toFun x := ⟨![x 0, x 1], ![x 2]⟩
+  map_add' x y  := by simp
+  map_smul' r x := by simp
+  invFun x a := ![x.1 0, x.1 1, x.2 0] a
+  left_inv x := by ext a; fin_cases a <;> simp
+  right_inv x := by ext a <;> fin_cases a <;> simp
+
+-- Also proven in RankFour.lean
+private theorem weightedSumSquares_equiv_prod (w : Fin 2 → kˣ) (a : kˣ) :
+    (weightedSumSquares k ![w 0, w 1, a]).Equivalent
+      ((weightedSumSquares k w).prod (weightedSumSquares k ![a])) :=
+ ⟨finThreeLinearEquivProd,
+  by intro f; simp [finThreeLinearEquivProd, Units.smul_def, Fin.sum_univ_three]⟩
+
 /-- Auxiliary definition for `hasseMinkoskiInv`. -/
 noncomputable def hasseMinkoskiInvAux {n : ℕ} (w : Fin n → kˣ) : ℤ :=
   ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2)
@@ -220,7 +237,7 @@ lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) k V) :
       _ = s * ε := by simp [s, discr_three b fw, u, a₀, a₁, a₂]
 
 open hasseMinkoskiInv in
-lemma of_prod (b : Basis (Fin 2) k V) (a : kˣ) (h : Q.Nondegenerate) :
+lemma hasseMinkoskiInv_of_prod (b : Basis (Fin 2) k V) (a : kˣ) (h : Q.Nondegenerate) :
     hasseMinkoskiInv
       ((Q.prod (weightedSumSquares k ![a])).nondegenerate_associated_iff.mpr
         (nondegenerate_prod h (nondegenerate_weightedSumSquares _))).1
@@ -228,46 +245,37 @@ lemma of_prod (b : Basis (Fin 2) k V) (a : kˣ) (h : Q.Nondegenerate) :
   let Qa := Q.prod (weightedSumSquares k ![a])
   obtain ⟨w, hw⟩ := Q.equivalent_weightedSumSquares_units_of_nondegenerate 2
     (by simp [finrank_eq_card_basis b]) (nondegenerate_associated_iff.mpr h).1
-  have hwa : Qa.Equivalent (weightedSumSquares k ![w 0, w 1, a]) := by sorry
+  have hwa : Qa.Equivalent (weightedSumSquares k ![w 0, w 1, a]) :=
+    (Equivalent.prod hw (Equivalent.refl _)).trans (weightedSumSquares_equiv_prod w a).symm
   have hQa := (Qa.nondegenerate_associated_iff.mpr
     (nondegenerate_prod h (nondegenerate_weightedSumSquares _))).1
-  -- Change the goal into hasseMinkoskiInv Qwa = hilbertSym a.val (Q.discr b) * hasseMinkoskiInv Qw
-  rw [eq_of_equivalent_weightedSumSquares (Q.nondegenerate_associated_iff.mpr h).1 hw]
-  rw [eq_of_equivalent_weightedSumSquares hQa hwa]
-  -- Q.discr b = Qw.discr (Pi.basisFun k (Fin 2)) * ? ^ 2
-  have := IsometryEquiv.discr (Equiv.refl (Fin 2)) b (Pi.basisFun k (Fin 2)) (Classical.choice hw)
-  -- Hence hilbertSym a.val (Q.discr b) = hilbertSym a.val (w 0 * w 1)
-  have : hilbertSym a.val (Q.discr b) = hilbertSym a.val (w 0 * w 1) := by
-    rw [this]
-    rw [mul_right_square_eq (LinearEquiv.det_toMatrix_ne_zero _ _ _)]
-    simp [weightedSumSquares_discr, Units.smul_def]
-  -- With HasBilinHilbertSym,
-  -- hilbertSym a.val (Q.discr b) = hilbertSym a.val w 0 * hilbertSym a.val w 1
-  -- Change the goal into
-  -- hasseMinkoskiInv Qwa = hilbertSym w 0 a.val * hilbertSym w 1 a.val * hasseMinkoskiInv Qw
-  rw [this, mul_right_eq]
-  repeat rw [hilbertSym.comm (a := a.val)]
-  simp [weightedSumSquares_two, weightedSumSquares_three]
+  have hilbertSym_eq : hilbertSym a.val (Q.discr b) = hilbertSym a.val (w 0 * w 1) := by
+    -- Q and Qw are equivalent, so Q.discr b and Qw.discr (Pi.basisFun k (Fin 2)) differ by a square
+    -- hilbertSym is invariant under multiplication by squares
+    -- The discriminant of a weightedSumSquare is the product of its coefficients
+    simp [IsometryEquiv.discr (Equiv.refl (Fin 2)) b (Pi.basisFun k (Fin 2)) (Classical.choice hw),
+      mul_right_square_eq (LinearEquiv.det_toMatrix_ne_zero _ _ _), weightedSumSquares_discr,
+      Units.smul_def]
+  -- Change goal to hasseMinkoskiInv Qwa = hilbertSym a.val (Q.discr b) * hasseMinkoskiInv Qw
+  -- With HasBilinHilbertSym, the two sides can be proven to be equal
+  simp [eq_of_equivalent_weightedSumSquares hQa hwa,
+    eq_of_equivalent_weightedSumSquares (Q.nondegenerate_associated_iff.mpr h).1 hw,
+    hilbertSym_eq, mul_left_eq, comm (a := a.val), weightedSumSquares_two, weightedSumSquares_three]
   ring_nf
 
 lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     Q.represents a ↔
       hilbertSym a.val (-Q.discr b) =
         hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1 := by
-  -- obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_units_of_nondegenerate 2
-  --   (by simp [finrank_eq_card_basis b]) (Q.nondegenerate_associated_iff.mpr hQ).1
-  -- have hQw := Equivalent.nondegenerate hw hQ
-  rw [represents_iff_sub_isotropic hQ a]
+  let ε := hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1
   let fa := Q.prod (weightedSumSquares k ![-a])
-  have hfa_nondeg : fa.Nondegenerate := nondegenerate_prod hQ (nondegenerate_weightedSumSquares _)
-  -- let fa := (weightedSumSquares k w).prod (-weightedSumSquares k ![a])
-  let b' := Basis.ofEquivFun ((LinearEquiv.sumArrowLequivProdArrow (Fin 2) (Fin 1) k k).symm.trans
-    (LinearEquiv.piCongrLeft k (fun _ : Fin 3 => k) (finSumFinEquiv (m := 2) (n := 1))))
-  let b_prod := b.prod (Pi.basisFun k (Fin 1))
+  have hfa : fa.Nondegenerate := nondegenerate_prod hQ (nondegenerate_weightedSumSquares _)
+  let b' := b.prod (Pi.basisFun k (Fin 1))
   let e := (finSumFinEquiv (m := 2) (n := 1))
-  rw [represents_zero_iff_of_rank_three hfa_nondeg (b_prod.reindex e)]
-  -- This have was also proved in IsometryEquiv.discr in QuadraticForm/Basic.lean
-  have discr_eq_of_reindex : fa.discr b_prod = fa.discr (b_prod.reindex e) := by
+  -- Change LHS of goal to hilbertSym (-1, -fa.discr b') = hasseMinkoskiInv fa
+  rw [represents_iff_sub_isotropic hQ a, represents_zero_iff_of_rank_three hfa (b'.reindex e)]
+  -- This `have` was also proved in IsometryEquiv.discr in QuadraticForm/Basic.lean
+  have discr_eq_of_reindex : fa.discr b' = fa.discr (b'.reindex e) := by
     simp only [QuadraticForm.discr, Matrix.det_apply]
     rw [Finset.sum_equiv (t := Finset.univ) (e.equivCongr e) (by simp)]
     intro g _
@@ -277,19 +285,18 @@ lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     rw [Equiv.Perm.sign_eq_sign_of_equiv g ((e.equivCongr e) g) e (by intro i; simp),
       Finset.prod_equiv (t := Finset.univ) e (by simp)]
     simp
-  have hdisc : fa.discr (b_prod.reindex e) = - (Q.discr b * a) := by
+  have hdisc : fa.discr (b'.reindex e) = - (Q.discr b * a) := by
     rw [← discr_eq_of_reindex]
     rw [discr_prod]
     field_simp [(nondegenerate_iff_discr_ne_zero b).mp hQ]
     simp [weightedSumSquares_discr, Units.smul_def]
-  let ε := hasseMinkoskiInv (Q.nondegenerate_associated_iff.mpr hQ).1
-  have hHM : hasseMinkoskiInv (fa.nondegenerate_associated_iff.mpr hfa_nondeg).1 =
+  have hHM : hasseMinkoskiInv (fa.nondegenerate_associated_iff.mpr hfa).1 =
     hilbertSym ((-1) * a.val) ((-1) * -Q.discr b) * ε := by
-    simpa using of_prod b (-a) hQ
+    simpa using hasseMinkoskiInv_of_prod b (-a) hQ
   -- Simplify left hand side (-1, discr) to (-1, d) * (a, -1)
-  simp only [hdisc, Nat.succ_eq_add_one, Nat.reduceAdd, neg_neg, mul_right_eq,
-    comm (a := -1) (b := a.val)]
+  simp only [hdisc, Nat.succ_eq_add_one, Nat.reduceAdd, neg_neg, mul_right_eq, comm (b := a.val)]
   -- Simplify right hand side (-a, d) * ε to (-1, d) * (a, -1) * (a, -d) * ε
+  -- Combing the two `simp only` does not work
   simp only [hHM, mul_left_eq]
   nth_rw 1 [mul_neg, neg_mul, one_mul, neg_neg]
   rw [mul_right_eq]
@@ -298,9 +305,8 @@ lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     ((nondegenerate_iff_discr_ne_zero b).mp hQ)
   have hnezero' : hilbertSym a.val (-1) ≠ 0 := ne_zero_of_ne_zero (by simp) (by simp)
   simp only [mul_assoc, mul_eq_mul_left_iff, ne_eq, hnezero', not_false_eq_true, left_eq_mul₀,
-    hnezero, or_false]
-  rw [eq_comm]
-  -- Using the fact that (a, -d) = ±1, we conclude that (a, -d) = ε
+    hnezero, or_false, eq_comm]
+  -- Using the fact (a, -d) = ±1 to conclude (a, -d) = ε
   have one_neg_one : hilbertSym (↑a) (-discr b Q) = 1 ∨ hilbertSym (↑a) (-discr b Q) = -1 :=
     eq_one_or_neg_one_of_ne_zero (by simp)
     (neg_ne_zero.mpr ((nondegenerate_iff_discr_ne_zero b).mp hQ))
