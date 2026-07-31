@@ -66,13 +66,9 @@ private theorem isotropic_prod_neg {k : Type*} [Field k] [CharZero k] [HasBilinH
   simp only [← represents_iff_sub_isotropic
       (nondegenerate_baseChange (nondegenerate_weightedSumSquares _)),
     represents_iff_of_rank_two (nondegenerate_baseChange
-      (nondegenerate_weightedSumSquares _)) ((Pi.basisFun ℚ (Fin 2)).baseChange k),
-    RingHom.toMonoidHom_eq_coe, Units.coe_map, MonoidHom.coe_coe, eq_ratCast,
-    Nat.succ_eq_add_one, Nat.reduceAdd, Fin.zero_eta, Fin.isValue, Fin.mk_one,
-    hasseMinkoskiInv.of_baseChange_weightedSumSquares k, Matrix.cons_val_zero,
-    Matrix.cons_val_one, Matrix.cons_val_fin_one]
-  rw [← hx, baseChange_discr, weightedSumSquares_discr]
-  simp [Units.smul_def]
+      (nondegenerate_weightedSumSquares _)) ((Pi.basisFun ℚ (Fin 2)).baseChange k)]
+  simp [hasseMinkoskiInv.of_baseChange_weightedSumSquares k, ← hx, baseChange_discr,
+    weightedSumSquares_discr, Units.smul_def]
 
 /-- Rank 4 case of Hasse-Minkowski. -/
 lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
