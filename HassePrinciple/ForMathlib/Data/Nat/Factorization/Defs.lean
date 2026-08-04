@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Data.Nat.Factorization.Defs
 
-/-! # Criterion of natural numbers or integers being a square through even factorization -/
+/-! # Criterion for a natural number or integer being a square through even factorization -/
 
 @[expose] public section
 

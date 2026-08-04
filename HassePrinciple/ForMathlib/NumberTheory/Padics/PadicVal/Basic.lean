@@ -8,9 +8,9 @@ module
 public import Mathlib.NumberTheory.Padics.PadicVal.Basic
 public import HassePrinciple.ForMathlib.Data.Nat.Factorization.Defs
 
-@[expose] public section
+/-! # `p`-adic valuation of the numerator and denominator of a rational number -/
 
-/-! # padic valuation of the numerator and denominator of a rational number -/
+@[expose] public section
 
 namespace Rat
 
@@ -23,10 +23,8 @@ lemma num_or_den_zero_padicVal (a : ℚ) (p : ℕ) [Fact (Nat.Prime p)] :
   have h2 : p ∣ a.den := not_not.mp (mt padicValNat.eq_zero_of_not_dvd h.2)
   exact (Nat.not_coprime_of_dvd_of_dvd (Nat.Prime.one_lt Fact.out) h1 h2)
 
-/--
-The numerator and denominator of a rational number with even p-adic valuation
-also have even p-adic valuation.
--/
+/-- The numerator and denominator of a rational number with even `p`-adic valuation
+also have even `p`-adic valuation. -/
 lemma num_den_even_padicVal_of_even_padicVal {a : ℚ} {p : ℕ} [Fact (Nat.Prime p)]
     (h : Even (padicValRat p a)) : Even (padicValInt p a.num) ∧ Even (padicValNat p a.den) := by
   rcases num_or_den_zero_padicVal a p with (h0 | h0) <;>
