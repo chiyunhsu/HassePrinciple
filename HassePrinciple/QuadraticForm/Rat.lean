@@ -117,7 +117,7 @@ lemma isotropic_of_rank_two [FiniteDimensional ℚ V] (hr : finrank ℚ V = 2) (
     rw [← Rat.cast_nonneg (K := ℝ), ← Real.isSquare_iff, isSquare_iff_exists_sq]
     exact ⟨(x 1)⁻¹ * x 0, coeff_ratio_isSquare_of_represents_zero (w := fun i ↦ (w i : ℚ)) (by simp)
       (comp_ne_zero_of_nondegenerate hx0 hx).2 hx⟩
-  -- Represents 0 over ℚ_[p] implies that the p-adic valuation of - (w 0)⁻¹ * w 1 is even
+  -- Represents 0 over ℚ_[p] implies that the `p`-adic valuation of - (w 0)⁻¹ * w 1 is even
   have hf (p : ℕ) [Fact (Nat.Prime p)] : Even (padicValRat p (- (w 0 : ℚ)⁻¹ * w 1)) := by
     obtain ⟨x, hx⟩ := hQ'fw p
     rw [← Padic.valuation_ratCast, coeff_ratio_isSquare_of_represents_zero (w := fun i ↦ (w i : ℚ))
