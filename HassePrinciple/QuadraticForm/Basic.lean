@@ -6,6 +6,7 @@ Authors: Nirvana Coppola, María Inés de Frutos-Fernández
 module
 
 public import HassePrinciple.ForMathlib.LinearAlgebra.BilinearForm.TensorProduct
+public import HassePrinciple.ForMathlib.LinearAlgebra.LinearIndependent.Basis
 public import HassePrinciple.ForMathlib.LinearAlgebra.TensorProduct.Prod
 public import Mathlib.Algebra.Squarefree.Basic
 public import Mathlib.LinearAlgebra.QuadraticForm.Prod
@@ -247,7 +248,7 @@ lemma nondegenerate_of_anisotropic [Invertible (2 : R)] {Q : QuadraticMap R M N}
   rw [nondegenerate_iff_radical_eq_bot, eq_bot_iff]
   exact fun m hm ↦ hQ m (mem_radical_iff'.mp hm).1
 
-open Module QuadraticMap
+open Module QuadraticMap Submodule
 
 -- The rank zero case of Hasse-Minkowski will follow trivially from this lemma:
 lemma anisotropic_of_rank_zero [IsDomain R] [StrongRankCondition R] [Module.Finite R M]
@@ -302,9 +303,8 @@ lemma degenerate_zero [StrongRankCondition R] (hM : 0 < finrank R M) :
     ¬ (0 : QuadraticMap R M N).Nondegenerate := by
   intro h0
   have := h0.radical_eq_bot
-  simp only [radical, zero_apply, true_and, Submodule.mk_eq_bot, AddSubmonoid.mk_eq_bot,
-    AddSubsemigroup.coe_set_mk, LinearMap.ext_iff, polarBilin_apply_apply, coeFn_zero,
-    LinearMap.zero_apply] at this
+  simp only [radical, zero_apply, true_and, mk_eq_bot, AddSubmonoid.mk_eq_bot, LinearMap.ext_iff,
+    AddSubsemigroup.coe_set_mk,  polarBilin_apply_apply, coeFn_zero, LinearMap.zero_apply] at this
   have : Subsingleton M := by
     apply subsingleton_of_forall_eq 0 fun m ↦ ?_
     simp [← Set.mem_singleton_iff, ← this, polar]
@@ -328,7 +328,7 @@ theorem Equivalent.nondegenerate [IsDomain R] [IsTorsionFree R M] [IsTorsionFree
     obtain ⟨e⟩ := h
     rw [← e.map_radical]
     exact Module.Finite.map Q.radical e.toLinearEquiv.toLinearMap
-  rw [← Submodule.finrank_eq_zero, h.symm.rank_radical_eq, Submodule.finrank_eq_zero]
+  rw [← finrank_eq_zero, h.symm.rank_radical_eq, finrank_eq_zero]
   exact hQ
 
 theorem Equivalent.nondegenerate_iff [IsDomain R] [IsTorsionFree R M] [IsTorsionFree R M']
@@ -375,7 +375,7 @@ end QuadraticMap
 
 namespace QuadraticForm
 
-open _root_.QuadraticMap LinearMap TensorProduct
+open _root_.QuadraticMap LinearMap Submodule TensorProduct
 
 /-
 Chiyun: Added `[Module.FaithfullyFlat R A]`. Counterexample otherwise: R = ℤ, A = ℤ/3ℤ, M = ℤ,
@@ -472,7 +472,6 @@ noncomputable abbrev XY (b : Basis (Fin 2) R V) : QuadraticForm R V where
       map_smul' r w := by ext; simp; ring }
     exact ⟨B, fun v w ↦ by simp [B]; ring⟩
 
-
 lemma _root_.QuadraticMap.Equivalent.isHyperbolic {Q : QuadraticForm R V} {Q' : QuadraticForm R W}
     (hQ : Q.IsHyperbolic) (heq : Q'.Equivalent Q) : Q'.IsHyperbolic :=
   heq.trans hQ
@@ -500,8 +499,7 @@ def toDual (Q : QuadraticForm R V) (S : Submodule R V) :
   toFun v := {
     toFun s   := polar Q v s
     map_add'  := by simp
-    map_smul' := by simp
-  }
+    map_smul' := by simp }
   map_add' v s  := by ext; simp
   map_smul' r v := by ext; simp
 
@@ -534,7 +532,7 @@ noncomputable def xyIsometryEquivSumSquares :
       simp [mul_comm _ (4 : R), ← mul_assoc, this] }
 
 lemma XY_isHyperbolic : IsHyperbolic (XY b) := by
-  simp only [IsHyperbolic, Nat.succ_eq_add_one, Nat.reduceAdd, ]
+  simp only [IsHyperbolic, Nat.succ_eq_add_one, Nat.reduceAdd]
   exact Nonempty.intro (xyIsometryEquivSumSquares b)
 
 lemma equivalent_XY_of_isHyperbolic {Q : QuadraticForm R V} (hQ : Q.IsHyperbolic) :
@@ -558,11 +556,11 @@ theorem represents_of_hyperbolic {Q : QuadraticForm K V} (hQ : Q.IsHyperbolic) (
   exact ⟨![r, 1], by simp, by simp [one_ne_zero]⟩
 
 lemma radical_eq_inf (Q : QuadraticForm K V) (S : Submodule K V) :
-    Submodule.map S.subtype (Q.restrict S).radical = (S ⊓ (Q.orthoCompl S)) := by
+    map S.subtype (Q.restrict S).radical = (S ⊓ (Q.orthoCompl S)) := by
   ext v
-  simp only [radical, QuadraticMap.restrict_apply, Submodule.mem_map, Submodule.mem_mk,
-    AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq, Submodule.subtype_apply,
-    Subtype.exists, exists_and_right, exists_and_left, exists_eq_right, Submodule.mem_inf]
+  simp only [radical, QuadraticMap.restrict_apply, mem_map, mem_mk, AddSubmonoid.mem_mk,
+    AddSubsemigroup.mem_mk, Set.mem_setOf_eq, subtype_apply, Subtype.exists,
+    exists_and_right, exists_and_left, exists_eq_right, mem_inf]
   refine ⟨fun ⟨h0, ⟨hvS, h'⟩⟩ ↦ ⟨hvS, ?_⟩, fun ⟨hS, hSc⟩ ↦ ⟨?_, ?_⟩⟩
   · simp only [mem_orthoCompl, SetLike.coe_sort_coe, Subtype.forall]
     intro s hs
@@ -578,33 +576,14 @@ lemma radical_eq_inf (Q : QuadraticForm K V) (S : Submodule K V) :
   · use hS
     ext t
     simp only [mem_orthoCompl, SetLike.coe_sort_coe, Subtype.forall] at hSc
-    simp only [polarBilin_apply_apply, polar, QuadraticMap.restrict_apply, Submodule.coe_add,
+    simp only [polarBilin_apply_apply, polar, QuadraticMap.restrict_apply, coe_add,
       LinearMap.zero_apply]
     rw [hSc t.1 t.2]
     ring
 
-open Submodule in
-noncomputable def fooEquiv {x y : V} (hxy : LinearIndependent K ![x, y]) :
-    (Fin 2 → K) ≃ₗ[K] (span K {x, y}) where
-  toFun a := ⟨a 0 • x + a 1 • y, by simp [mem_span_pair]⟩
-  map_add' a b := by simp [add_smul]; abel
-  map_smul' k a := by simp [mul_smul]
-  invFun v := ![(mem_span_pair.mp v.2).choose, (mem_span_pair.mp v.2).choose_spec.choose]
-  left_inv a := by
-    ext n
-    have h := (mem_span_pair.mp
-      ((⟨a 0 • x + a 1 • y, by simp [mem_span_pair]⟩ : span K {x, y})).2).choose_spec.choose_spec
-    simp only [Fin.isValue] at h ⊢
-    apply LinearIndependent.eq_coords_of_eq hxy (by simpa using h)
-  right_inv v := by simp [(mem_span_pair.mp v.2).choose_spec.choose_spec]
-
-noncomputable def bar {x y : V} (hxy : LinearIndependent K ![x, y]) :
-    Basis (Fin 2) K (Submodule.span K {x, y}) where
-  repr := (fooEquiv hxy).symm.trans (Finsupp.linearEquivFunOnFinite K K (Fin 2)).symm
-
-open Submodule in
-theorem foo {Q : QuadraticForm K V} {x y : V} (hx0 : x ≠ 0) (hQx : Q x = 0) (hQy : Q y = 0)
-    (hQxy : polar Q x y = 1) : (Q.restrict (Submodule.span K {x, y})).IsHyperbolic := by
+theorem restrict_isHyperbolic_of_polar {Q : QuadraticForm K V} {x y : V} (hx0 : x ≠ 0)
+    (hQx : Q x = 0) (hQy : Q y = 0) (hQxy : polar Q x y = 1) :
+    (Q.restrict (span K {x, y})).IsHyperbolic := by
   have hxy : LinearIndependent K ![x, y] := by
     rw [LinearIndependent.pair_iff]
     intro a b hab
@@ -612,44 +591,38 @@ theorem foo {Q : QuadraticForm K V} {x y : V} (hx0 : x ≠ 0) (hQx : Q x = 0) (h
       have h : Q (a • x + b • y) = 0 := by rw [hab, map_zero]
       simpa [QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, Or.comm] using h
     aesop
-  apply Equivalent.trans _ (XY_isHyperbolic (bar hxy))
+  apply Equivalent.trans _ (XY_isHyperbolic (basisSpanPair hxy))
   exact ⟨{
     toLinearEquiv := LinearEquiv.ofEq _ _ rfl
     map_app' v := by
-      set a := (mem_span_pair.mp v.2).choose with ha
-      set b := (mem_span_pair.mp v.2).choose_spec.choose with hb
-      set hab : a • x + b • y = v.1 := (mem_span_pair.mp v.2).choose_spec.choose_spec
-      simp only [fooEquiv, Fin.isValue, LinearEquiv.symm_mk, LinearMap.coe_mk, AddHom.coe_mk,
-        AddHom.toFun_eq_coe, coe_toAddHom, LinearEquiv.coe_coe, QuadraticMap.coe_mk,
-        LinearEquiv.trans_apply, LinearEquiv.coe_mk, LinearEquiv.coe_ofEq_apply,
-        Finsupp.linearEquivFunOnFinite_symm_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
-        Matrix.cons_val_fin_one, QuadraticMap.restrict_apply, bar, ← ha, ← hb]
-      simp [← hab, QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, mul_comm a] }⟩
-
+      simp only [LinearEquiv.ofEq_rfl, LinearEquiv.refl_toLinearMap, AddHom.toFun_eq_coe,
+        coe_toAddHom, id_coe, id_eq, QuadraticMap.coe_mk, Fin.isValue, QuadraticMap.restrict_apply]
+      conv_rhs => rw [← basisSpanPair_add_repr hxy v]
+      simp [QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, mul_comm] }⟩
 section Finite
 
 variable [Module.Finite K V] {Q : QuadraticForm K V}
 
 lemma nondegenerate_iff_toDual_bijective : Q.Nondegenerate ↔ Function.Bijective (Q.toDual ⊤) := by
   have hbot := Q.radical_eq_inf ⊤
-  simp only [Submodule.top_coe, le_top, inf_of_le_right] at hbot
+  simp only [top_coe, le_top, inf_of_le_right] at hbot
   have hinj : Function.Bijective (Q.toDual ⊤) ↔ Function.Injective (Q.toDual ⊤) := by
     simp only [Function.Bijective, and_iff_left_iff_imp]
     rw [LinearMap.injective_iff_surjective_of_finrank_eq_finrank (by simp)]
     simp
   rw [hinj, nondegenerate_iff_radical_eq_bot, ← ker_eq_bot, ← orthoCompl_eq_ker_toDual,
-    Submodule.top_coe, ← hbot]
-  conv_rhs => rw [← Submodule.map_bot (⊤ : Submodule K V).subtype,
-    (Submodule.map_injective_of_injective (⊤ : Submodule K V).injective_subtype).eq_iff]
+    top_coe, ← hbot]
+  conv_rhs => rw [← map_bot (⊤ : Submodule K V).subtype,
+    (map_injective_of_injective (⊤ : Submodule K V).injective_subtype).eq_iff]
   simp [radical, LinearMap.ext_iff, polar, Set.eq_singleton_iff_unique_mem]
 
 lemma toDual_surjective (hQ : Q.Nondegenerate) (S : Submodule K V) :
     Function.Surjective (Q.toDual S) := by
-  have : Q.toDual S = LinearMap.comp (dualMap (Submodule.inclusion (by simp))) (Q.toDual ⊤) := by
+  have : Q.toDual S = LinearMap.comp (dualMap (inclusion (by simp))) (Q.toDual ⊤) := by
     ext v s
     simp [toDual]
   simp only [this, LinearMap.comp, LinearMap.coe_mk, AddHom.coe_mk]
-  exact (LinearMap.dualMap_surjective_iff.mpr (Submodule.inclusion_injective (by simp))).comp
+  exact (LinearMap.dualMap_surjective_iff.mpr (inclusion_injective (by simp))).comp
     (nondegenerate_iff_toDual_bijective.mp hQ).surjective
 
 lemma finrank_eq_add (hQ : Q.Nondegenerate) (S : Submodule K V) :
@@ -664,7 +637,7 @@ lemma orthoCompl_orthoCompl (hQ : Q.Nondegenerate) (S : Submodule K V) :
   rw [finrank_eq_add hQ (Q.orthoCompl S), add_comm] at this
   simp only [Nat.add_right_cancel_iff] at this
   rw [eq_comm]
-  apply Submodule.eq_of_le_of_finrank_eq _ this.symm
+  apply eq_of_le_of_finrank_eq _ this.symm
   intro s hs
   simp only [coe_orthoCompl, SetLike.coe_sort_coe, Subtype.forall, mem_orthoCompl, Set.coe_setOf,
     Set.mem_setOf_eq]
@@ -678,30 +651,29 @@ lemma nondegenerate_orthoCompl (hQ : Q.Nondegenerate) {S : Submodule K V}
   rw [orthoCompl_orthoCompl hQ S, inf_comm] at hrSc
   simp only [nondegenerate_iff_radical_eq_bot] at hQ hS ⊢
   simp only [hS, Submodule.map_bot] at hrS
-  simp only [← hrS, ← Submodule.map_bot (Q.orthoCompl S).subtype] at hrSc
-  rwa [(Submodule.map_injective_of_injective (Q.orthoCompl S).injective_subtype).eq_iff] at hrSc
+  simp only [← hrS, ← map_bot (Q.orthoCompl S).subtype] at hrSc
+  rwa [(map_injective_of_injective (Q.orthoCompl S).injective_subtype).eq_iff] at hrSc
 
 lemma nondegenerate_orthoCompl_iff (hQ : Q.Nondegenerate) (S : Submodule K V) :
-    (Q.restrict S).Nondegenerate ↔ (Q.restrict (Q.orthoCompl S)).Nondegenerate := by
-  refine ⟨fun hS ↦ ?_, fun hS ↦ ?_⟩
-  · exact nondegenerate_orthoCompl hQ hS
-  · rw [← orthoCompl_orthoCompl hQ S]
-    exact nondegenerate_orthoCompl hQ hS
+    (Q.restrict S).Nondegenerate ↔ (Q.restrict (Q.orthoCompl S)).Nondegenerate :=
+  ⟨fun hS ↦ nondegenerate_orthoCompl hQ hS,
+    fun hS ↦ orthoCompl_orthoCompl hQ S ▸ nondegenerate_orthoCompl hQ hS⟩
 
 lemma orthoCompl_isCompl (hQ : Q.Nondegenerate) {S : Submodule K V}
     (hQS : (Q.restrict S).Nondegenerate) : IsCompl S  (Q.orthoCompl S) := by
-  rw [Submodule.isCompl_iff_disjoint _ _ (finrank_eq_add hQ S).le, disjoint_iff,
-    ← radical_eq_inf, ← Submodule.map_bot S.subtype,
-    (Submodule.map_injective_of_injective S.injective_subtype).eq_iff,
+  rw [isCompl_iff_disjoint _ _ (finrank_eq_add hQ S).le, disjoint_iff, ← radical_eq_inf,
+    ← map_bot S.subtype, (map_injective_of_injective S.injective_subtype).eq_iff,
     nondegenerate_iff_radical_eq_bot.mp hQS]
 
-noncomputable def prodOrthoComplEquiv (hQ : Q.Nondegenerate) {U : Submodule K V}
+/-- If `Q` is a nondegenerate quadratic form, then `prodEquivOfIsCompl U (Q.orthoCompl U)` is an
+  isometry. -/
+noncomputable def _root_.Submodule.prodOrthoComplEquiv (hQ : Q.Nondegenerate) {U : Submodule K V}
     (hU : (Q.restrict U).Nondegenerate) :
     ((Q.restrict U).prod (Q.restrict (Q.orthoCompl U))).IsometryEquiv Q where
-  __ := Submodule.prodEquivOfIsCompl U (Q.orthoCompl U) (orthoCompl_isCompl hQ hU)
+  __ := prodEquivOfIsCompl U (Q.orthoCompl U) (orthoCompl_isCompl hQ hU)
   map_app' v := by
-    simp only [Submodule.coe_prodEquivOfIsCompl, AddHom.toFun_eq_coe, coe_toAddHom, coprod_apply,
-      Submodule.subtype_apply, QuadraticMap.prod_apply, QuadraticMap.restrict_apply]
+    simp only [coe_prodEquivOfIsCompl, AddHom.toFun_eq_coe, coe_toAddHom, coprod_apply,
+      subtype_apply, QuadraticMap.prod_apply, QuadraticMap.restrict_apply]
     have := v.2.2 v.1
     rw [Q.isOrtho_def] at this
     grind
@@ -716,8 +688,8 @@ lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
   obtain ⟨z, hxz⟩ : ∃ (z : V), polar Q x z = 1 := by
     obtain ⟨z, hxz⟩ : ∃ (z : V), polar Q x z ≠ 0 := by
       by_contra! h
-      simp only [nondegenerate_iff_radical_eq_bot, radical, Submodule.mk_eq_bot,
-        AddSubmonoid.mk_eq_bot, AddSubsemigroup.coe_set_mk, Set.eq_singleton_iff_unique_mem,
+      simp only [nondegenerate_iff_radical_eq_bot, radical, mk_eq_bot, AddSubmonoid.mk_eq_bot,
+        AddSubsemigroup.coe_set_mk, Set.eq_singleton_iff_unique_mem,
         Set.mem_setOf_eq, map_zero, and_self, and_imp, true_and] at hQ'
       exact hx0 (hQ' x hQx (LinearMap.ext_iff.mpr h))
     exact ⟨(1/ (polar Q x z)) • z, by simp [inv_mul_eq_one₀ hxz]⟩
@@ -740,7 +712,7 @@ lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
     exact one_ne_zero hxy.symm
   -- The restriction of `Q` to `span{x, y}` is hyperbolic, and `Q` is equivalent to the product
   -- of the restrictions to `span{x, y}` and its `Q`-orthogonal complement.
-  let U := Submodule.span K {x, y}
+  let U := span K {x, y}
   have hU : finrank K U = 2 := by
     have : Fintype ({x, y} : Set V) := Fintype.ofFinite _
     rw [finrank_span_set_eq_card (linearIndepOn_id_pair hx0 hxy'), Set.toFinset_card,
@@ -749,7 +721,7 @@ lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
   have hW : finrank K W = finrank K V - 2 := by simp [finrank_eq_add hQ' U, W, hU]
   let QU : QuadraticForm K U := Q.restrict U
   let QW : QuadraticForm K W := Q.restrict W
-  have hQU : QU.IsHyperbolic := foo hx0 hQx hQy (by simp [hxy])
+  have hQU : QU.IsHyperbolic := restrict_isHyperbolic_of_polar hx0 hQx hQy (by simp [hxy])
   have hQU' : QU.Nondegenerate := hQU.nondegenerate
   have hprod : Q.Equivalent (QU.prod QW) := ⟨(prodOrthoComplEquiv hQ' hQU').symm⟩
   obtain ⟨wU, hwU⟩ := equivalent_weightedSumSquares_units_of_nondegenerate 2 hU
