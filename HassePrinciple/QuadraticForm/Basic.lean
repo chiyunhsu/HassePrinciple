@@ -647,48 +647,112 @@ lemma orthoCompl_isCompl (hQ : Q.Nondegenerate) {S : Submodule K V}
     (Submodule.map_injective_of_injective S.injective_subtype).eq_iff,
     nondegenerate_iff_radical_eq_bot.mp hQS]
 
+noncomputable def prodOrthoComplEquiv (hQ : Q.Nondegenerate) {U : Submodule K V}
+    (hU : (Q.restrict U).Nondegenerate) :
+    ((Q.restrict U).prod (Q.restrict (Q.orthoCompl U))).IsometryEquiv Q where
+  __ := Submodule.prodEquivOfIsCompl U (Q.orthoCompl U) (orthoCompl_isCompl hQ hU)
+  map_app' v := by
+    simp only [Submodule.coe_prodEquivOfIsCompl, AddHom.toFun_eq_coe, coe_toAddHom, coprod_apply,
+      Submodule.subtype_apply, QuadraticMap.prod_apply, QuadraticMap.restrict_apply]
+    have := v.2.2 v.1
+    rw [Q.isOrtho_def] at this
+    grind
+
 lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
     ∃ (A : QuadraticForm K (Fin 2 → K)) (B : QuadraticForm K (Fin (finrank K V - 2) → K)),
       A.IsHyperbolic ∧ Q.Equivalent (A.prod B) := by
   have := two_le_finrank_of_isotropic_of_nondegenerate hQ hQ'
   simp only [Isotropic, Anisotropic, not_forall] at hQ
   obtain ⟨x, hQx, hx0⟩ := hQ
-  obtain ⟨z, hxz⟩ : ∃ (z : V), polar Q x z = 2 := sorry
-  let y : V := (2 : K) • z - (Q z) • x
+  obtain ⟨z, hxz⟩ : ∃ (z : V), polar Q x z = 1 := by
+    obtain ⟨z, hxz⟩ : ∃ (z : V), polar Q x z ≠ 0 := by
+      by_contra! h
+      simp only [nondegenerate_iff_radical_eq_bot, radical, Submodule.mk_eq_bot,
+        AddSubmonoid.mk_eq_bot, AddSubsemigroup.coe_set_mk, Set.eq_singleton_iff_unique_mem,
+        Set.mem_setOf_eq, map_zero, and_self, and_imp, true_and] at hQ'
+      exact hx0 (hQ' x hQx (LinearMap.ext_iff.mpr h))
+    exact ⟨(1/ (polar Q x z)) • z, by simp [inv_mul_eq_one₀ hxz]⟩
+  let y : V := (2 : K) • z - (polar Q z z) • x
   have hQy : Q y = 0 := by
     simp [y, hxz, sub_eq_add_neg, QuadraticMap.map_add, QuadraticMap.map_smul, polar_comm Q z, hQx]
+    ring_nf
+  have hxy : polar Q x y = 2 := by
+    simp only [polar, hQx, hQy]
+    simp only [sub_eq_add_neg, polar_self, nsmul_eq_mul, Nat.cast_ofNat, QuadraticMap.map_add Q,
+      hQx, QuadraticMap.map_smul, smul_eq_mul, QuadraticMap.map_neg, mul_zero, add_zero,
+      polar_neg_right, polar_smul_right, polar_smul_left, polar_comm Q z, hxz, mul_one, zero_add,
+      polar_add_right, neg_zero, add_eq_right, y]
     ring
-  have hxy : polar Q x y = 4 := by
-    simp only [polar, hQx, sub_zero, hQy, y]
-    simp only [sub_eq_add_neg, QuadraticMap.map_add Q, hQx, QuadraticMap.map_neg, polar_neg_right,
-      polar_smul_right, polar_smul_left, polar_comm Q z, hxz, smul_eq_mul, zero_add,
-      polar_add_right, polar_self, nsmul_zero, mul_zero, neg_zero, add_zero, QuadraticMap.map_smul]
-    ring
+  have hxy' : ∀ (a : K), a • x ≠ y := by
+    by_contra! ha
+    obtain ⟨a, hay⟩ := ha
+    simp only [polar, ← hay] at hxy
+    nth_rw 1 [← one_smul K x, ← add_smul] at hxy
+    simp only [QuadraticMap.map_smul, hQx, smul_eq_mul, mul_zero, sub_self] at hxy
+    exact two_ne_zero hxy.symm
   let U := Submodule.span K {x, y}
+  have hU : finrank K U = 2 := by
+    have : Fintype ↑({x, y} : Set V) := Fintype.ofFinite _
+    rw [finrank_span_set_eq_card (linearIndepOn_id_pair hx0 hxy'), Set.toFinset_card,
+      Set.fintypeCard_eq_ncard, Set.ncard_pair (by simpa [one_smul] using hxy' 1)]
   let W := Q.orthoCompl U
+  have hW : finrank K W = finrank K V - 2 := by simp [finrank_eq_add hQ' U, W, hU]
   let QU : QuadraticForm K U := Q.restrict U
   let QW : QuadraticForm K W := Q.restrict W
   have hQU : QU.IsHyperbolic := sorry
-  have hQU' : QU.Nondegenerate := by
+  have hQU' : QU.Nondegenerate := hQU.nondegenerate
+  have hprod : Q.Equivalent (QU.prod QW) := ⟨(prodOrthoComplEquiv hQ' hQU').symm⟩
+  obtain ⟨wU, hwU⟩ := equivalent_weightedSumSquares_units_of_nondegenerate 2 hU
+    (by apply (QU.nondegenerate_associated_iff.mpr hQU').1)
+  obtain ⟨wW, hwW⟩ := equivalent_weightedSumSquares_units_of_nondegenerate (finrank K V - 2) hW
+    (by apply (QW.nondegenerate_associated_iff.mpr (nondegenerate_orthoCompl hQ' hQU')).1)
+  exact ⟨weightedSumSquares K wU, weightedSumSquares K wW,
+    Equivalent.isHyperbolic hQU hwU.symm, hprod.trans (hwU.prod hwW)⟩
 
-    sorry
-  have hW : IsCompl U W := orthoCompl_isCompl hQ' hQU'
-  -- TODO: extract def
-  let e := Submodule.prodEquivOfIsCompl U W hW
-  have hprod : Q.Equivalent (QU.prod QW) :=
-    ⟨{  __ := e.symm
-        map_app' v := by
-          have : ((U.projectionOnto W hW) v, (W.projectionOnto U hW.symm) v) =
-            ((U.projectionOnto W hW) v, 0) + (0, (W.projectionOnto U hW.symm) v) := by simp
-          simp only [Submodule.toLinearMap_prodEquivOfIsCompl_symm, AddHom.toFun_eq_coe,
-            coe_toAddHom, LinearMap.prod_apply, Function.prod_apply, QuadraticMap.prod_apply, e]
-          simp only [QuadraticMap.restrict_apply, Submodule.coe_projectionOnto_apply, QU, QW]
-          conv_rhs => rw [← Submodule.projection_add_projection_eq_self hW v]
-          have : Q.IsOrtho (U.projection W hW v) (W.projection U hW.symm v) := sorry
-          rw [this]
-      }⟩
-  sorry
-
+-- lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
+--     ∃ (A : QuadraticForm K (Fin 2 → K)) (B : QuadraticForm K (Fin (finrank K V - 2) → K)),
+--       A.IsHyperbolic ∧ Q.Equivalent (A.prod B) := by
+--   have := two_le_finrank_of_isotropic_of_nondegenerate hQ hQ'
+--   simp only [Isotropic, Anisotropic, not_forall] at hQ
+--   obtain ⟨x, hQx, hx0⟩ := hQ
+--   obtain ⟨z, hxz⟩ : ∃ (z : V), polar Q x z = 2 := sorry
+--   let y : V := (2 : K) • z - (Q z) • x
+--   have hQy : Q y = 0 := by
+--     simp [y, hxz, sub_eq_add_neg, QuadraticMap.map_add, QuadraticMap.map_smul, polar_comm Q z, hQx]
+--     ring
+--   have hxy : polar Q x y = 4 := by
+--     simp only [polar, hQx, sub_zero, hQy, y]
+--     simp only [sub_eq_add_neg, QuadraticMap.map_add Q, hQx, QuadraticMap.map_neg, polar_neg_right,
+--       polar_smul_right, polar_smul_left, polar_comm Q z, hxz, smul_eq_mul, zero_add,
+--       polar_add_right, polar_self, nsmul_zero, mul_zero, neg_zero, add_zero, QuadraticMap.map_smul]
+--     ring
+--   have hxy' : ∀ (a : K), a • x ≠ y := by
+--     by_contra! ha
+--     obtain ⟨a, hay⟩ := ha
+--     simp only [polar, ← hay] at hxy
+--     nth_rw 1 [← one_smul K x, ← add_smul] at hxy
+--     simp only [QuadraticMap.map_smul, hQx, smul_eq_mul, mul_zero, sub_self] at hxy
+--     rw [(show (4 : K) = 2 * 2 by ring)] at hxy
+--     simp only [zero_eq_mul, or_self] at hxy
+--     exact two_ne_zero hxy
+--   let U := Submodule.span K {x, y}
+--   have hU : finrank K U = 2 := by
+--     have : Fintype ↑({x, y} : Set V) := Fintype.ofFinite _
+--     rw [finrank_span_set_eq_card (linearIndepOn_id_pair hx0 hxy'), Set.toFinset_card,
+--       Set.fintypeCard_eq_ncard, Set.ncard_pair (by simpa [one_smul] using hxy' 1)]
+--   let W := Q.orthoCompl U
+--   have hW : finrank K W = finrank K V - 2 := by simp [finrank_eq_add hQ' U, W, hU]
+--   let QU : QuadraticForm K U := Q.restrict U
+--   let QW : QuadraticForm K W := Q.restrict W
+--   have hQU : QU.IsHyperbolic := sorry
+--   have hQU' : QU.Nondegenerate := hQU.nondegenerate
+--   have hprod : Q.Equivalent (QU.prod QW) := ⟨(prodOrthoComplEquiv hQ' hQU').symm⟩
+--   obtain ⟨wU, hwU⟩ := equivalent_weightedSumSquares_units_of_nondegenerate 2 hU
+--     (by apply (QU.nondegenerate_associated_iff.mpr hQU').1)
+--   obtain ⟨wW, hwW⟩ := equivalent_weightedSumSquares_units_of_nondegenerate (finrank K V - 2) hW
+--     (by apply (QW.nondegenerate_associated_iff.mpr (nondegenerate_orthoCompl hQ' hQU')).1)
+--   exact ⟨weightedSumSquares K wU, weightedSumSquares K wW,
+--     Equivalent.isHyperbolic hQU hwU.symm, hprod.trans (hwU.prod hwW)⟩
 
 lemma represents_of_isotropic_of_nondegenerate (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) (r : K) :
     Q.represents r := by
