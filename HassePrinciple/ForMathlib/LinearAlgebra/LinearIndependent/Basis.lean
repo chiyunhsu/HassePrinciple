@@ -13,14 +13,14 @@ public import Mathlib.Tactic.Abel
 
 namespace Submodule
 
-variable {K V : Type*} [Field K] [AddCommGroup V] [Module K V]
+variable {R V : Type*} [CommRing R] [AddCommGroup V] [Module R V]
 
 open Module
 
-/-- The `K`-linear isomorphism between `K^2` and `span {x, y}` that sends the standard basis to
+/-- The `R`-linear isomorphism between `R^2` and `span {x, y}` that sends the standard basis to
 `{x, y}`. -/
-noncomputable def basisSpanPairAux {x y : V} (hxy : LinearIndependent K ![x, y]) :
-    (Fin 2 → K) ≃ₗ[K] (span K {x, y}) where
+noncomputable def basisSpanPairAux {x y : V} (hxy : LinearIndependent R ![x, y]) :
+    (Fin 2 → R) ≃ₗ[R] (span R {x, y}) where
   toFun a := ⟨a 0 • x + a 1 • y, by simp [mem_span_pair]⟩
   map_add' a b := by simp [add_smul]; abel
   map_smul' k a := by simp [mul_smul]
@@ -28,19 +28,19 @@ noncomputable def basisSpanPairAux {x y : V} (hxy : LinearIndependent K ![x, y])
   left_inv a := by
     ext n
     have h := (mem_span_pair.mp
-      ((⟨a 0 • x + a 1 • y, by simp [mem_span_pair]⟩ : span K {x, y})).2).choose_spec.choose_spec
+      ((⟨a 0 • x + a 1 • y, by simp [mem_span_pair]⟩ : span R {x, y})).2).choose_spec.choose_spec
     simp only [Fin.isValue] at h ⊢
     apply LinearIndependent.eq_coords_of_eq hxy (by simpa using h)
   right_inv v := by simp [(mem_span_pair.mp v.2).choose_spec.choose_spec]
 
-/-- Linearly independent `{x, y}` form a basis for `span K {x, y}`. -/
-public noncomputable def basisSpanPair {x y : V} (hxy : LinearIndependent K ![x, y]) :
-    Module.Basis (Fin 2) K (span K {x, y}) where
-  repr := (basisSpanPairAux hxy).symm.trans (Finsupp.linearEquivFunOnFinite K K (Fin 2)).symm
+/-- Linearly independent `{x, y}` form a basis for `span R {x, y}`. -/
+public noncomputable def basisSpanPair {x y : V} (hxy : LinearIndependent R ![x, y]) :
+    Module.Basis (Fin 2) R (span R {x, y}) where
+  repr := (basisSpanPairAux hxy).symm.trans (Finsupp.linearEquivFunOnFinite R R (Fin 2)).symm
 
 open Submodule in
-public lemma basisSpanPair_add_repr {x y : V} (hxy : LinearIndependent K ![x, y])
-    (v : span K {x, y}) :
+public lemma basisSpanPair_add_repr {x y : V} (hxy : LinearIndependent R ![x, y])
+    (v : span R {x, y}) :
     ((basisSpanPair hxy).repr v) 0 • x + ((basisSpanPair hxy).repr v) 1 • y = v := by
   simp [basisSpanPair, basisSpanPairAux, (mem_span_pair.mp v.2).choose_spec.choose_spec]
 

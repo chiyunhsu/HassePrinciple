@@ -454,10 +454,6 @@ section CommRing
 
 variable {R V W : Type*} [CommRing R] [AddCommGroup V] [Module R V] [AddCommGroup W] [Module R W]
 
-/-- A quadratic form is hyperbolic if it is equivalent to the form X^2 - Y^2. -/
-def IsHyperbolic (Q : QuadraticForm R V) : Prop :=
-  Q.Equivalent (weightedSumSquares R ![(1 : Rˣ), -1])
-
 /-- The quadratic form `XY` on a two dimensional free `R`-module. -/
 noncomputable abbrev XY (b : Basis (Fin 2) R V) : QuadraticForm R V where
   toFun v := b.repr v 0 * b.repr v 1
@@ -472,9 +468,43 @@ noncomputable abbrev XY (b : Basis (Fin 2) R V) : QuadraticForm R V where
       map_smul' r w := by ext; simp; ring }
     exact ⟨B, fun v w ↦ by simp [B]; ring⟩
 
+/-- A quadratic form is hyperbolic if it is equivalent to the form X^2 - Y^2. -/
+def IsHyperbolic (Q : QuadraticForm R V) : Prop :=
+  Q.Equivalent (XY (Pi.basisFun R (Fin 2)))
+
+lemma XY_isHyperbolic (b : Basis (Fin 2) R V) : IsHyperbolic (XY b) := ⟨{
+  toLinearEquiv := b.equivFun
+  map_app' v := by simp }⟩
+
 lemma _root_.QuadraticMap.Equivalent.isHyperbolic {Q : QuadraticForm R V} {Q' : QuadraticForm R W}
     (hQ : Q.IsHyperbolic) (heq : Q'.Equivalent Q) : Q'.IsHyperbolic :=
   heq.trans hQ
+
+theorem represents_of_isHyperbolic [Nontrivial R] {Q : QuadraticForm R V} (hQ : Q.IsHyperbolic)
+    (r : R) : represents Q r := by
+  apply hQ.symm.represents
+  simp only [represents, QuadraticMap.coe_mk, Fin.isValue, Pi.basisFun_repr, ne_eq]
+  exact ⟨![r, 1], by simp, by simp [one_ne_zero]⟩
+
+theorem restrict_isHyperbolic_of_polar [IsDomain R] [Module.Free R V] {Q : QuadraticForm R V}
+    {x y : V} (hx0 : x ≠ 0) (hQx : Q x = 0) (hQy : Q y = 0) (hQxy : polar Q x y = 1) :
+    (Q.restrict (span R {x, y})).IsHyperbolic := by
+  have hxy : LinearIndependent R ![x, y] := by
+    rw [LinearIndependent.pair_iff]
+    intro a b hab
+    have h0 : a = 0 ∨ b = 0 := by
+      have h : Q (a • x + b • y) = 0 := by rw [hab, map_zero]
+      simpa [QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, Or.comm] using h
+    aesop
+  apply Equivalent.trans ?_ (XY_isHyperbolic (basisSpanPair hxy))
+  exact ⟨{
+    toLinearEquiv := LinearEquiv.ofEq _ _ rfl
+    map_app' v := by
+      simp only [LinearEquiv.ofEq_rfl, LinearEquiv.refl_toLinearMap, AddHom.toFun_eq_coe,
+        coe_toAddHom, id_coe, id_eq, QuadraticMap.coe_mk, Fin.isValue,
+        QuadraticMap.restrict_apply]
+      conv_rhs => rw [← basisSpanPair_add_repr hxy v]
+      simp [QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, mul_comm] }⟩
 
 /-- The orthogonal complement of `S : Set V` with respect to the quadratic form `Q` is the
 `R`-submodule of `V` consisting of elements that are `Q`-orthogonal to every `s : S`.
@@ -531,13 +561,13 @@ noncomputable def xyIsometryEquivSumSquares :
       ring_nf
       simp [mul_comm _ (4 : R), ← mul_assoc, this] }
 
-lemma XY_isHyperbolic : IsHyperbolic (XY b) := by
+lemma Xsq_sub_Ysq_isHyperbolic : IsHyperbolic (weightedSumSquares R ![(1 : Rˣ), -1]) := by
   simp only [IsHyperbolic, Nat.succ_eq_add_one, Nat.reduceAdd]
-  exact Nonempty.intro (xyIsometryEquivSumSquares b)
+  exact Nonempty.intro (xyIsometryEquivSumSquares (Pi.basisFun R (Fin 2))).symm
 
-lemma equivalent_XY_of_isHyperbolic {Q : QuadraticForm R V} (hQ : Q.IsHyperbolic) :
-    Q.Equivalent (XY (Pi.basisFun R (Fin 2))) :=
-  hQ.trans (XY_isHyperbolic (Pi.basisFun R (Fin 2))).symm
+lemma equivalent_Xsq_sub_Ysq_of_isHyperbolic {Q : QuadraticForm R V} (hQ : Q.IsHyperbolic) :
+    Q.Equivalent (weightedSumSquares R ![(1 : Rˣ), -1]) :=
+  hQ.trans Xsq_sub_Ysq_isHyperbolic.symm
 
 end CommRing
 
@@ -547,13 +577,8 @@ variable {K V : Type*} [Field K] [Invertible (2 : K)] [AddCommGroup V] [Module K
 
 lemma IsHyperbolic.nondegenerate {Q : QuadraticForm K V} (hQ : Q.IsHyperbolic) :
     Q.Nondegenerate :=
-  hQ.nondegenerate_iff.mpr (nondegenerate_weightedSumSquares _)
-
-theorem represents_of_hyperbolic {Q : QuadraticForm K V} (hQ : Q.IsHyperbolic) (r : K) :
-    represents Q r := by
-  apply (equivalent_XY_of_isHyperbolic hQ).symm.represents
-  simp only [represents, QuadraticMap.coe_mk, Fin.isValue, Pi.basisFun_repr, ne_eq]
-  exact ⟨![r, 1], by simp, by simp [one_ne_zero]⟩
+  (equivalent_Xsq_sub_Ysq_of_isHyperbolic hQ).nondegenerate_iff.mpr
+    (nondegenerate_weightedSumSquares _)
 
 lemma radical_eq_inf (Q : QuadraticForm K V) (S : Submodule K V) :
     map S.subtype (Q.restrict S).radical = (S ⊓ (Q.orthoCompl S)) := by
@@ -581,24 +606,6 @@ lemma radical_eq_inf (Q : QuadraticForm K V) (S : Submodule K V) :
     rw [hSc t.1 t.2]
     ring
 
-theorem restrict_isHyperbolic_of_polar {Q : QuadraticForm K V} {x y : V} (hx0 : x ≠ 0)
-    (hQx : Q x = 0) (hQy : Q y = 0) (hQxy : polar Q x y = 1) :
-    (Q.restrict (span K {x, y})).IsHyperbolic := by
-  have hxy : LinearIndependent K ![x, y] := by
-    rw [LinearIndependent.pair_iff]
-    intro a b hab
-    have h0 : a = 0 ∨ b = 0 := by
-      have h : Q (a • x + b • y) = 0 := by rw [hab, map_zero]
-      simpa [QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, Or.comm] using h
-    aesop
-  apply Equivalent.trans _ (XY_isHyperbolic (basisSpanPair hxy))
-  exact ⟨{
-    toLinearEquiv := LinearEquiv.ofEq _ _ rfl
-    map_app' v := by
-      simp only [LinearEquiv.ofEq_rfl, LinearEquiv.refl_toLinearMap, AddHom.toFun_eq_coe,
-        coe_toAddHom, id_coe, id_eq, QuadraticMap.coe_mk, Fin.isValue, QuadraticMap.restrict_apply]
-      conv_rhs => rw [← basisSpanPair_add_repr hxy v]
-      simp [QuadraticMap.map_add, QuadraticMap.map_smul, hQx, hQy, hQxy, mul_comm] }⟩
 section Finite
 
 variable [Module.Finite K V] {Q : QuadraticForm K V}
@@ -678,7 +685,7 @@ noncomputable def _root_.Submodule.prodOrthoComplEquiv (hQ : Q.Nondegenerate) {U
     rw [Q.isOrtho_def] at this
     grind
 
-lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
+lemma equivalent_isHyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
     ∃ (A : QuadraticForm K (Fin 2 → K)) (B : QuadraticForm K (Fin (finrank K V - 2) → K)),
       A.IsHyperbolic ∧ Q.Equivalent (A.prod B) := by
   -- Since `Q` is isotropic, there exists a nonzero `x` with `Q x = 0`.
@@ -733,9 +740,9 @@ lemma equivalent_hyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
 
 lemma represents_of_isotropic_of_nondegenerate (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) (r : K) :
     Q.represents r := by
-  obtain ⟨H, Q', hH, heq⟩ := equivalent_hyperbolic_add hQ hQ'
+  obtain ⟨H, Q', hH, heq⟩ := equivalent_isHyperbolic_add hQ hQ'
   apply heq.symm.represents
-  have hr : represents H r := represents_of_hyperbolic hH r
+  have hr : represents H r := represents_of_isHyperbolic hH r
   simp only [represents, ne_eq, QuadraticMap.prod_apply] at hr ⊢
   obtain ⟨x, hxr, hx0⟩ := hr
   exact ⟨(x, 0), by simp [hxr], by simp [hx0]⟩

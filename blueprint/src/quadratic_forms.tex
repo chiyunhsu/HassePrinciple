@@ -102,31 +102,34 @@ Let $R$ be a commutative ring, let $V$ and $W$ be $R$-modules and let $Q$ and $Q
 \begin{definition}\label{def:hyperbolic}
 \lean{QuadraticForm.IsHyperbolic}
 \leanok
-A quadratic form is \emph{hyperbolic} if it is equivalent to the form $X^2 - Y^2$.
+A quadratic form is \emph{hyperbolic} if it is equivalent to the form $XY$.
 \end{definition}
 
-\begin{lemma}\label{lem:XY_hyperbolic}
-\lean{QuadraticForm.XY_isHyperbolic}
+\begin{lemma}\label{lem:represents_of_hyperbolic}
+\lean{QuadraticForm.represents_of_isHyperbolic}
 \leanok
-\uses{def:hyperbolic}
-The quadratic form $XY$ is hyperbolic.
+\uses{def:hyperbolic, def:represents}
+An hyperbolic quadratic form represents all elements of $R$.
 \end{lemma}
-
 \begin{proof}
-TODO.
+\leanok 
+\uses{lem:represents_iff}
+By Lemma \ref{lem:represents_iff}, it suffices to prove this for the quadratic form $XY$, which holds since for each $r \in R$, we have $XY(r, 1) = 0$.
 \end{proof}
 
 
-% NOTE: if needed, assume $R$ is a field.
 \begin{proposition}\label{prop:sum_hyperbolic}
-\lean{QuadraticForm.equivalent_hyperbolic_add}
+\lean{QuadraticForm.equivalent_isHyperbolic_add}
 \leanok
-\uses{lem:XY_hyperbolic, def:represents}
-Let $R$ be a commutative ring. If a quadratic form $Q$ on an $R$-module $V$ represents $0$ and is nondegenerate, then $Q$ is equivalent to $H + Q'$, where $H$ is hyperbolic. Moreover, $f$ represents all elements of $R$.
+\uses{def:represents, def:hyperbolic}
+Let $K$ be a field. If a quadratic form $Q$ on an $K$-vector space $V$ represents $0$ and is nondegenerate, then $Q$ is equivalent to $H + Q'$, where $H$ is hyperbolic. Moreover, $f$ represents all elements of $K$.
 \end{proposition}
 \begin{proof}
-Fix $x \in V$ such that $Q(x) = 0$. Since $Q$ is nondegenerate, there exists $z \in V$ such that $x \cdot z = 1$. The element $y = 2z - (z\cdot z)x$ is isotropic and $x \cdot y = 2$.
-The restriction of $Q$ to the submodule $U := Rx \oplus Ry$ is the desired hyperbolic form $H$.
+\leanok
+\uses{lem:represents_of_hyperbolic}
+Fix $x \in V$ such that $Q(x) = 0$. Since $Q$ is nondegenerate, there exists $z \in V$ such that $x \cdot z = 1$. The element $y = z - 1/2 \cdot(z\cdot z)x$ is isotropic and $x \cdot y = 1$.
+The restriction of $Q$ to the submodule $U := Kx \oplus Ky$ is the desired hyperbolic form $H$. Take $Q'$ to be the restriction of $Q'$ to the orthogonal complement of $U$; then $Q$ is equivalent to $H + Q'$. %TODO: add reference
+Since $H$ represents all elements of $K$ by Lemma \ref{lem:represents_of_hyperbolic}, so does $Q = H + Q'$. 
 \end{proof}
 
 \begin{corollary}\label{cor:represents_iff_sub_sub}
