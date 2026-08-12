@@ -580,48 +580,36 @@ lemma IsHyperbolic.nondegenerate {Q : QuadraticForm K V} (hQ : Q.IsHyperbolic) :
   (equivalent_Xsq_sub_Ysq_of_isHyperbolic hQ).nondegenerate_iff.mpr
     (nondegenerate_weightedSumSquares _)
 
-lemma radical_eq_inf (Q : QuadraticForm K V) (S : Submodule K V) :
-    map S.subtype (Q.restrict S).radical = (S ⊓ (Q.orthoCompl S)) := by
+lemma radical_eq_orthoCompl_top (Q : QuadraticForm K V) :
+    Q.radical = (Q.orthoCompl ⊤) := by
   ext v
-  simp only [radical, QuadraticMap.restrict_apply, mem_map, mem_mk, AddSubmonoid.mem_mk,
-    AddSubsemigroup.mem_mk, Set.mem_setOf_eq, subtype_apply, Subtype.exists,
-    exists_and_right, exists_and_left, exists_eq_right, mem_inf]
-  refine ⟨fun ⟨h0, ⟨hvS, h'⟩⟩ ↦ ⟨hvS, ?_⟩, fun ⟨hS, hSc⟩ ↦ ⟨?_, ?_⟩⟩
-  · simp only [mem_orthoCompl, SetLike.coe_sort_coe, Subtype.forall]
-    intro s hs
-    have : (Q.restrict S).polarBilin ⟨v, hvS⟩ ⟨s, hs⟩ = 0 := by simp [h']
-    simp only [polarBilin_apply_apply, polar, AddMemClass.mk_add_mk, QuadraticMap.restrict_apply,
-      sub_eq_iff_eq_add', add_zero] at this
-    exact this
-  · simp only [mem_orthoCompl, SetLike.coe_sort_coe, Subtype.forall, Q.isOrtho_def] at hSc
-    specialize hSc v hS
-    rw [← two_smul K, ← two_mul, Q.map_smul, smul_eq_mul, mul_eq_mul_right_iff] at hSc
-    have : ¬ (2 : K) * 2 = 2 := by field_simp; grind
-    tauto
-  · use hS
-    ext t
-    simp only [mem_orthoCompl, SetLike.coe_sort_coe, Subtype.forall] at hSc
-    simp only [polarBilin_apply_apply, polar, QuadraticMap.restrict_apply, coe_add,
-      LinearMap.zero_apply]
-    rw [hSc t.1 t.2]
-    ring
+  simp only [mem_radical_iff', Set.top_eq_univ, mem_orthoCompl, QuadraticMap.isOrtho_def,
+    Subtype.forall, Set.mem_univ, forall_const]
+  refine ⟨fun ⟨h0, h⟩ ↦ by simp [h, h0], fun h ↦ ?_⟩
+  have h0 : Q v = 0 := by
+    have h2 : ¬ (2 : K) * 2 = 2 := by field_simp; grind
+    specialize h v
+    simpa [← two_smul K v, QuadraticMap.map_smul, ← two_mul, h2] using h
+  simp [h0, h]
+
+lemma radical_restrict_eq_inf (Q : QuadraticForm K V) (S : Submodule K V) :
+    map S.subtype (Q.restrict S).radical = (S ⊓ (Q.orthoCompl S)) := by
+  rw [radical_eq_orthoCompl_top]
+  ext v
+  simp [mem_orthoCompl]
+  simp [QuadraticMap.isOrtho_def]
 
 section Finite
 
 variable [Module.Finite K V] {Q : QuadraticForm K V}
 
 lemma nondegenerate_iff_toDual_bijective : Q.Nondegenerate ↔ Function.Bijective (Q.toDual ⊤) := by
-  have hbot := Q.radical_eq_inf ⊤
-  simp only [top_coe, le_top, inf_of_le_right] at hbot
   have hinj : Function.Bijective (Q.toDual ⊤) ↔ Function.Injective (Q.toDual ⊤) := by
     simp only [Function.Bijective, and_iff_left_iff_imp]
     rw [LinearMap.injective_iff_surjective_of_finrank_eq_finrank (by simp)]
     simp
-  rw [hinj, nondegenerate_iff_radical_eq_bot, ← ker_eq_bot, ← orthoCompl_eq_ker_toDual,
-    top_coe, ← hbot]
-  conv_rhs => rw [← map_bot (⊤ : Submodule K V).subtype,
-    (map_injective_of_injective (⊤ : Submodule K V).injective_subtype).eq_iff]
-  simp [radical, LinearMap.ext_iff, polar, Set.eq_singleton_iff_unique_mem]
+  simp [hinj, nondegenerate_iff_radical_eq_bot, ← ker_eq_bot, Q.radical_eq_orthoCompl_top,
+    ← orthoCompl_eq_ker_toDual]
 
 lemma toDual_surjective (hQ : Q.Nondegenerate) (S : Submodule K V) :
     Function.Surjective (Q.toDual S) := by
@@ -653,8 +641,8 @@ lemma orthoCompl_orthoCompl (hQ : Q.Nondegenerate) (S : Submodule K V) :
 
 lemma nondegenerate_orthoCompl (hQ : Q.Nondegenerate) {S : Submodule K V}
     (hS : (Q.restrict S).Nondegenerate) : (Q.restrict (Q.orthoCompl S)).Nondegenerate := by
-  have hrS := radical_eq_inf Q S
-  have hrSc := radical_eq_inf Q (Q.orthoCompl S)
+  have hrS := radical_restrict_eq_inf Q S
+  have hrSc := radical_restrict_eq_inf Q (Q.orthoCompl S)
   rw [orthoCompl_orthoCompl hQ S, inf_comm] at hrSc
   simp only [nondegenerate_iff_radical_eq_bot] at hQ hS ⊢
   simp only [hS, Submodule.map_bot] at hrS
@@ -668,7 +656,7 @@ lemma nondegenerate_orthoCompl_iff (hQ : Q.Nondegenerate) (S : Submodule K V) :
 
 lemma orthoCompl_isCompl (hQ : Q.Nondegenerate) {S : Submodule K V}
     (hQS : (Q.restrict S).Nondegenerate) : IsCompl S  (Q.orthoCompl S) := by
-  rw [isCompl_iff_disjoint _ _ (finrank_eq_add hQ S).le, disjoint_iff, ← radical_eq_inf,
+  rw [isCompl_iff_disjoint _ _ (finrank_eq_add hQ S).le, disjoint_iff, ← radical_restrict_eq_inf,
     ← map_bot S.subtype, (map_injective_of_injective S.injective_subtype).eq_iff,
     nondegenerate_iff_radical_eq_bot.mp hQS]
 
