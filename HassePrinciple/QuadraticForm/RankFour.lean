@@ -67,7 +67,7 @@ private theorem isotropic_prod_neg {k : Type*} [Field k] [CharZero k] [HasBilinH
       (nondegenerate_baseChange (nondegenerate_weightedSumSquares _)),
     represents_iff_of_rank_two (nondegenerate_baseChange
       (nondegenerate_weightedSumSquares _)) ((Pi.basisFun ℚ (Fin 2)).baseChange k)]
-  simp [hasseMinkoskiInv.of_baseChange_weightedSumSquares k, ← hx, baseChange_discr,
+  simp [hasseMinkowskiInv.of_baseChange_weightedSumSquares k, ← hx, baseChange_discr,
     weightedSumSquares_discr, Units.smul_def]
 
 /-- Rank 4 case of Hasse-Minkowski. -/
@@ -105,7 +105,7 @@ lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
     have h2 : (Q2.baseChange ℚ_[p]).represents (hp p).choose := (hp p).choose_spec.2
     rw [represents_iff_of_rank_two (nondegenerate_baseChange
       (nondegenerate_weightedSumSquares _)) ((Pi.basisFun ℚ (Fin 2)).baseChange ℚ_[p])] at h1 h2
-    · simp only [hasseMinkoskiInv.of_baseChange_weightedSumSquares ℚ_[p], Fin.zero_eta,
+    · simp only [hasseMinkowskiInv.of_baseChange_weightedSumSquares ℚ_[p], Fin.zero_eta,
         Fin.isValue, Matrix.cons_val_zero, eq_ratCast, Fin.mk_one, Matrix.cons_val_one,
         Matrix.cons_val_fin_one, Units.val_neg, Rat.cast_neg] at h1 h2
       refine ⟨?_, ?_⟩
@@ -118,7 +118,7 @@ lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
     have h2 : (Q2.baseChange ℝ).represents xr := hxr.2
     rw [represents_iff_of_rank_two (nondegenerate_baseChange
       (nondegenerate_weightedSumSquares _)) ((Pi.basisFun ℚ (Fin 2)).baseChange ℝ)] at h1 h2
-    · simp only [hasseMinkoskiInv.of_baseChange_weightedSumSquares ℝ, Fin.zero_eta,
+    · simp only [hasseMinkowskiInv.of_baseChange_weightedSumSquares ℝ, Fin.zero_eta,
         Fin.isValue, Matrix.cons_val_zero, eq_ratCast, Fin.mk_one, Matrix.cons_val_one,
         Matrix.cons_val_fin_one, Units.val_neg, Rat.cast_neg] at h1 h2
       refine ⟨?_, ?_⟩
