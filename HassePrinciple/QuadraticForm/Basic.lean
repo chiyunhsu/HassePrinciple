@@ -468,7 +468,7 @@ noncomputable abbrev XY (b : Basis (Fin 2) R V) : QuadraticForm R V where
       map_smul' r w := by ext; simp; ring }
     exact ⟨B, fun v w ↦ by simp [B]; ring⟩
 
-/-- A quadratic form is hyperbolic if it is equivalent to the form X^2 - Y^2. -/
+/-- A quadratic form is hyperbolic if it is equivalent to the form `XY`. -/
 def IsHyperbolic (Q : QuadraticForm R V) : Prop :=
   Q.Equivalent (XY (Pi.basisFun R (Fin 2)))
 
@@ -513,7 +513,7 @@ Note that if `S` contains isotropic elements, then `S ∩ (Q.orthoCompl S)` may 
 -/
 @[simps]
 def orthoCompl (Q : QuadraticForm R V) (S : Set V) : Submodule R V where
-  carrier   := {v : V | ∀ (w : S), Q.IsOrtho v w}
+  carrier := {v : V | ∀ (w : S), Q.IsOrtho v w}
   add_mem' {v v'} hv hv' := by simp_all [Q.isOrtho_def, QuadraticMap.map_add]
   zero_mem' := by simp [Q.isOrtho_def]
   smul_mem' r v hrv := by simp_all [Q.isOrtho_def, QuadraticMap.map_add]
@@ -605,8 +605,7 @@ variable [Module.Finite K V] {Q : QuadraticForm K V}
 
 lemma nondegenerate_iff_toDual_bijective : Q.Nondegenerate ↔ Function.Bijective (Q.toDual ⊤) := by
   have hinj : Function.Bijective (Q.toDual ⊤) ↔ Function.Injective (Q.toDual ⊤) := by
-    simp only [Function.Bijective, and_iff_left_iff_imp]
-    rw [LinearMap.injective_iff_surjective_of_finrank_eq_finrank (by simp)]
+    rw [Function.Bijective, LinearMap.injective_iff_surjective_of_finrank_eq_finrank (by simp)]
     simp
   simp [hinj, nondegenerate_iff_radical_eq_bot, ← ker_eq_bot, Q.radical_eq_orthoCompl_top,
     ← orthoCompl_eq_ker_toDual]
@@ -629,8 +628,7 @@ lemma finrank_eq_add (hQ : Q.Nondegenerate) (S : Submodule K V) :
 lemma orthoCompl_orthoCompl (hQ : Q.Nondegenerate) (S : Submodule K V) :
     (Q.orthoCompl (Q.orthoCompl S)) = S := by
   have := finrank_eq_add hQ S
-  rw [finrank_eq_add hQ (Q.orthoCompl S), add_comm] at this
-  simp only [Nat.add_right_cancel_iff] at this
+  rw [finrank_eq_add hQ (Q.orthoCompl S), add_comm, Nat.add_right_cancel_iff] at this
   rw [eq_comm]
   apply eq_of_le_of_finrank_eq _ this.symm
   intro s hs
@@ -860,7 +858,7 @@ theorem baseChange_weightedSumSquares {ι : Type*} [Fintype ι] (w : ι → R) :
           simp only [piScalarRightHom_tmul, Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
           induction y using TensorProduct.induction_on with
           | zero => simp
-          | tmul b y =>
+          | tmul b y =>and_iff_left_iff_imp,
             simp only [piScalarRightHom_tmul, Algebra.smul_mul_assoc, Algebra.mul_smul_comm,
               ← polarBilin_apply_apply, polarBilin_baseChange, LinearMap.BilinForm.baseChange_tmul]
             simp only [Algebra.algebraMap_eq_smul_one, Algebra.smul_mul_assoc, one_mul,
