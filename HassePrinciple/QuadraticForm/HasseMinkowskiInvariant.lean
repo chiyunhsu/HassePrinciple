@@ -157,7 +157,8 @@ lemma prod_rank_one [HasBilinHilbertSym k] (b : Basis (Fin 2) k V) (a : kˣ) (h 
     hasseMinkowskiInv
       ((Q.prod (QuadraticMap.weightedSumSquares k ![a])).nondegenerate_associated_iff.mpr
         (nondegenerate_prod h (nondegenerate_weightedSumSquares _))).1 =
-    hilbertSym (a : k) (Q.discr b) * hasseMinkowskiInv (Q.nondegenerate_associated_iff.mpr h).1 := by
+    hilbertSym (a : k) (Q.discr b) *
+      hasseMinkowskiInv (Q.nondegenerate_associated_iff.mpr h).1 := by
   let Qa := Q.prod (QuadraticMap.weightedSumSquares k ![a])
   obtain ⟨w, hw⟩ := Q.equivalent_weightedSumSquares_units_of_nondegenerate 2
     (by simp [finrank_eq_card_basis b]) (nondegenerate_associated_iff.mpr h).1
@@ -175,8 +176,8 @@ lemma prod_rank_one [HasBilinHilbertSym k] (b : Basis (Fin 2) k V) (a : kˣ) (h 
   -- Change goal to hasseMinkowskiInv Qwa = hilbertSym (a : k) (Q.discr b) * hasseMinkowskiInv Qw
   -- With HasBilinHilbertSym, the two sides can be proven to be equal
   simp [eq_of_equivalent_weightedSumSquares hQa hwa,
-    eq_of_equivalent_weightedSumSquares (Q.nondegenerate_associated_iff.mpr h).1 hw,
-    hilbertSym_eq, mul_left_eq, comm (a := (a : k)), weightedSumSquares_two, weightedSumSquares_three]
+    eq_of_equivalent_weightedSumSquares (Q.nondegenerate_associated_iff.mpr h).1 hw, hilbertSym_eq,
+    mul_left_eq, comm (a := (a : k)), weightedSumSquares_two, weightedSumSquares_three]
   ring_nf
 
 end hasseMinkowskiInv
