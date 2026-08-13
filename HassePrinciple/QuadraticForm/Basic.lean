@@ -526,8 +526,8 @@ lemma mem_orthoCompl (Q : QuadraticForm R V) (S : Set V) (v : V) :
   `V →ₗ[R] Module.Dual R S` sending `v : V` to the `R`-linear map `s ↦ polar Q v s`. -/
 def toDual (Q : QuadraticForm R V) (S : Submodule R V) :
     V →ₗ[R] Module.Dual R S where
-  toFun v := {
-    toFun s   := polar Q v s
+  toFun v :=
+  { toFun s   := polar Q v s
     map_add'  := by simp
     map_smul' := by simp }
   map_add' v s  := by ext; simp
