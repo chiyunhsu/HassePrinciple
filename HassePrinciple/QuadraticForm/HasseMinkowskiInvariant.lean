@@ -20,11 +20,15 @@ public import Mathlib.Data.Fin.Basic
 
 section Prelim
 
+open QuadraticMap
 lemma LinearMap.separatingLeft_of_equivalent {R M M' N : Type*} [CommRing R]
     [AddCommGroup M] [AddCommGroup M'] [Module R M] [Module R M'] [AddCommGroup N] [Module R N]
     [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q')
     (hQ : LinearMap.SeparatingLeft Q.associated) :
     LinearMap.SeparatingLeft Q'.associated := by
+  obtain ⟨f, hf⟩ := h
+  have := hQ.congr f f
+  simp [QuadraticMap.associated, associatedHom]
   sorry
 
 end Prelim
