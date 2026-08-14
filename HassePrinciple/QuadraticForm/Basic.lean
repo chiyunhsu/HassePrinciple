@@ -858,7 +858,7 @@ theorem baseChange_weightedSumSquares {ι : Type*} [Fintype ι] (w : ι → R) :
           simp only [piScalarRightHom_tmul, Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
           induction y using TensorProduct.induction_on with
           | zero => simp
-          | tmul b y =>and_iff_left_iff_imp,
+          | tmul b y =>
             simp only [piScalarRightHom_tmul, Algebra.smul_mul_assoc, Algebra.mul_smul_comm,
               ← polarBilin_apply_apply, polarBilin_baseChange, LinearMap.BilinForm.baseChange_tmul]
             simp only [Algebra.algebraMap_eq_smul_one, Algebra.smul_mul_assoc, one_mul,
