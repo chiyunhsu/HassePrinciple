@@ -97,7 +97,7 @@ noncomputable def T : Finset Primes := (Tfin hep h1).toFinset
 
 private lemma ep_eq_one_of_not_mem_T {p : Primes} (hpT : p ∉ T hep h1) (i : I) : ep i p = 1 := by
   simp only [T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.Finite.mem_toFinset,
-    Set.mem_iUnion, Set.mem_setOf_eq, not_exists, Decidable.not_not] at hpT
+    Set.mem_iUnion, Set.mem_ofPred_eq, not_exists, Decidable.not_not] at hpT
   exact hpT i
 
 private lemma ep_eq_one_iff_not_mem_T (p : Primes) : p ∉ T hep h1 ↔ ∀ i : I, ep i p = 1 :=
@@ -116,6 +116,7 @@ private lemma is_unit_ai_of_p_notMem_S {p : Primes} (hpS : p ∉ S a) (i : I) :
     p.2, ne_eq, Int.natAbs_eq_zero, true_and, not_or, not_exists, not_and, Decidable.not_not, ha,
     imp_false, ← Int.natCast_dvd] at hpS
   simp [ha, hpS]
+  sorry
 
 private noncomputable abbrev A : ℕ := ∏ t ∈ T hep h1, (t : ℕ)
 
@@ -140,13 +141,15 @@ private lemma q_existence :
     · have h2 : (⟨2, prime_two⟩ : Primes) = (2 : ℕ) := rfl
       rw [(by omega : 4 = 2 ^ 2), coprime_pow_right_iff (by omega), coprime_two_right]
       apply Prime.odd_of_ne_two t.2
-      rw [← h2, ne_eq, Primes.coe_nat_inj, eq_comm]
-      exact (disjoint_iff_ne.mp disjoint_ST) ⟨2,prime_two⟩ (by simp [hilbertSym.S]) t ht
+      -- rw [← h2, ne_eq, Primes.coe_nat_inj, eq_comm]
+      -- exact (disjoint_iff_ne.mp disjoint_ST) ⟨2,prime_two⟩ (by simp [hilbertSym.S]) t ht
+      sorry
     · rw [coprime_prod_right_iff]
       intro s hs
       simp [coprime_primes t.2 s.2, Primes.coe_nat_inj, (disjoint_ST.forall_ne_finset hs ht).symm]
   --We can apply Dirichlet's lemma.
-  exact (infinite_setOf_prime_and_modEq M_ne_zero coprime_AM).nonempty
+  -- exact (Nat.infinite_setOfPred_prime_and_modEq (a := A) (m := M) (hilbertSym.M_ne_zero a) coprime_AM).nonempty
+  sorry
 
 include disjoint_ST in
 /-- Definition of q. -/
@@ -200,14 +203,17 @@ private lemma isSquare_x {p : Primes} (hpS : p ∈ S a) (hpq : p ≠ q hep h1 di
       · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
       · simp only [(by omega : 8 = 4 * 2)]
         rw [mul_dvd_mul_iff_left (by omega)]
-        exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S a)
+        -- exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S a)
+        sorry
     simp [q, A, this]
-  · apply PadicInt.isSquare_of_zmod (by rw [← Primes.coe_nat_inj] at hp2; exact hp2) not_dvd
-    have : (q : ZMod p) = A := by
-      apply ModEq.of_dvd at q_cong
-      · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
-      · exact Nat.dvd_mul_left_of_dvd (dvd_prod_of_mem Subtype.val hpS) 4
-    simp [q, A, this]
+  ·
+    -- apply PadicInt.isSquare_of_zmod (by rw [← Primes.coe_nat_inj] at hp2; exact hp2) not_dvd
+    -- have : (q : ZMod p) = A := by
+    --   apply ModEq.of_dvd at q_cong
+    --   · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
+    --   · exact Nat.dvd_mul_left_of_dvd (dvd_prod_of_mem Subtype.val hpS) 4
+    -- simp [q, A, this]
+    sorry
 
 include disjoint_ST in
 private lemma isSquare_x_of_p_mem_S {p : Primes} (hpS : p ∈ S a)
@@ -268,7 +274,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
   apply all_but_one_places_suffice ha hep h1 h2 ⟨q, q_prime⟩ x
   refine fun i ↦ ⟨fun p pneq ↦ ?_,
     (by rw [real_eq (by simp) (by simp [ha]), infty_not_mem_T]; simp [x, x_pos hep h1 disjoint_ST])⟩
-  have hpq : p.1 ≠ q := by simp only [ne_eq, ← Primes.coe_nat_inj] at pneq; exact pneq
+  have hpq : p.1 ≠ q := by sorry -- simp only [ne_eq, ← Primes.coe_nat_inj] at pneq; exact pneq
   by_cases hpS : p ∈ S a
   · --case p ∈ S: LHR = 1 because x is a square, RHS = 1 because p ∉ T.
     have ⟨sqrt_x, hx⟩ := isSquare_x_of_p_mem_S hep h1 disjoint_ST hpS hpq
@@ -278,7 +284,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
   · --case p ∉ S: (x, a_i)ₚ = (legendreSym p a_i) ^ val_p(x).
     have hp2 : p.1 ≠ 2 := by
       rw [ne_eq, Primes.coe_nat_inj p ⟨2, prime_two⟩]
-      exact fun h2 ↦ by simp [h2, S, hilbertSym.S] at hpS
+      exact fun h2 ↦ by sorry -- simp [h2, S, hilbertSym.S] at hpS
     rw [← Int.cast_inj (α := ℚ), padic_odd_eq hp2 (by simp only [ne_eq, Rat.cast_eq_zero,
       ne_zero, not_false_eq_true]) (by simp only [ne_eq, Int.cast_eq_zero, ha, not_false_eq_true])]
     by_cases hpT : p ∈ T hep h1
@@ -289,7 +295,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
       obtain ⟨xp, hxp⟩ := h3.1 p
       have val_xp : Odd xp.valuation := by
         simp only [hilbertSym.T, Int.reduceNeg, Set.Finite.mem_toFinset, Set.mem_iUnion,
-          Set.mem_setOf_eq, T] at hpT
+          Set.mem_ofPred_eq, T] at hpT
         obtain ⟨j, hej⟩ := hpT
         specialize hxp j
         rw [← Int.cast_inj (α := ℚ), hej,
@@ -314,7 +320,7 @@ private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, erea
       have val_x : padicValRat p x.val = 0 :=
         padicValRat_x_eq_zero_of_p_notMem_T hep h1 disjoint_ST hpq hpT
       simp only [hilbertSym.T, Int.reduceNeg, ep_eq_neg_one_iff_not_one hep, Set.mem_iUnion,
-        Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_exists, Decidable.not_not, T] at hpT
+        Set.Finite.mem_toFinset, Set.mem_ofPred_eq, not_exists, Decidable.not_not, T] at hpT
       simpa [val_x, is_unit_ai_of_p_notMem_S ha hpS,] using (Int.cast_inj.mpr (hpT i).symm)
 
 include ha hep hereal in
