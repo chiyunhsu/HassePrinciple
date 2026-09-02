@@ -30,8 +30,7 @@ lemma isSquare_of_dist_one_lt_one {p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2) 
     exact (z + 1).isSquare_of_zmod hp (by simp [dvd_add_right hx, ← PadicInt.norm_lt_one_iff_dvd])
       (by simp [hz0])
   obtain ⟨r, hr⟩ := hz1
-  -- exact ⟨r, by simp [← PadicInt.coe_mul, ← hr, z]⟩
-  sorry
+  exact ⟨r, by simp [← PadicInt.coe_mul, ← hr]; aesop⟩
 
 lemma isSquare_of_dist_one_lt_pow {x : ℚ_[2]} (hx : dist x 1 < 2 ^ (-(2 : ℤ))) : IsSquare x := by
   have hx1 : ‖x - 1‖ ≤ 1 := le_trans hx.le (by norm_num)
@@ -49,8 +48,7 @@ lemma isSquare_of_dist_one_lt_pow {x : ℚ_[2]} (hx : dist x 1 < 2 ^ (-(2 : ℤ)
       ← PadicInt.norm_lt_one_iff_dvd]
     simp
   obtain ⟨r, hr⟩ := hz1
-  -- exact ⟨r, by simp [← PadicInt.coe_mul, ← hr, z]⟩
-  sorry
+  exact ⟨r, by simp [← PadicInt.coe_mul, ← hr]; aesop⟩
 
 lemma exists_pow_isSquare_of_dist_one_lt (p : ℕ) [Fact (Nat.Prime p)] :
     ∃ (n : ℕ), ∀ (x : ℚ_[p]), dist x 1 < p ^ (-(n : ℤ)) → IsSquare x := by
