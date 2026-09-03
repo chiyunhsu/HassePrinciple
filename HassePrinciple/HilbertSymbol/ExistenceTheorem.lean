@@ -148,8 +148,7 @@ private lemma q_existence :
       intro s hs
       simp [coprime_primes t.2 s.2, Primes.coe_nat_inj, (disjoint_ST.forall_ne_finset hs ht).symm]
   --We can apply Dirichlet's lemma.
-  -- exact (Nat.infinite_setOfPred_prime_and_modEq (a := A) (m := M) (hilbertSym.M_ne_zero a) coprime_AM).nonempty
-  sorry
+  exact (Nat.infinite_setOfPred_prime_and_modEq (a := A) (hilbertSym.M_ne_zero) coprime_AM).nonempty
 
 include disjoint_ST in
 /-- Definition of q. -/
@@ -206,14 +205,13 @@ private lemma isSquare_x {p : Primes} (hpS : p ∈ S a) (hpq : p ≠ q hep h1 di
         -- exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S a)
         sorry
     simp [q, A, this]
-  ·
-    -- apply PadicInt.isSquare_of_zmod (by rw [← Primes.coe_nat_inj] at hp2; exact hp2) not_dvd
-    -- have : (q : ZMod p) = A := by
-    --   apply ModEq.of_dvd at q_cong
-    --   · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
-    --   · exact Nat.dvd_mul_left_of_dvd (dvd_prod_of_mem Subtype.val hpS) 4
-    -- simp [q, A, this]
-    sorry
+  · apply PadicInt.isSquare_of_zmod _ not_dvd
+    · have : (q : ZMod p) = A := by
+        apply ModEq.of_dvd at q_cong
+        · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
+        · exact Nat.dvd_mul_left_of_dvd (dvd_prod_of_mem Subtype.val hpS) 4
+      simp [q, A, this]
+    · sorry
 
 include disjoint_ST in
 private lemma isSquare_x_of_p_mem_S {p : Primes} (hpS : p ∈ S a)
