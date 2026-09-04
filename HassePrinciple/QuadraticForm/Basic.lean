@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Nirvana Coppola, María Inés de Frutos-Fernández
+Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Chi-Yun Hsu
 -/
 module
 
@@ -130,12 +130,11 @@ lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fint
 
 open Module _root_.QuadraticMap
 
-lemma discr_reindex {R M : Type*} [CommRing R] [Invertible (2 : R)]
-    [AddCommGroup M] [Module R M]
+lemma discr_reindex {R M : Type*} [CommRing R] [Invertible (2 : R)] [AddCommGroup M] [Module R M]
     {ι κ : Type u} [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
     (e : ι ≃ κ) (b : Basis ι R M) (Q : QuadraticForm R M) :
     Q.discr (b.reindex e) = Q.discr b := by
-  simp only [QuadraticForm.discr, Matrix.det_apply]
+  simp only [discr, Matrix.det_apply]
   rw [Finset.sum_equiv (t := Finset.univ) (e.equivCongr e) (by simp)]
   intro g _
   simp only [Equiv.equivCongr_apply_apply, toMatrix, LinearMap.toMatrix₂_apply,
@@ -153,8 +152,7 @@ lemma IsometryEquiv.discr {R M N : Type*} [CommRing R] [Invertible (2 : R)]
     Q₁.discr b₁ = Q₂.discr b₂ * (f.toLinearEquiv.toMatrix (b₁.reindex e) b₂).det ^ 2 := by
   rw [← Q₁.discr_reindex e b₁]
   have hcomp : Q₁ = Q₂.comp f := by ext; simp
-  simp [QuadraticForm.discr, hcomp,
-      toMatrix_comp (b₁.reindex e) b₂ _ (f.toLinearEquiv : M →ₗ[R] N)]
+  simp [QuadraticForm.discr, hcomp, toMatrix_comp (b₁.reindex e) b₂ _ (f.toLinearEquiv : M →ₗ[R] N)]
   ring
 
 end QuadraticForm

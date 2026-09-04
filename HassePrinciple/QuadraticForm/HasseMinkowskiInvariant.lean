@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Nirvana Coppola, María Inés de Frutos-Fernández
+Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Chi-Yun Hsu
 -/
 module
 
@@ -279,14 +279,14 @@ lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     field_simp [(nondegenerate_iff_discr_ne_zero b).mp hQ]
     simp [weightedSumSquares_discr, Units.smul_def]
   have hHM : hasseMinkowskiInv (fa.nondegenerate_associated_iff.mpr hfa).1 =
-    hilbertSym ((-1) * (a : k)) ((-1) * -Q.discr b) * ε := by
+      hilbertSym ((-1) * (a : k)) ((-1) * -Q.discr b) * ε := by
     simpa using hasseMinkowskiInv.prod_rank_one b (-a) hQ
   -- Simplify left hand side (-1, discr) to (-1, d) * (a, -1)
   simp only [hdisc, Nat.succ_eq_add_one, Nat.reduceAdd, neg_neg, mul_right_eq, comm (b := (a : k))]
   -- Simplify right hand side (-a, d) * ε to (-1, d) * (a, -1) * (a, -d) * ε
   rw [hHM, mul_left_eq]
-  nth_rw 1 [mul_neg, neg_mul, one_mul, neg_neg]
-  rw [mul_right_eq]
+  nth_rw 1 [mul_neg]
+  rw [neg_mul, one_mul, neg_neg, mul_right_eq]
   -- Cancel out (-1, d) * (a, -1) from both sides to get 1 = (a, -d) * ε
   have hnezero :  hilbertSym (-1) (discr b Q) ≠ 0 := ne_zero_of_ne_zero (by simp)
     ((nondegenerate_iff_discr_ne_zero b).mp hQ)
