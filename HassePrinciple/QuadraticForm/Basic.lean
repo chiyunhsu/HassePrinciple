@@ -271,8 +271,8 @@ Because `Q(b) ≠ 0` and N is torsion free, we have `s² = 0`, so `s = 0`.
 Then `r • x = 0` and `r ≠ 0`. Hence `x = 0`.
 -/
 open Finsupp in
-lemma anisotropic_of_rank_one [IsDomain R] [StrongRankCondition R] [IsTorsionFree R M]
-    [IsTorsionFree R N] (hr : finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
+lemma anisotropic_of_rank_one [IsDomain R] [IsTorsionFree R M] [IsTorsionFree R N]
+    (hr : finrank R M = 1) {Q : QuadraticMap R M N} (hQ : Q ≠ 0) :
     Q.Anisotropic := by
   intro x hx
   obtain ⟨b, hb⟩ : ∃ m, Q m ≠ 0 := by simpa [Q.ext_iff] using hQ
@@ -296,8 +296,8 @@ lemma anisotropic_of_rank_one [IsDomain R] [StrongRankCondition R] [IsTorsionFre
       _ = 0 := by simp [QuadraticMap.map_smul, hx]
   simp_all
 
-lemma isotropic_iff_zero_of_rank_one [IsDomain R] [StrongRankCondition R] [IsTorsionFree R M]
-    [IsTorsionFree R N] (hr : finrank R M = 1) {Q : QuadraticMap R M N} :
+lemma isotropic_iff_zero_of_rank_one [IsDomain R] [IsTorsionFree R M] [IsTorsionFree R N]
+    (hr : finrank R M = 1) {Q : QuadraticMap R M N} :
     Q.Isotropic ↔ Q = 0 :=
   ⟨fun hQ ↦ by contrapose! hQ; exact anisotropic_of_rank_one hr hQ,
     fun hQ ↦ by simp [hQ, Isotropic, Anisotropic, ← rank_pos_iff_exists_ne_zero (R := R),
@@ -309,7 +309,8 @@ lemma degenerate_zero [StrongRankCondition R] (hM : 0 < finrank R M) :
   intro h0
   have := h0.radical_eq_bot
   simp only [radical, zero_apply, true_and, mk_eq_bot, AddSubmonoid.mk_eq_bot, LinearMap.ext_iff,
-    AddSubsemigroup.coe_set_mk,  polarBilin_apply_apply, coeFn_zero, LinearMap.zero_apply] at this
+    AddSubsemigroup.coe_set_mk,  polarBilin_apply_apply, FunLike.coe_zero, LinearMap.zero_apply]
+    at this
   have : Subsingleton M := by
     apply subsingleton_of_forall_eq 0 fun m ↦ ?_
     simp [← Set.mem_singleton_iff, ← this, polar]
@@ -637,8 +638,8 @@ lemma orthoCompl_orthoCompl (hQ : Q.Nondegenerate) (S : Submodule K V) :
   rw [eq_comm]
   apply eq_of_le_of_finrank_eq _ this.symm
   intro s hs
-  simp only [coe_orthoCompl, SetLike.coe_sort_coe, Subtype.forall, mem_orthoCompl, Set.coe_setOf,
-    Set.mem_setOf_eq]
+  simp only [coe_orthoCompl, SetLike.coe_sort_coe, Subtype.forall, mem_orthoCompl,
+    Set.mem_ofPred_eq]
   intro v hv
   exact (hv s hs).symm
 
@@ -688,7 +689,7 @@ lemma equivalent_isHyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
       by_contra! h
       simp only [nondegenerate_iff_radical_eq_bot, radical, mk_eq_bot, AddSubmonoid.mk_eq_bot,
         AddSubsemigroup.coe_set_mk, Set.eq_singleton_iff_unique_mem,
-        Set.mem_setOf_eq, map_zero, and_self, and_imp, true_and] at hQ'
+        Set.mem_ofPred_eq, map_zero, and_self, and_imp, true_and] at hQ'
       exact hx0 (hQ' x hQx (LinearMap.ext_iff.mpr h))
     exact ⟨(1/ (polar Q x z)) • z, by simp [inv_mul_eq_one₀ hxz]⟩
   -- `Q` vanishes at `y := z - (polar Q z z)/2 • x`, and `polar Q x y = 1`.
@@ -767,8 +768,7 @@ lemma nondegenerate_baseChange [IsDomain R] [Module.Free R M] [Module.Finite R M
 /-- Given quadratic forms `Q` and `Q'` with matrices `A` and `B` with respect to bases `b` and `b'`,
 respectively, the matrix associated is the block diagonal matrix `[[A, 0], [0, B]]`. -/
 theorem toMatrix_prod {ι κ : Type*} [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
-    [IsDomain R] {Q' : QuadraticForm R N} (b : Module.Basis ι R M)
-    (b' : Module.Basis κ R N) :
+    {Q' : QuadraticForm R N} (b : Module.Basis ι R M) (b' : Module.Basis κ R N) :
     (toMatrix (b.prod b') (Q.prod Q')) = Matrix.fromBlocks (toMatrix b Q) 0 0 (toMatrix b' Q') := by
   simp only [Matrix.ext_iff_blocks, Matrix.toBlocks_fromBlocks₁₁, Matrix.toBlocks_fromBlocks₁₂,
     Matrix.toBlocks_fromBlocks₂₁, Matrix.toBlocks_fromBlocks₂₂]
@@ -780,8 +780,7 @@ theorem toMatrix_prod {ι κ : Type*} [Fintype ι] [DecidableEq ι] [Fintype κ]
 
 /-- The discriminant of the product of quadratic forms is the product of the discriminants. -/
 theorem discr_prod {ι κ : Type*} [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
-    [IsDomain R] {Q' : QuadraticForm R N} (b : Module.Basis ι R M)
-    (b' : Module.Basis κ R N) :
+    {Q' : QuadraticForm R N} (b : Module.Basis ι R M) (b' : Module.Basis κ R N) :
     discr (b.prod b') (Q.prod Q') = discr b Q * discr b' Q' := by
   simp [discr, prod, toMatrix_prod]
 
