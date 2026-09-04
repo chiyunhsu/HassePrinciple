@@ -304,7 +304,8 @@ lemma degenerate_zero [StrongRankCondition R] (hM : 0 < finrank R M) :
   intro h0
   have := h0.radical_eq_bot
   simp only [radical, zero_apply, true_and, mk_eq_bot, AddSubmonoid.mk_eq_bot, LinearMap.ext_iff,
-    AddSubsemigroup.coe_set_mk,  polarBilin_apply_apply, coeFn_zero, LinearMap.zero_apply] at this
+    AddSubsemigroup.coe_set_mk,  polarBilin_apply_apply, FunLike.coe_zero, LinearMap.zero_apply]
+    at this
   have : Subsingleton M := by
     apply subsingleton_of_forall_eq 0 fun m ↦ ?_
     simp [← Set.mem_singleton_iff, ← this, polar]
@@ -632,8 +633,8 @@ lemma orthoCompl_orthoCompl (hQ : Q.Nondegenerate) (S : Submodule K V) :
   rw [eq_comm]
   apply eq_of_le_of_finrank_eq _ this.symm
   intro s hs
-  simp only [coe_orthoCompl, SetLike.coe_sort_coe, Subtype.forall, mem_orthoCompl, Set.coe_setOf,
-    Set.mem_setOf_eq]
+  simp only [coe_orthoCompl, SetLike.coe_sort_coe, Subtype.forall, mem_orthoCompl,
+    Set.mem_ofPred_eq]
   intro v hv
   exact (hv s hs).symm
 
@@ -683,7 +684,7 @@ lemma equivalent_isHyperbolic_add (hQ : Q.Isotropic) (hQ' : Q.Nondegenerate) :
       by_contra! h
       simp only [nondegenerate_iff_radical_eq_bot, radical, mk_eq_bot, AddSubmonoid.mk_eq_bot,
         AddSubsemigroup.coe_set_mk, Set.eq_singleton_iff_unique_mem,
-        Set.mem_setOf_eq, map_zero, and_self, and_imp, true_and] at hQ'
+        Set.mem_ofPred_eq, map_zero, and_self, and_imp, true_and] at hQ'
       exact hx0 (hQ' x hQx (LinearMap.ext_iff.mpr h))
     exact ⟨(1/ (polar Q x z)) • z, by simp [inv_mul_eq_one₀ hxz]⟩
   -- `Q` vanishes at `y := z - (polar Q z z)/2 • x`, and `polar Q x y = 1`.
