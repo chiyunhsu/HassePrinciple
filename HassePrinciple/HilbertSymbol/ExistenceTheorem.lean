@@ -212,8 +212,7 @@ private lemma isSquare_x {p : Primes} (hpS : p ∈ S a) (hpq : p ≠ q hep h1 di
       · rwa [← ZMod.natCast_eq_natCast_iff] at q_cong
       · simp only [(by omega : 8 = 4 * 2)]
         rw [mul_dvd_mul_iff_left (by omega)]
-        -- exact dvd_prod_of_mem Subtype.val (by simp [S, hilbertSym.S] : ⟨2, prime_two⟩ ∈ S a)
-        sorry
+        exact dvd_prod_of_mem Subtype.val (two_in_S a)
     simp [q, A, this]
   · apply PadicInt.isSquare_of_zmod (by rw [ne_eq, Primes.coe_nat_inj p ⟨2, prime_two⟩]; exact hp2)
       not_dvd
