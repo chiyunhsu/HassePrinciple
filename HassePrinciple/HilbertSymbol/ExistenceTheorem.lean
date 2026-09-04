@@ -268,7 +268,7 @@ private lemma padicValRat_x_eq_zero_of_p_notMem_T {p : Primes} (pneq : p ≠ q h
 
 include ha h2 h3 disjoint_ST in
 /-- We first prove the Existence Theorem when S and T are disjoint. -/
-private lemma existence_disjoint [Nonempty I] (infty_not_mem_T : ∀ i : I, ereal i = 1) :
+private lemma existence_disjoint (infty_not_mem_T : ∀ i : I, ereal i = 1) :
     (∃ x : ℚˣ, ∀ i : I, (∀ p : Primes, hilbertSym (x : ℚ_[p]) (a i) = ep i p) ∧
       hilbertSym (x : ℝ) (a i) = ereal i) := by
   let q := hilbertSym.q hep h1 disjoint_ST
