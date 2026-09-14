@@ -412,6 +412,7 @@ open Filter Int Nat
 /-- The instance that provides the fact that an element of type Nat.Primes is prime. -/
 scoped instance fact_prime (p : Nat.Primes) : Fact (Nat.Prime p) := fact_iff.mpr p.2
 
+/-- A property that a rational number is either equal to -1 or a natural prime. -/
 abbrev IsNegOneOrPrime (a : ℚ) : Prop := a = -1 ∨ ∃ r : ℕ, r.Prime ∧ (a : ℚ) = r
 
 /-- `x ≠ 0' in `ℚ_[p]' when `x' is `-1' or a prime -/
