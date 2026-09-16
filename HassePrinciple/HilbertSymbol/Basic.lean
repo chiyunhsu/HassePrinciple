@@ -478,7 +478,7 @@ theorem of_neg_one_of_neg_one :
   apply (Set.finite_singleton ⟨2, prime_two⟩).subset
   intro ⟨p, hp⟩ hne
   by_contra hcon
-  have hp2 : p ≠ 2 := by aesop
+  have hp2 : p ≠ 2 := by contrapose! hcon; aesop
   have hfact : Fact (Nat.Prime p) := ⟨hp⟩
   exact hne (eq_one_of_valuation_zero hp2
     (IsNegOneOrPrime.valuation_ne_zero (Or.inl rfl))
@@ -492,8 +492,10 @@ theorem of_neg_one_of_prime {b : ℕ} (hb : Nat.Prime b) :
   refine (Set.toFinite ({⟨2, prime_two⟩, ⟨b, hb⟩} : Set Primes)).subset ?_
   intro ⟨p, hp⟩ hne
   by_contra hcon
-  have hpr : p ≠ b := fun h ↦ hcon (by subst h; simp)
-  have hp2 : p ≠ 2 := by aesop
+  have hpr : p ≠ b := fun h ↦ hcon (by subst h; tauto)
+  have hp2 : p ≠ 2 := by
+    intro h2
+    exact hcon (Set.mem_insert_iff.mpr (Or.inl (Subtype.ext h2)))
   have hfact : Fact (Nat.Prime p) := ⟨hp⟩
   exact hne (eq_one_of_valuation_zero hp2
     (IsNegOneOrPrime.valuation_ne_zero (Or.inl rfl))
@@ -508,7 +510,8 @@ theorem of_prime_of_prime {a b : ℕ} (ha : Nat.Prime a) (hb : Nat.Prime b) :
   intro ⟨p, hp⟩ hne
   by_contra hcon
   have : Fact (Nat.Prime p) := ⟨hp⟩
-  exact hne (eq_one_of_valuation_zero (by aesop)
+  exact hne (eq_one_of_valuation_zero
+    (by intro h2; exact hcon (Set.mem_insert_iff.mpr (Or.inl (Subtype.ext h2))))
     (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨a, ha, rfl⟩))
     (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨b, hb, rfl⟩))
     (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨a, ha, rfl, by grind⟩))
