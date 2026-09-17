@@ -543,6 +543,9 @@ theorem almost_all_one_left {a : ℚˣ} (ha : ∀ (d : ℚˣ) (_ : IsNegOneOrPri
     rw [← cast_natCast (R := ℚ), ← Int.cast_mul, sign_mul_natAbs]
   rw [comm, ← num_mul_den, hsplitQ, Rat.cast_mul, comm, right_mul_eq_of_eq_one hsignND, hnatND]
 
+end eventually_one
+
+open eventually_one in
 /-- For all but finitely many primes `p`, the Hilbert symbol of `a` and `b` at `p` is `1`. -/
 theorem almost_all_one (a b : ℚˣ) :
     ∀ᶠ (p : Primes) in cofinite, hilbertSym (a : ℚ_[p]) b = 1 := by
@@ -560,8 +563,6 @@ theorem almost_all_one (a b : ℚˣ) :
       rw [comm, hp]
     exact one_reduced_general hbase_b a
   · apply of_IsNegOneOrPrime
-
-end eventually_one
 
 /-- The product of the Hilbert symbols at all places equals 1. -/
 theorem prod_eq_one (a b : ℚˣ) :
