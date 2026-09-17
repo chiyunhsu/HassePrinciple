@@ -511,7 +511,7 @@ theorem of_prime_of_prime {a b : ℕ} (ha : Nat.Prime a) (hb : Nat.Prime b) :
   by_contra hcon
   have : Fact (Nat.Prime p) := ⟨hp⟩
   exact hne (eq_one_of_valuation_zero
-    (by intro h2; exact hcon (Set.mem_insert_iff.mpr (Or.inl (Subtype.ext h2))))
+    (fun h2 ↦ hcon (Set.mem_insert_iff.mpr (Or.inl (Subtype.ext h2))))
     (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨a, ha, rfl⟩))
     (IsNegOneOrPrime.valuation_ne_zero (Or.inr ⟨b, hb, rfl⟩))
     (Padic.valuation_eq_zero_of_neg_one_or_prime (Or.inr ⟨a, ha, rfl, by grind⟩))
