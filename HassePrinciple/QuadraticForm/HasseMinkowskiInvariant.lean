@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Nirvana Coppola, María Inés de Frutos-Fernández
+Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Chi-Yun Hsu
 -/
 module
 
@@ -148,7 +148,7 @@ lemma of_baseChange_weightedSumSquares {R : Type*} (A : Type*) [Field R]
     hasseMinkowskiInv
       ((nondegenerate_associated_iff.mpr
         (nondegenerate_baseChange (A := A) (nondegenerate_weightedSumSquares w))).1) =
-      hilbertSym (algebraMap R A (w ⟨0, by omega⟩)) ( algebraMap R A (w ⟨1, by omega⟩)) := by
+      hilbertSym (algebraMap R A (w ⟨0, by omega⟩)) (algebraMap R A (w ⟨1, by omega⟩)) := by
   have h2 : finrank A (A ⊗[R] (Fin 2 → R)) = 2 := by simp
   rw [hasseMinkowskiInv.eq_of_equivalent_weightedSumSquares
     (w := ![Units.map (algebraMap R A) (w ⟨0, by omega⟩),
@@ -240,32 +240,32 @@ lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) k V) :
   rw [represents_zero_iff_of_rank_three_aux b hQ hw]
   -- Computation using properties of the Hilbert Symbol
   calc hilbertSym (-a₂ * a₀ : k) (-a₂ * a₁)
-      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
-          hilbertSym (a₂ : k) a₂ *
-          (hilbertSym (a₀ : k) a₁ * hilbertSym (a₀ : k) a₂ * hilbertSym (a₁ : k) a₂) := by
-          rw [← neg_one_mul (a₂ : k)]
-          simp only [mul_right_eq, mul_left_eq]
-          rw [comm (a := (a₂ : k)) (b := -1), comm (a := (a₀ : k)) (b := -1),
-            comm (a := (a₂ : k)) (b := a₁)]
-          ring_nf
-          rw [sq_eq_one_iff.mpr (eq_one_or_neg_one_of_ne_zero (by simp) (by simp))]
-          simp
-      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
-          hilbertSym (a₂ : k) a₂ * ε := by simp [hε]
-      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
-          hilbertSym (-1 : k) a₂ * ε := by
-          congr 2
-          rw [← left_neg_mul (a := -1)]
-          simp
-      _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) (a₀ * a₁ * a₂) * ε := by
-        rw [mul_right_eq, mul_right_eq]
-        ring
-      _ = hilbertSym (-1 : k) (- (a₀ * a₁ * a₂)) * ε := by
-        rw [← neg_one_mul (_ * _), mul_right_eq (b := -1)]
-      _ = hilbertSym (-1 : k) (- (a₀ * a₁ * a₂ * u ^ 2)) * ε := by
-        rw [← neg_mul _ ((u : k) ^ 2), mul_right_square_eq]
-        exact LinearEquiv.det_toMatrix_ne_zero _ _ _
-      _ = s * ε := by simp [s, discr_three b fw, u, a₀, a₁, a₂]
+    _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
+        hilbertSym (a₂ : k) a₂ *
+        (hilbertSym (a₀ : k) a₁ * hilbertSym (a₀ : k) a₂ * hilbertSym (a₁ : k) a₂) := by
+        rw [← neg_one_mul (a₂ : k)]
+        simp only [mul_right_eq, mul_left_eq]
+        rw [comm (a := (a₂ : k)) (b := -1), comm (a := (a₀ : k)) (b := -1),
+          comm (a := (a₂ : k)) (b := a₁)]
+        ring_nf
+        rw [sq_eq_one_iff.mpr (eq_one_or_neg_one_of_ne_zero (by simp) (by simp))]
+        simp
+    _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
+        hilbertSym (a₂ : k) a₂ * ε := by simp [hε]
+    _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) a₀ * hilbertSym (-1 : k) a₁ *
+        hilbertSym (-1 : k) a₂ * ε := by
+        congr 2
+        rw [← left_neg_mul (a := -1)]
+        simp
+    _ = hilbertSym (-1 : k) (- 1) * hilbertSym (-1 : k) (a₀ * a₁ * a₂) * ε := by
+      rw [mul_right_eq, mul_right_eq]
+      ring
+    _ = hilbertSym (-1 : k) (- (a₀ * a₁ * a₂)) * ε := by
+      rw [← neg_one_mul (_ * _), mul_right_eq (b := -1)]
+    _ = hilbertSym (-1 : k) (- (a₀ * a₁ * a₂ * u ^ 2)) * ε := by
+      rw [← neg_mul _ ((u : k) ^ 2), mul_right_square_eq]
+      exact LinearEquiv.det_toMatrix_ne_zero _ _ _
+    _ = s * ε := by simp [s, discr_three b fw, u, a₀, a₁, a₂]
 
 lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     Q.represents a ↔
@@ -283,14 +283,14 @@ lemma represents_iff_of_rank_two (b : Basis (Fin 2) k V) (a : kˣ) :
     field_simp [(nondegenerate_iff_discr_ne_zero b).mp hQ]
     simp [weightedSumSquares_discr, Units.smul_def]
   have hHM : hasseMinkowskiInv (fa.nondegenerate_associated_iff.mpr hfa).1 =
-    hilbertSym ((-1) * (a : k)) ((-1) * -Q.discr b) * ε := by
+      hilbertSym ((-1) * (a : k)) ((-1) * -Q.discr b) * ε := by
     simpa using hasseMinkowskiInv.prod_rank_one b (-a) hQ
   -- Simplify left hand side (-1, discr) to (-1, d) * (a, -1)
   simp only [hdisc, Nat.succ_eq_add_one, Nat.reduceAdd, neg_neg, mul_right_eq, comm (b := (a : k))]
   -- Simplify right hand side (-a, d) * ε to (-1, d) * (a, -1) * (a, -d) * ε
   rw [hHM, mul_left_eq]
-  nth_rw 1 [mul_neg, neg_mul, one_mul, neg_neg]
-  rw [mul_right_eq]
+  nth_rw 1 [mul_neg]
+  rw [neg_mul, one_mul, neg_neg, mul_right_eq]
   -- Cancel out (-1, d) * (a, -1) from both sides to get 1 = (a, -d) * ε
   have hnezero :  hilbertSym (-1) (discr b Q) ≠ 0 := ne_zero_of_ne_zero (by simp)
     ((nondegenerate_iff_discr_ne_zero b).mp hQ)
