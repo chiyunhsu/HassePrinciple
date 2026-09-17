@@ -143,7 +143,8 @@ lemma isotropic_of_rank_four (hr : finrank ℚ V = 4) (hQ : Q.Nondegenerate)
     simp only [neg_mul, Units.val_neg, Units.val_mul, Rat.cast_neg,
       Rat.cast_mul] at this ⊢ hxr' hp'
     rw [this]
-    refine ⟨⟨almost_all_one _ _, almost_all_one (-w ⟨2, by omega⟩) (-w ⟨3, by omega⟩)⟩,
+    refine ⟨⟨eventually_one.almost_all_one _ _,
+      eventually_one.almost_all_one (-w ⟨2, by omega⟩) (-w ⟨3, by omega⟩)⟩,
       ⟨prod_eq_one _ _, ?_⟩, fun p ↦ ⟨(hp p).choose, hp' p⟩ , ⟨xr, hxr'⟩⟩
     exact_mod_cast prod_eq_one (-w ⟨2, by omega⟩) (-w ⟨3, by omega⟩)
   -- We conclude by showing that `x` is represented by `Q1` and `Q2`.
