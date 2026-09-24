@@ -20,18 +20,52 @@ public import Mathlib.Data.Fin.Basic
 
 section Prelim
 
-open QuadraticMap
 lemma LinearMap.separatingLeft_of_equivalent {R M M' N : Type*} [CommRing R]
     [AddCommGroup M] [AddCommGroup M'] [Module R M] [Module R M'] [AddCommGroup N] [Module R N]
     [Invertible (2 : R)] {Q : QuadraticMap R M N} {Q' : QuadraticMap R M' N} (h : Q.Equivalent Q')
     (hQ : LinearMap.SeparatingLeft Q.associated) :
     LinearMap.SeparatingLeft Q'.associated := by
   obtain ⟨f, hf⟩ := h
-  have := hQ.congr f f
-  simp [QuadraticMap.associated, associatedHom]
-  sorry
+  intro x hx
+  have finvx_zero : f.symm x = 0 := by
+    refine hQ _ (fun y ↦ ?_)
+    simpa [QuadraticMap.associated_apply, ← hf (f.symm x + y), ← hf (f.symm x), ← hf y]
+      using hx (f y)
+  simpa using finvx_zero
 
 end Prelim
+
+namespace hilbertSym
+
+-- `[Invertible (2 : k)]` is used in `nondegenerate_weightedSumSquares`
+variable {k : Type*} [Field k] [Invertible (2 : k)]
+
+open QuadraticForm in
+theorem eq_one_iff_represents_one (w : Fin 2 → kˣ) :
+    hilbertSym (w 0 : k) (w 1) = 1 ↔ (weightedSumSquares k w).represents (1 : kˣ) := by
+  have hdef : hilbertSym (w 0 : k) (w 1) = 1 ↔
+      ∃ z x y : k, (z, x, y) ≠ (0, 0, 0) ∧ w 0 * x ^ 2 + w 1 * y ^ 2 - z ^ 2 = 0 := by
+    simp [hilbertSym]
+    grind
+  rw [hdef, represents_iff_sub_isotropic (QuadraticMap.nondegenerate_weightedSumSquares w) 1,
+    ← QuadraticMap.represents_zero_iff_isotropic]
+  dsimp [QuadraticMap.represents]
+  refine ⟨fun ⟨z, x, y, hne, hrep⟩ ↦
+    ⟨(![x, y], ![z]), ⟨by simpa [pow_two, Units.smul_def, sub_eq_add_neg] using hrep, ?_⟩⟩,
+    fun ⟨x, ⟨hrep, hne⟩⟩ ↦
+    ⟨x.2 0, x.1 0, x.1 1, ?_, by simpa [pow_two, Units.smul_def, sub_eq_add_neg] using hrep⟩⟩
+  · simp only [Prod.mk_eq_zero, Matrix.cons_eq_zero_iff, Matrix.zero_empty, and_true]
+    rw [and_comm]
+    simpa using hne
+  · contrapose hne
+    simp only [Fin.isValue, Prod.mk.injEq] at hne
+    ext i <;>
+    fin_cases i
+    · exact hne.2.1
+    · exact hne.2.2
+    · exact hne.1
+
+end hilbertSym
 
 namespace QuadraticForm
 
@@ -68,9 +102,48 @@ lemma hasseMinkowskiInvAux_def {n : ℕ} (w : Fin n → kˣ) :
       ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) := rfl
 
 lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' : Fin m → kˣ}
+    [Invertible (2 : k)] -- `[Invertible (2 : k)]` is used in `eq_one_iff_represents_one`
     (h : (QuadraticMap.weightedSumSquares k w).Equivalent (QuadraticMap.weightedSumSquares k w')) :
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
-  sorry
+  dsimp [hasseMinkowskiInvAux]
+  have eq : m = n := by
+    sorry
+  subst m
+  match hn : n with
+  | 0       => simp
+  | 1       =>
+  have hempty : ({p : Fin 1 × Fin 1 | p.1 < p.2} : Finset (Fin 1 × Fin 1)) = ∅ := by simp
+  simp [hempty]
+  | 2       =>
+  have hsingle (w : Fin 2 → kˣ) :
+    ∏ p : Fin 2 × Fin 2 with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) =
+    hilbertSym (w 0 : k) (w 1) := Finset.prod_eq_single (0, 1) (by grind) (fun h ↦ by simp at h)
+  rw [hsingle w, hsingle w']
+  by_cases hone : hilbertSym (w' 0 : k) (w' 1 : k) = 1
+  · rw [hone]
+    rw [hilbertSym.eq_one_iff_represents_one] at hone ⊢
+    exact (QuadraticMap.Equivalent.represents_iff h 1).mpr hone
+  · have hnegone : hilbertSym (w' 0 : k) (w' 1 : k) = -1 := by
+      simpa [hone] using
+      hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp : (w' 0 : k) ≠ 0) (by simp : (w' 1 : k) ≠ 0)
+    rw [hnegone]
+    rw [not_congr (hilbertSym.eq_one_iff_represents_one w'),
+      ← QuadraticMap.Equivalent.represents_iff h (1 : kˣ),
+      ← not_congr (hilbertSym.eq_one_iff_represents_one w)] at hone
+    simpa [hone] using
+      hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp : (w 0 : k) ≠ 0) (by simp : (w 1 : k) ≠ 0)
+  | (r + 3) =>
+  obtain ⟨f, hf⟩ := h
+  -- have f := Classical.choice h
+  let b := Pi.basisFun k (Fin (r + 3))
+  let b' := b.map f
+  #check LinearMap.IsOrthoᵢ
+  #check Module.Basis.chainOfNondegenerate (by simp : 3 ≤ Module.finrank k (Fin (r + 3) → k))
+    (QuadraticMap.nondegenerate_weightedSumSquares w)
+  -- induction n, hn using Nat.le_induction with
+  induction r with
+  | zero => sorry
+  | succ => sorry
 
 variable [FiniteDimensional k V] [FiniteDimensional k W]
 
@@ -121,8 +194,8 @@ lemma weightedSumSquares_three (w : Fin 3 → kˣ) :
     refine ⟨fun hp ↦ ?_, fun hp ↦ by aesop⟩
     · simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fin.isValue, Finset.mem_insert,
         Finset.mem_singleton] at hp ⊢
-      have h1 : p.1 = 0 ∨ p.1 = 1 ∨ p.1 = 2  := by omega
-      have h2 : p.2 = 0 ∨ p.2 = 1 ∨ p.2 = 2  := by omega
+      have h1 : p.1 = 0 ∨ p.1 = 1 ∨ p.1 = 2 := by omega
+      have h2 : p.2 = 0 ∨ p.2 = 1 ∨ p.2 = 2 := by omega
       aesop
   rw [hasseMinkowskiInv.weightedSumSquares,
     Finset.prod_congr h (g := fun p ↦ hilbertSym (w p.1 : k) (w p.2)) (by simp)]
@@ -132,15 +205,31 @@ lemma eq_of_equivalent_weightedSumSquares {n : ℕ} {w : Fin n → kˣ}
     (h : Q.Equivalent (QuadraticMap.weightedSumSquares k w)) :
     hasseMinkowskiInv hQ =
       hasseMinkowskiInv (LinearMap.separatingLeft_of_equivalent h hQ) := by
-  sorry
+  dsimp [hasseMinkowskiInv]
+  have hQeq := (equivalent_weightedSumSquares_units_of_nondegenerate' Q hQ).choose_spec
+  have hweq := (equivalent_weightedSumSquares_units_of_nondegenerate'
+    (QuadraticMap.weightedSumSquares k w) (LinearMap.separatingLeft_of_equivalent h hQ)).choose_spec
+  exact hasseMinkowskiInvAux.eq_of_equivalent ((hQeq.symm.trans h).trans hweq)
 
 lemma eq_of_equivalent (h : Q.Equivalent Q') :
     hasseMinkowskiInv hQ =
       hasseMinkowskiInv (LinearMap.separatingLeft_of_equivalent h hQ) := by
-  sorry
+  obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_units_of_nondegenerate' Q hQ
+  have hw' : Q'.Equivalent (QuadraticMap.weightedSumSquares k w) := by
+    let f := Classical.choice h
+    let g := Classical.choice hw
+    exact ⟨f.symm.trans g⟩
+  rw [eq_of_equivalent_weightedSumSquares hQ hw,
+    eq_of_equivalent_weightedSumSquares (LinearMap.separatingLeft_of_equivalent h hQ) hw']
 
 lemma eq_one_or_neg_one :
-    hasseMinkowskiInv hQ = 1 ∨ hasseMinkowskiInv hQ = - 1 := sorry
+    hasseMinkowskiInv hQ = 1 ∨ hasseMinkowskiInv hQ = - 1 := by
+  obtain ⟨w, hw⟩ := equivalent_weightedSumSquares_units_of_nondegenerate' Q hQ
+  rw [eq_of_equivalent_weightedSumSquares hQ hw, weightedSumSquares]
+  refine Finset.prod_induction
+    (fun (p : Fin (Module.finrank k V) × Fin (Module.finrank k V)) ↦ hilbertSym (w p.1 : k) (w p.2))
+    (fun n ↦ n = 1 ∨ n = -1) (by grind) (by simp) (fun x hx ↦ ?_)
+  exact hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp) (by simp)
 
 open Module TensorProduct in
 lemma of_baseChange_weightedSumSquares {R : Type*} (A : Type*) [Field R]
