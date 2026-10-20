@@ -107,7 +107,8 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' 
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
   dsimp [hasseMinkowskiInvAux]
   have eq : m = n := by
-    sorry
+    obtain ⟨e⟩ := h
+    simpa only [Module.finrank_fin_fun] using e.toLinearEquiv.finrank_eq.symm
   subst m
   match hn : n with
   | 0       => simp
@@ -138,8 +139,11 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' 
   let b := Pi.basisFun k (Fin (r + 3))
   let b' := b.map f
   #check LinearMap.IsOrthoᵢ
-  #check Module.Basis.chainOfNondegenerate (by simp : 3 ≤ Module.finrank k (Fin (r + 3) → k))
-    (QuadraticMap.nondegenerate_weightedSumSquares w)
+  #check OrthonormalBasis
+  have hb : (QuadraticMap.weightedSumSquares k w).associated.IsOrthoᵢ b := by sorry
+  have hb' : (QuadraticMap.weightedSumSquares k w).associated.IsOrthoᵢ b' := by sorry
+  -- #check Module.Basis.chainOfNondegenerate (by simp : 3 ≤ Module.finrank k (Fin (r + 3) → k))
+  --   (QuadraticMap.nondegenerate_weightedSumSquares w) hb hb'
   -- induction n, hn using Nat.le_induction with
   induction r with
   | zero => sorry
