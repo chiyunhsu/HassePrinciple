@@ -109,7 +109,7 @@ lemma hasseMinkowskiInvAux_induction {n : ℕ} (w : Fin (n + 1) → kˣ) [Invert
 
 lemma hasseMinkowskiInvAux.eq_of_equivalent_induction {n : ℕ} {w w' : Fin (n + 1) → kˣ}
     [Invertible (2 : k)]
-    (h : (QuadraticMap.weightedSumSquares k w).Equivalent (QuadraticMap.weightedSumSquares k w'))
+    (h : (weightedSumSquares k w).Equivalent (weightedSumSquares k w'))
     (ih : hasseMinkowskiInvAux (w ∘ Fin.succ) = hasseMinkowskiInvAux (w' ∘ Fin.succ))
     (h0 : w 0 = w' 0) :
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
@@ -127,12 +127,25 @@ lemma coeff_eq_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → kˣ} [Invertibl
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (hf : Pi.basisFun k (Fin (n + 1)) 0 = ((Pi.basisFun k (Fin (n + 1))).map f) 0) :
     w 0 = w' 0 := by
+  #check f.toLinearEquiv
   obtain ⟨f', hf'⟩ := f
-  have := QuadraticMap.weightedSumSquares_apply w (Pi.basisFun k (Fin (n + 1)) 0)
-  simp only [Pi.basisFun_apply] at this
-  -- rw [Finset.sum_eq_single 0] at this
-  #check Finset.sum_eq_single 0
-  sorry
+  have := hf' (Pi.basisFun k (Fin (n + 1)) 0)
+  simp only [Pi.basisFun_apply, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe,
+    QuadraticMap.weightedSumSquares_apply, Module.Basis.map_apply] at this hf
+  rw [← hf] at this
+  rw [Finset.sum_eq_single 0] at this
+  · rw [Finset.sum_eq_single 0] at this
+    · simp only [Pi.single_eq_same, mul_one, Units.smul_def, smul_eq_mul] at this
+      symm
+      exact Units.val_injective this
+    · intro b hb hb0
+      simp only [ne_eq, hb0, not_false_eq_true, Pi.single_eq_of_ne, mul_zero, smul_zero]
+    · intro h0
+      simp at h0
+  · intro b hb hb0
+    simp only [ne_eq, hb0, not_false_eq_true, Pi.single_eq_of_ne, mul_zero, smul_zero]
+  · intro h0
+    simp at h0
 
 lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' : Fin m → kˣ}
     [Invertible (2 : k)] -- `[Invertible (2 : k)]` is used in `eq_one_iff_represents_one`
@@ -180,10 +193,13 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' 
   have hb' : (QuadraticMap.weightedSumSquares k w).associated.IsOrthoᵢ b' := by sorry
   -- #check Module.Basis.chainOfNondegenerate (by simp : 3 ≤ Module.finrank k (Fin (r + 3) → k))
   --   (QuadraticMap.nondegenerate_weightedSumSquares w) hb hb'
-  -- induction n, hn using Nat.le_induction with
-  induction r with
-  | zero => sorry
-  | succ => sorry
+  -- induction n, (by omega : 3 ≤ n) using Nat.le_induction with
+  -- | base => sorry
+  -- | succ => sorry
+  -- induction n using Nat.strong_induction_on with
+  -- | h n ih => sorry
+
+  sorry
 
 variable [FiniteDimensional k V] [FiniteDimensional k W]
 
@@ -303,7 +319,7 @@ lemma prod_rank_one [HasBilinHilbertSym k] (b : Basis (Fin 2) k V) (a : kˣ) (h 
     -- Q and Qw are equivalent, so Q.discr b and Qw.discr (Pi.basisFun k (Fin 2)) differ by a square
     -- hilbertSym is invariant under multiplication by squares
     -- The discriminant of a weightedSumSquares is the product of its coefficients
-    simp? [IsometryEquiv.discr (Equiv.refl (Fin 2)) b (Pi.basisFun k (Fin 2)) (Classical.choice hw),
+    simp [IsometryEquiv.discr (Equiv.refl (Fin 2)) b (Pi.basisFun k (Fin 2)) (Classical.choice hw),
       mul_right_square_eq (LinearEquiv.det_toMatrix_ne_zero _ _ _), weightedSumSquares_discr,
       Units.smul_def]
   -- Change goal to hasseMinkowskiInv Qwa = hilbertSym (a : k) (Q.discr b) * hasseMinkowskiInv Qw
