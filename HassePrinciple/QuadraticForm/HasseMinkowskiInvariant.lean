@@ -202,9 +202,9 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fi
     (hf : (Pi.basisFun k (Fin (n + 1))).IsContiguous ((Pi.basisFun k (Fin (n + 1))).map f)) :
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
   obtain ⟨e, heq, h0⟩ := coeff_eq_of_IsContiguous f hf
-  let F : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k (w'∘ e)) :=
+  let fe : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k (w'∘ e)) :=
     ⟨f.toLinearEquiv.trans (LinearEquiv.funCongrLeft k k e), heq⟩
-  rw [hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨F⟩ ih (coeff_eq_of_basis_eq F h0)]
+  rw [hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨fe⟩ ih (coeff_eq_of_basis_eq fe h0)]
   exact hasseMinkowskiInvAux.eq_of_perm w' e
 
 open Module in
