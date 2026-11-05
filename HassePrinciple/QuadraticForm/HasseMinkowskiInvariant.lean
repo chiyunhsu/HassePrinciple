@@ -122,53 +122,18 @@ lemma hasseMinkowskiInvAux.eq_of_perm {n : ℕ} (w : Fin n → kˣ) (e : Fin n �
     hasseMinkowskiInvAux (w ∘ e) = hasseMinkowskiInvAux w := by
   rw [hasseMinkowskiInvAux_def', hasseMinkowskiInvAux_def']
   let e2 := e.sym2Congr
-  have (z : Sym2 (Fin n)) : hilbertSym_lift (w ∘ e) z = hilbertSym_lift w (e2 z) := by
+  have : ∏ z : (Sym2 (Fin n)) with ¬z.IsDiag, hilbertSym_lift (w ∘ e) z =
+      ∏ z : (Sym2 (Fin n)) with ¬z.IsDiag, hilbertSym_lift w (e2 z) := by
+    refine Finset.prod_congr rfl (fun z hz ↦ ?_)
     simp only [Equiv.sym2Congr, Equiv.coe_fn_mk, e2]
-    have := Sym2.lift_comp_map (g := e) ⟨fun i j ↦ hilbertSym (w i : k) (w j), by simp [hilbertSym.comm]⟩
-    have := congrFun this z
-    simp only [Function.comp_apply] at this
     symm
-    exact this
-  have : ∏ z ∈ (Finset.univ : Finset (Sym2 (Fin n))).filter (fun z => ¬ z.IsDiag),
-      Sym2.lift ⟨fun i j => hilbertSym ((w ∘ e) i : k) ((w ∘ e) j), by simp [hilbertSym.comm]⟩ z =
-        ∏ z ∈ (Finset.univ : Finset (Sym2 (Fin n))).filter (fun z => ¬ z.IsDiag),
-          Sym2.lift ⟨fun i j => hilbertSym (w i : k) (w j), by simp [hilbertSym.comm]⟩ (e2 z) :=
-    Finset.prod_congr (s₁ := (Finset.univ : Finset (Sym2 (Fin n))).filter (fun z => ¬ z.IsDiag))
-      (f := fun z ↦ Sym2.lift ⟨fun i j => hilbertSym ((w ∘ e) i : k) ((w ∘ e) j), by simp [hilbertSym.comm]⟩ z)
-      (g := fun z ↦ Sym2.lift ⟨fun i j => hilbertSym (w i : k) (w j), by simp [hilbertSym.comm]⟩ (e2 z))
-      rfl (fun p hp ↦ this p)
+    exact congrFun (Sym2.lift_comp_map _) z
   rw [this]
   refine Finset.prod_equiv e2 ?_ (by simp)
   intro z
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
-  rw [not_iff_not]
-  constructor
-  · intro hz
-    #check Sym2.IsDiag.map
-    exact Sym2.IsDiag.map (f := e) hz
-  · intro hz
-    have := Sym2.IsDiag.map (f := e.symm) hz
-    simp [e2, Equiv.sym2Congr] at this
-    simp [Sym2.map_map] at this
-    exact this
-  -- rw [hasseMinkowskiInvAux_def, hasseMinkowskiInvAux_def]
-  -- let e2 : Fin n × Fin n ≃ Fin n × Fin n := Equiv.prodCongr e e
-  -- #check Finset.prod_bij
-  -- #check Finset.prod_nbij'
-  -- #check Finset.prod_equiv
-  -- #check Equiv.Perm.prod_comp
-  -- #check Equiv.prod_comp
-  -- #check Finset.prod_map
-  -- have (p : Fin n × Fin n) :
-  --     hilbertSym ((w ∘ e) p.1 : k) ((w ∘ e) p.2) = hilbertSym (w (e2 p).1 : k) (w (e2 p).2) := by
-  --   simp [e2]
-  -- have : ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym ((w ∘ e) p.1 : k) ((w ∘ e) p.2) =
-  --     ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w (e2 p).1 : k) (w (e2 p).2) :=
-  --   Finset.prod_congr (s₁ := {p : Fin n × Fin n | p.1 < p.2})
-  --     (f := fun p ↦ hilbertSym ((w ∘ e) p.1 : k) ((w ∘ e) p.2))
-  --     (g := fun p ↦ hilbertSym (w (e2 p).1 : k) (w (e2 p).2)) rfl (fun p hp ↦ this p)
-  -- rw [this]
-  -- refine Equiv.Perm.prod_comp e2 _ (fun p ↦ hilbertSym (w p.1 : k) (w p.2)) ?_
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_iff_not]
+  refine ⟨Sym2.IsDiag.map, ?_⟩
+  simpa [e2, Equiv.sym2Congr, Sym2.map_map] using Sym2.IsDiag.map (f := e.symm) (z := e2 z)
 
 lemma hasseMinkowskiInvAux.eq_succ {n : ℕ} (w : Fin (n + 1) → kˣ) [Invertible (2 : k)] :
     hasseMinkowskiInvAux w =
