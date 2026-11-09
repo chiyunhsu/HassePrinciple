@@ -182,30 +182,76 @@ lemma coeff_eq_of_basis_eq {n : ℕ} {w w' : Fin (n + 1) → kˣ} [Invertible (2
     simp at h0
 
 open LinearEquiv in
+lemma weightedSumSquares_comp_perm {n : ℕ} (w : Fin n → kˣ) [Invertible (2 : k)]
+    (e : Fin n ≃ Fin n) (m : Fin n → k) :
+    weightedSumSquares k (w ∘ e) m = (weightedSumSquares k w) ((funCongrLeft k k e) m) := by sorry
+
+open LinearEquiv in
 lemma coeff_eq_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → kˣ} [Invertible (2 : k)]
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (hf : (Pi.basisFun k (Fin (n + 1))).IsContiguous ((Pi.basisFun k (Fin (n + 1))).map f)) :
-    ∃ e : Fin (n + 1) ≃ Fin (n + 1),
+    ∃ e e' : Fin (n + 1) ≃ Fin (n + 1),
       -- ∃ f' : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k (w'∘ e)),
-      (∀ m, (weightedSumSquares k (w'∘ e)) ((f.toLinearEquiv.trans (funCongrLeft k k e)) m) =
-        (weightedSumSquares k w) m) ∧
+      (∀ m, (weightedSumSquares k (w' ∘ e'))
+        ((funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')) m) =
+          (weightedSumSquares k (w ∘ e)) m) ∧
       Pi.basisFun k (Fin (n + 1)) 0 =
         ((Pi.basisFun k (Fin (n + 1))).map
-          (f.toLinearEquiv.trans (LinearEquiv.funCongrLeft k k e))) 0 := by
-  #check LinearEquiv.funCongrLeft k k
-  sorry
+          ((funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')))) 0 := by
+  obtain ⟨i, j, hij⟩ := hf
+  use Equiv.swap 0 j, Equiv.swap 0 i
+  constructor
+  · intro m
+    rw [weightedSumSquares_comp_perm, weightedSumSquares_comp_perm w]
+    have hf_map_app := f.map_app ((funCongrLeft k k (Equiv.swap 0 j)) m)
+    simp only [funCongrLeft_apply,QuadraticMap.weightedSumSquares_apply, LinearMap.funLeft_apply]
+      at hf_map_app
+    simp only [trans_apply, funCongrLeft_apply, QuadraticMap.IsometryEquiv.coe_toLinearEquiv,
+      QuadraticMap.weightedSumSquares_apply, LinearMap.funLeft_apply, Equiv.swap_apply_self]
+    rw [hf_map_app]
+  · simp only [Module.Basis.map_apply, trans_apply]
+    simp only [Module.Basis.map_apply] at hij
+    simp only [Pi.basisFun_apply, QuadraticMap.IsometryEquiv.coe_toLinearEquiv,
+      funCongrLeft_apply] at hij ⊢
+    ext x
+    simp only [LinearMap.funLeft_apply]
+    rw [Equiv.swap_apply_def]
+    have : (LinearMap.funLeft k k (Equiv.swap 0 j)) (Pi.single 0 1) = Pi.single j 1 := by
+      ext y
+      have := LinearMap.funLeft_apply k k (Equiv.swap 0 j) (Pi.single 0 1) y
+      rw [this]
+      rw [Equiv.swap_apply_def]
+      split_ifs with hy0 hyj
+      · simp [hy0]
+        by_cases hj0 : j = 0 <;> simp [hj0]
+      · simp [hyj]
+      · simp [hy0, hyj]
+    split_ifs with hx0 hxi
+    · simp only [hx0, Pi.single_eq_same]
+      rw [this]
+      rw [← hij]
+      simp
+    · rw [this]
+      rw [← hij]
+      rw [← hxi]
+      simp [hx0]
+    · simp only [ne_eq, hx0, not_false_eq_true, Pi.single_eq_of_ne]
+      rw [this]
+      rw [← hij]
+      simp [hxi]
 
+open LinearEquiv in
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → kˣ}
     [Invertible (2 : k)]
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (ih : ∀ {w0 w0' : Fin n → kˣ}, hasseMinkowskiInvAux w0 = hasseMinkowskiInvAux w0')
     (hf : (Pi.basisFun k (Fin (n + 1))).IsContiguous ((Pi.basisFun k (Fin (n + 1))).map f)) :
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
-  obtain ⟨e, heq, h0⟩ := coeff_eq_of_IsContiguous f hf
-  let fe : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k (w'∘ e)) :=
-    ⟨f.toLinearEquiv.trans (LinearEquiv.funCongrLeft k k e), heq⟩
-  rw [hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨fe⟩ ih (coeff_eq_of_basis_eq fe h0)]
-  exact hasseMinkowskiInvAux.eq_of_perm w' e
+  obtain ⟨e, e', heq, h0⟩ := coeff_eq_of_IsContiguous f hf
+  let e'fe : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k (w'∘ e')) :=
+    ⟨(funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')), heq⟩
+  rw [hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨e'fe⟩ ih (coeff_eq_of_basis_eq e'fe h0)]
+  exact hasseMinkowskiInvAux.eq_of_perm w' e'
 
 open Module in
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n m : ℕ} {w w' : Fin (n + 1) → kˣ}
