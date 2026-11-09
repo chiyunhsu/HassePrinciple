@@ -184,7 +184,8 @@ lemma coeff_eq_of_basis_eq {n : ℕ} {w w' : Fin (n + 1) → kˣ} [Invertible (2
 open LinearEquiv in
 lemma weightedSumSquares_comp_perm {n : ℕ} (w : Fin n → kˣ) [Invertible (2 : k)]
     (e : Fin n ≃ Fin n) (m : Fin n → k) :
-    weightedSumSquares k (w ∘ e) m = (weightedSumSquares k w) ((funCongrLeft k k e) m) := by sorry
+    weightedSumSquares k (w ∘ e) m = (weightedSumSquares k w) ((funCongrLeft k k e.symm) m) := by
+  simpa using Finset.sum_equiv e (by simp) (by simp)
 
 open LinearEquiv in
 lemma coeff_eq_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → kˣ} [Invertible (2 : k)]
@@ -206,8 +207,9 @@ lemma coeff_eq_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → kˣ} [Invertibl
     have hf_map_app := f.map_app ((funCongrLeft k k (Equiv.swap 0 j)) m)
     simp only [funCongrLeft_apply,QuadraticMap.weightedSumSquares_apply, LinearMap.funLeft_apply]
       at hf_map_app
-    simp only [trans_apply, funCongrLeft_apply, QuadraticMap.IsometryEquiv.coe_toLinearEquiv,
-      QuadraticMap.weightedSumSquares_apply, LinearMap.funLeft_apply, Equiv.swap_apply_self]
+    simp only [Equiv.symm_swap, trans_apply, funCongrLeft_apply,
+      QuadraticMap.IsometryEquiv.coe_toLinearEquiv, QuadraticMap.weightedSumSquares_apply,
+      LinearMap.funLeft_apply, Equiv.swap_apply_self]
     rw [hf_map_app]
   · simp only [Module.Basis.map_apply, trans_apply]
     simp only [Module.Basis.map_apply] at hij
@@ -248,20 +250,22 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fi
     (hf : (Pi.basisFun k (Fin (n + 1))).IsContiguous ((Pi.basisFun k (Fin (n + 1))).map f)) :
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
   obtain ⟨e, e', heq, h0⟩ := coeff_eq_of_IsContiguous f hf
-  let e'fe : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k (w'∘ e')) :=
+  let e'fe : (weightedSumSquares k (w ∘ e)).IsometryEquiv (weightedSumSquares k (w'∘ e')) :=
     ⟨(funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')), heq⟩
-  rw [hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨e'fe⟩ ih (coeff_eq_of_basis_eq e'fe h0)]
-  exact hasseMinkowskiInvAux.eq_of_perm w' e'
+  rw [← hasseMinkowskiInvAux.eq_of_perm w e, ← hasseMinkowskiInvAux.eq_of_perm w' e',
+    hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨e'fe⟩ ih (coeff_eq_of_basis_eq e'fe h0)]
 
 open Module in
 lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n m : ℕ} {w w' : Fin (n + 1) → kˣ}
     [Invertible (2 : k)]
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
+    -- (c : Basis.Chain (weightedSumSquares k w')
+    --   (Pi.basisFun k (Fin (n + 1))) ((Pi.basisFun k (Fin (n + 1))).map f))
     (ih : ∀ {w0 w0' : Fin n → kˣ}, hasseMinkowskiInvAux w0 = hasseMinkowskiInvAux w0')
     (basis : Fin (m + 1) → Basis (Fin (n + 1)) k (Fin (n + 1) → k))
-    (hbasis0 : basis 0 = (Pi.basisFun k (Fin (n + 1))))
-    (hbasism : basis ⟨m, lt_add_one m⟩ = ((Pi.basisFun k (Fin (n + 1))).map f))
-    (hc : ∀ i, ∀ (hi : i < m), (basis ⟨i, by omega⟩).IsContiguous (basis ⟨i, by omega⟩)) :
+    (basis_zero : basis 0 = (Pi.basisFun k (Fin (n + 1))))
+    (basis_m_sub_one : basis ⟨m, lt_add_one m⟩ = ((Pi.basisFun k (Fin (n + 1))).map f))
+    (basis_isContiguous : ∀ i, ∀ (hi : i < m), (basis ⟨i, by omega⟩).IsContiguous (basis ⟨i, by omega⟩)) :
     -- (C : Module.Basis.Chain (weightedSumSquares k w')
     -- (Pi.basisFun k (Fin (n + 1))) ((Pi.basisFun k (Fin (n + 1))).map f)):
     hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
@@ -269,15 +273,17 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n m : ℕ} {w w' : Fin (n 
   | zero =>
   simp only [Fin.isValue, Nat.reduceAdd, Fin.zero_eta, not_lt_zero, IsEmpty.forall_iff,
     implies_true] at *
-  rw [hbasis0] at hbasism
+  rw [basis_zero] at basis_m_sub_one
   apply hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous f ih
   use 0, 0
-  exact congrArg (fun b ↦ b 0) hbasism
-  | succ m ih =>
+  exact congrArg (fun b ↦ b 0) basis_m_sub_one
+  | succ m ih' =>
   let basis' := basis ∘ Fin.succ
+
+  refine hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous f ih ?_
   have hc' : ∀ i, ∀ (hi : i < m), (basis ⟨i, by omega⟩).IsContiguous (basis ⟨i, by omega⟩) := by
     intro i hi
-    exact hc i (Nat.lt_of_succ_lt_succ hi)
+    exact basis_isContiguous i (Nat.lt_of_succ_lt_succ hi)
   sorry
   -- exists chain
   -- apply hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨f⟩ ih
