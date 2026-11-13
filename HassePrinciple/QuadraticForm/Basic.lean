@@ -128,6 +128,14 @@ lemma weightedSumSquaresCongr'_equivalent {ι κ S R : Type*} [Fintype ι] [Fint
     {w : ι → S} {w' : κ → S} (f : ι ≃ κ) (h : w = w'.comp f) :
     (weightedSumSquares R w).Equivalent (weightedSumSquares R w') := ⟨weightedSumSquaresCongr' f h⟩
 
+-- CY : This looks to be related to the previous two lemmas.
+lemma weightedSumSquares_comp_equiv {R ι ι' : Type*} [CommSemiring R] [Fintype ι] [Fintype ι']
+    (w : ι' → R) (e : ι ≃ ι') :
+    weightedSumSquares R (w ∘ e) =
+      (weightedSumSquares R w).comp (LinearEquiv.funCongrLeft R R e.symm) := by
+  ext m
+  simpa using Finset.sum_equiv e (by simp) (by simp)
+
 open Module _root_.QuadraticMap
 
 lemma discr_reindex {R M : Type*} [CommRing R] [Invertible (2 : R)] [AddCommGroup M] [Module R M]
