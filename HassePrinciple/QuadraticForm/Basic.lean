@@ -796,8 +796,8 @@ lemma nondegenerate_prod [IsDomain R] [Module.Free R M] [Module.Finite R M]
 
 open _root_.QuadraticMap
 
-theorem polar_weightedSumSquares {S R ι : Type*} [CommRing R] [Fintype ι]
-    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R] (w : ι → S) :
+theorem polar_weightedSumSquares {S R ι : Type*} [CommRing R] [Monoid S] [DistribMulAction S R]
+    [SMulCommClass S R R] [Fintype ι] (w : ι → S) :
     polar (weightedSumSquares R w) = fun x y ↦ ∑ (i : ι), 2 * (w i) • (x i) * (y i) := by
   ext x y
   simp only [polar, weightedSumSquares_apply, Pi.add_apply, ← Finset.sum_sub_distrib, add_mul,
@@ -807,6 +807,30 @@ theorem polar_weightedSumSquares {S R ι : Type*} [CommRing R] [Fintype ι]
   ring_nf
   rw [mul_smul_comm, mul_comm (x i)]
 
+-- CY : This is similar to the previous theorem.
+-- I don't think this should be in Section Discr though.
+-- Should we move both theorems to Section weighteSumSquares?
+theorem associated_weightedSumSquares {S R ι : Type*} [CommRing R] [Monoid S] [DistribMulAction S R]
+    [SMulCommClass S R R] [Invertible (2 : R)] [Fintype ι] (w : ι → S) (x y : ι → R) :
+    (weightedSumSquares R w).associated x y = ∑ i, (w i) • (x i * y i) := by
+  simp only [QuadraticMap.associated_apply, QuadraticMap.weightedSumSquares_apply,
+    Pi.add_apply]
+  rw [← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib]
+  simp only [Finset.smul_sum]
+  refine Finset.sum_congr rfl fun i _ ↦ ?_
+  rw [invOf_smul_eq_iff, two_smul, ← smul_sub, ← smul_sub, ← smul_add]
+  exact congrArg (w i • ·) (by ring)
+
+-- CY : This theorem uses the previous one, so I am putting it here for now.
+lemma weightedSumSquares_isOrthoᵢ_basisFun {R ι : Type*} [CommRing R] [Invertible (2 : R)]
+    [Fintype ι] (w : ι → R) : (weightedSumSquares R w).associated.IsOrthoᵢ (Pi.basisFun R ι) := by
+  intro i j hij
+  simp only [Function.onFun, associated_weightedSumSquares]
+  refine Finset.sum_eq_zero fun l _ ↦ ?_
+  by_cases hi : l = i
+  classical
+  · simp [Pi.single_eq_of_ne hij, hi]
+  · simp [Pi.single_eq_of_ne hi]
 
 end Discr
 

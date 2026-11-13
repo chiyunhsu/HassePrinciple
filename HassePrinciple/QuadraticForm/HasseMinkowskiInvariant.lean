@@ -96,19 +96,20 @@ private theorem weightedSumSquares_equiv_prod (w : Fin 2 → kˣ) (a : kˣ) :
  ⟨finThreeLinearEquivProd, fun f ↦ by simp [finThreeLinearEquivProd, Fin.sum_univ_three]⟩
 
 /-- Auxiliary definition for `hasseMinkowskiInv`. -/
+-- CY : Changed `kˣ` to `k` to define `hasseMinkowskiInvBasis`
 noncomputable def hasseMinkowskiInvAux {n : ℕ} (w : Fin n → k) : ℤ :=
-  ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2)
+  ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1) (w p.2)
 
 lemma hasseMinkowskiInvAux_def {n : ℕ} (w : Fin n → k) :
     hasseMinkowskiInvAux w =
       ∏ p : Fin n × Fin n with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) := rfl
 
 noncomputable abbrev hilbertSym_Sym2 {n : ℕ} (w : Fin n → k) (z : Sym2 (Fin n)) : ℤ :=
-  Sym2.lift ⟨fun i j => hilbertSym (w i : k) (w j), by simp [hilbertSym.comm]⟩ z
+  Sym2.lift ⟨fun i j ↦ hilbertSym (w i) (w j), by simp [hilbertSym.comm]⟩ z
 
-lemma hasseMinkowskiInvAux_def' {n : ℕ} (w : Fin n → k) :
+lemma hasseMinkowskiInvAux_Sym2 {n : ℕ} (w : Fin n → k) :
     hasseMinkowskiInvAux w = ∏ z : (Sym2 (Fin n)) with ¬z.IsDiag, hilbertSym_Sym2 w z := by
-  refine Finset.prod_bij (fun p _ => s(p.1, p.2)) ?_ ?_ ?_ (by simp)
+  refine Finset.prod_bij (fun p _ ↦ s(p.1, p.2)) ?_ ?_ ?_ (by simp)
   · -- lands in the non-diagonal part
     rintro ⟨i, j⟩ hp
     simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp ⊢
@@ -123,15 +124,16 @@ lemma hasseMinkowskiInvAux_def' {n : ℕ} (w : Fin n → k) :
       exact absurd hij (lt_asymm hij')
   · -- surjective
     intro z
-    refine Sym2.ind (fun i j => ?_) z
+    refine Sym2.ind (fun i j ↦ ?_) z
     simp only [Finset.mem_filter, Finset.mem_univ, Sym2.mk_isDiag_iff, true_and, Sym2.eq,
       Prod.mk.eta, Sym2.rel_iff', Prod.swap_prod_mk, exists_prop, Prod.exists, Prod.mk.injEq]
     intro hij
     rcases lt_trichotomy i j with h | h | h
     · exact ⟨i, j, by simp [h]⟩
-    · exact absurd h hij
+    · contradiction
     · exact ⟨j, i, by simp [h]⟩
 
+-- PR 43815
 def _root_.Equiv.sym2Congr {α β : Type*} (e : α ≃ β) : Sym2 α ≃ Sym2 β where
   toFun := Sym2.map e
   invFun := Sym2.map e.symm
@@ -142,7 +144,7 @@ def _root_.Equiv.sym2Congr {α β : Type*} (e : α ≃ β) : Sym2 α ≃ Sym2 β
 
 lemma hasseMinkowskiInvAux.eq_of_perm {n : ℕ} (w : Fin n → k) (e : Fin n ≃ Fin n) :
     hasseMinkowskiInvAux (w ∘ e) = hasseMinkowskiInvAux w := by
-  rw [hasseMinkowskiInvAux_def', hasseMinkowskiInvAux_def']
+  rw [hasseMinkowskiInvAux_Sym2, hasseMinkowskiInvAux_Sym2]
   let e2 := e.sym2Congr
   have hlift_comp_map : ∏ z : (Sym2 (Fin n)) with ¬z.IsDiag, hilbertSym_Sym2 w (e2 z) =
       ∏ z : (Sym2 (Fin n)) with ¬z.IsDiag, hilbertSym_Sym2 (w ∘ e) z := by
@@ -155,6 +157,7 @@ lemma hasseMinkowskiInvAux.eq_of_perm {n : ℕ} (w : Fin n → k) (e : Fin n ≃
   refine ⟨Sym2.IsDiag.map, ?_⟩
   simpa [e2, Equiv.sym2Congr, Sym2.map_map] using Sym2.IsDiag.map (f := e.symm) (z := e2 z)
 
+-- CY : This lemma is probably not useful enough to be put into Mathlib separately.
 lemma _root_.Fin.prod_lt_succ {M : Type*} [CommMonoid M] {n : ℕ}
     (f : Fin (n + 1) → Fin (n + 1) → M) :
     ∏ p : Fin (n + 1) × Fin (n + 1) with p.1 < p.2, f p.1 p.2 =
@@ -164,80 +167,59 @@ lemma _root_.Fin.prod_lt_succ {M : Type*} [CommMonoid M] {n : ℕ}
     Fin.succ_lt_succ_iff]
 
 lemma _root_.hilbertSym.HasBilinHilbertSym.prod_right_eq [hilbertSym.HasBilinHilbertSym k]
-    {ι : Type*} (s : Finset ι) (a : kˣ) (f : ι → k) :
+    {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (a : k) (f : ι → k) :
     hilbertSym (a : k) (∏ i ∈ s, f i) = ∏ i ∈ s, hilbertSym (a : k) (f i) := by
+  by_cases ha : a = 0
+  · simp [hilbertSym, ha, zero_pow hs.card_ne_zero]
   let h : k →* ℤ :=
     { toFun := fun b ↦ hilbertSym (a : k) b
       map_one' := by
         rw [← one_pow 2]
-        exact hilbertSym.right_square_eq_one (by simp) (by simp)
-      map_mul' := fun _ _ => hilbertSym.HasBilinHilbertSym.mul_right_eq }
+        exact hilbertSym.right_square_eq_one ha (by simp)
+      map_mul' := fun _ _ ↦ hilbertSym.HasBilinHilbertSym.mul_right_eq }
   simpa only [h, MonoidHom.coe_mk, OneHom.coe_mk, Units.coe_prod] using map_prod h f s
 
 -- `[Invertible (2 : k)]` for `discr`
--- Need `w 0 ≠ 0`
-lemma hasseMinkowskiInvAux.eq_succ {n : ℕ} (w : Fin (n + 1) → kˣ) [Invertible (2 : k)]
-    [hilbertSym.HasBilinHilbertSym k] :
-    hasseMinkowskiInvAux (fun i ↦ (w i : k)) =
-      hilbertSym (w 0 : k) (w 0 * (weightedSumSquares k w).discr (Pi.basisFun k _)) *
-        hasseMinkowskiInvAux ((fun i ↦ (w i : k)) ∘ Fin.succ) := by
+lemma hasseMinkowskiInvAux.succ {n : ℕ} [NeZero n] [Invertible (2 : k)]
+    [hilbertSym.HasBilinHilbertSym k] (w : Fin (n + 1) → k) :
+    hasseMinkowskiInvAux w =
+      hilbertSym (w 0) (w 0 * (weightedSumSquares k w).discr (Pi.basisFun k _)) *
+        hasseMinkowskiInvAux (w ∘ Fin.succ) := by
   rw [hasseMinkowskiInvAux_def (fun i ↦ (w i : k)),
-  Fin.prod_lt_succ (fun i j => hilbertSym (w i : k) (w j : k)), hasseMinkowskiInvAux_def]
+    Fin.prod_lt_succ (fun i j ↦ hilbertSym (w i : k) (w j : k)), hasseMinkowskiInvAux_def]
   congr
   rw [weightedSumSquares_discr, Fin.prod_univ_succ, ← mul_assoc, mul_comm]
-  simp only [Units.smul_def, smul_eq_mul, mul_one,]
-  rw [← sq, hilbertSym.mul_right_square_eq (by simp), hilbertSym.HasBilinHilbertSym.prod_right_eq]
+  simp only [smul_eq_mul, mul_one]
+  by_cases hw0 : w 0 = 0
+  · simpa [hilbertSym, hw0] using NeZero.out
+  rw [← sq, hilbertSym.mul_right_square_eq hw0, hilbertSym.HasBilinHilbertSym.prod_right_eq]
+  exact ⟨0, by simp⟩
 
--- Need `w 0 ≠ 0`
-lemma hasseMinkowskiInvAux.eq_of_equivalent_induction {n : ℕ} {w w' : Fin (n + 1) → kˣ}
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
+lemma hasseMinkowskiInvAux.eq_of_equivalent_succ {n : ℕ} {w w' : Fin (n + 1) → k}
+    [NeZero n] [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
     (h : (weightedSumSquares k w).Equivalent (weightedSumSquares k w'))
-    (ih : hasseMinkowskiInvAux ((fun i ↦ (w i : k)) ∘ Fin.succ) =
-      hasseMinkowskiInvAux ((fun i ↦ (w' i : k)) ∘ Fin.succ))
+    (ih : hasseMinkowskiInvAux (w ∘ Fin.succ) = hasseMinkowskiInvAux (w' ∘ Fin.succ))
     (h0 : w 0 = w' 0) :
-    hasseMinkowskiInvAux (fun i ↦ (w i : k)) = hasseMinkowskiInvAux (fun i ↦ (w' i : k)) := by
-  rw [hasseMinkowskiInvAux.eq_succ w, hasseMinkowskiInvAux.eq_succ w', ih, h0]
-  apply congrArg (· * hasseMinkowskiInvAux ((fun i ↦ (w' i : k)) ∘ Fin.succ))
+    hasseMinkowskiInvAux w = hasseMinkowskiInvAux w' := by
+  rw [hasseMinkowskiInvAux.succ w, hasseMinkowskiInvAux.succ w', ih, h0]
+  apply congrArg (· * hasseMinkowskiInvAux (w' ∘ Fin.succ))
   rw [IsometryEquiv.discr (Equiv.refl _) (Pi.basisFun _ _) (Pi.basisFun _ _) (Classical.choice h),
     ← mul_assoc]
   exact hilbertSym.mul_right_square_eq (LinearEquiv.det_toMatrix_ne_zero _ _ _)
-
-lemma associated_weightedSumSquares {S R ι : Type*} [CommRing R] [Fintype ι]
-    [Monoid S] [DistribMulAction S R] [SMulCommClass S R R] [Invertible (2 : R)]
-    (w : ι → S) (x y : ι → R) :
-    (weightedSumSquares R w).associated x y = ∑ i, (w i) • (x i * y i) := by
-  simp only [QuadraticMap.associated_apply, QuadraticMap.weightedSumSquares_apply,
-    Pi.add_apply]
-  rw [← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib]
-  simp only [Finset.smul_sum]
-  refine Finset.sum_congr rfl fun i _ ↦ ?_
-  rw [invOf_smul_eq_iff, two_smul, ← smul_sub, ← smul_sub, ← smul_add]
-  exact congrArg (w i • ·) (by ring)
-
-lemma weightedSumSquares_isOrthoᵢ_basisFun {n : ℕ} (w : Fin n → kˣ) [Invertible (2 : k)] :
-    (weightedSumSquares k w).associated.IsOrthoᵢ (Pi.basisFun k (Fin n)) := by
-  intro i j hij
-  simp only [Function.onFun, Pi.basisFun_apply, associated_weightedSumSquares]
-  refine Finset.sum_eq_zero fun l _ ↦ ?_
-  by_cases hi : l = i
-  · simp [hi, hij]
-  · simp [Pi.single_apply, hi]
 
 lemma coeff_eq_of_basis_eq {n : ℕ} {w w' : Fin (n + 1) → k} [Invertible (2 : k)]
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
     (hf : Pi.basisFun k (Fin (n + 1)) 0 = ((Pi.basisFun k (Fin (n + 1))).map f) 0) :
     w 0 = w' 0 := by
-  obtain ⟨f', hf'⟩ := f
-  have := hf' (Pi.basisFun k (Fin (n + 1)) 0)
-  simp only [Pi.basisFun_apply, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe,
-    QuadraticMap.weightedSumSquares_apply, Module.Basis.map_apply] at this hf
-  rw [← hf] at this
-  rw [Finset.sum_eq_single 0] at this
-  · rw [Finset.sum_eq_single 0] at this
-    · simp only [Pi.single_eq_same, mul_one, smul_eq_mul] at this
+  have h0 := f.map_app (Pi.basisFun k (Fin (n + 1)) 0)
+  simp only [Pi.basisFun_apply, QuadraticMap.IsometryEquiv.coe_toLinearEquiv,
+    QuadraticMap.weightedSumSquares_apply, Module.Basis.map_apply] at h0 hf
+  rw [← hf, Finset.sum_eq_single 0] at h0
+  · rw [Finset.sum_eq_single 0] at h0
+    · simp only [Pi.single_eq_same, mul_one, smul_eq_mul] at h0
       -- simp only [Pi.single_eq_same, mul_one, Units.smul_def, smul_eq_mul] at this
       symm
-      exact this
+      exact h0
       -- exact Units.val_injective this
     · intro b hb hb0
       simp only [ne_eq, hb0, not_false_eq_true, Pi.single_eq_of_ne, mul_zero, smul_zero]
@@ -315,11 +297,12 @@ lemma equiv_of_coefficient_eq {n : ℕ} {w w' : Fin (n + 1) → k}
   sorry
 
 open LinearEquiv in
-lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fin (n + 1) → kˣ}
+lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} [NeZero n]
+    {w w' : Fin (n + 1) → k}
     [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
     (f : (weightedSumSquares k (fun i ↦ (w i : k))).IsometryEquiv
       (weightedSumSquares k (fun i ↦ (w' i : k))))
-    (ih : ∀ {w0 w0' : Fin n → kˣ},
+    (ih : ∀ {w0 w0' : Fin n → k},
       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
         hasseMinkowskiInvAux (fun i ↦ (w0 i : k)) = hasseMinkowskiInvAux (fun i ↦ (w0' i : k)))
     (hf : ((Pi.basisFun k (Fin (n + 1))).map f).IsContiguous (Pi.basisFun k (Fin (n + 1)))) :
@@ -329,9 +312,10 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent_of_IsContiguous {n : ℕ} {w w' : Fi
     ⟨(funCongrLeft k k e).trans (f.toLinearEquiv.trans (funCongrLeft k k e')), heq⟩
   rw [← hasseMinkowskiInvAux.eq_of_perm (fun i ↦ (w i : k)) e,
     ← hasseMinkowskiInvAux.eq_of_perm (fun i ↦ (w' i : k)) e']
-  refine hasseMinkowskiInvAux.eq_of_equivalent_induction ⟨e'fe⟩ (ih ?_) ?_
+  refine hasseMinkowskiInvAux.eq_of_equivalent_succ ⟨e'fe⟩ (ih ?_) ?_
   · exact equiv_of_coefficient_eq e'fe (coeff_eq_of_basis_eq e'fe h0)
-  · simpa using Units.val_injective (coeff_eq_of_basis_eq e'fe h0)
+  · simpa using (coeff_eq_of_basis_eq e'fe h0)
+    -- simpa using Units.val_injective (coeff_eq_of_basis_eq e'fe h0)
 
 section hasseMinkowskiInvBasis
 
@@ -340,20 +324,30 @@ open Module
 noncomputable def hasseMinkowskiInvBasis {n : ℕ} {Q : QuadraticForm k V} [FiniteDimensional k V]
     [Invertible (2 : k)]
     {b : Basis (Fin n) k V} (_ : Q.associated.IsOrthoᵢ b) : ℤ :=
-  hasseMinkowskiInvAux fun i => Q (b i)
+  hasseMinkowskiInvAux fun i ↦ Q (b i)
 
-lemma hasseMinkowskiInvAux_Basis {n : ℕ} (w : Fin n → kˣ) [Invertible (2 : k)] :
+lemma hasseMinkowskiInvAux_Basis {n : ℕ} (w : Fin n → k) [Invertible (2 : k)] :
     hasseMinkowskiInvAux (fun i ↦ (w i : k)) =
       ((weightedSumSquares k w).hasseMinkowskiInvBasis
-        (weightedSumSquares_isOrthoᵢ_basisFun w)) := by sorry
+        (weightedSumSquares_isOrthoᵢ_basisFun fun i ↦ (w i : k))) := by
+  congr 1
+  funext i
+  symm
+  rw [QuadraticMap.weightedSumSquares_apply, Finset.sum_eq_single i]
+  · simp [Pi.basisFun_apply, Units.smul_def]
+  · intro j _ hj
+    simp [Pi.basisFun_apply, Pi.single_eq_of_ne hj]
+  · simp
 
 noncomputable def isometryEquivWeightedSumSquares' {R M ι : Type*} [CommRing R] [Invertible (2 : R)]
     [AddCommGroup M] [Module R M] [Fintype ι]
     (Q : QuadraticForm R M) (v : Basis ι R M)
     (hv : (QuadraticMap.associated (R := R) Q).IsOrthoᵢ v) :
-    Q.IsometryEquiv (QuadraticMap.weightedSumSquares R fun i => Q (v i)) := by
-  rw [← Q.basisRepr_eq_of_iIsOrtho v hv]
-  exact Q.isometryEquivBasisRepr v
+    Q.IsometryEquiv (QuadraticMap.weightedSumSquares R fun i ↦ Q (v i)) :=
+  { v.equivFun with
+    map_app' := fun x ↦ by
+      rw [← Q.basisRepr_eq_of_iIsOrtho v hv]
+      exact (Q.isometryEquivBasisRepr v).map_app x }
 
 #check isometryEquivWeightedSumSquares'
 #check isometryEquivWeightedSumSquares
@@ -362,44 +356,65 @@ theorem isometryEquiv_basis {R M ι : Type*} [CommRing R] [Invertible (2 : R)]
     [AddCommGroup M] [Module R M] [Fintype ι]
     (Q : QuadraticForm R M) (v : Basis ι R M)
     (hv : (QuadraticMap.associated (R := R) Q).IsOrthoᵢ v) :
-    v.map (isometryEquivWeightedSumSquares' Q v hv) = Pi.basisFun R ι := by sorry
+    v.map (isometryEquivWeightedSumSquares' Q v hv) = Pi.basisFun R ι := by
+  classical
+  refine Basis.eq_of_apply_eq fun i ↦ ?_
+  rw [Basis.map_apply, Pi.basisFun_apply]
+  change v.equivFun (v i) = Pi.single i 1
+  ext j
+  simp [Pi.single_apply, eq_comm]
 
 theorem isometryEquiv_symm_basis {R M ι : Type*} [CommRing R] [Invertible (2 : R)]
     [AddCommGroup M] [Module R M] [Fintype ι]
     (Q : QuadraticForm R M) (v : Basis ι R M)
     (hv : (QuadraticMap.associated (R := R) Q).IsOrthoᵢ v) :
-    (Pi.basisFun R ι).map (isometryEquivWeightedSumSquares' Q v hv).symm = v := by sorry
+    (Pi.basisFun R ι).map (isometryEquivWeightedSumSquares' Q v hv).symm = v := by
+  refine Basis.eq_of_apply_eq fun i ↦ ?_
+  have h : (isometryEquivWeightedSumSquares' Q v hv).toLinearEquiv (v i) = Pi.basisFun R ι i := by
+    rw [← isometryEquiv_basis Q v hv, Basis.map_apply]
+  rw [Basis.map_apply, ← h]
+  exact (isometryEquivWeightedSumSquares' Q v hv).toLinearEquiv.symm_apply_apply (v i)
 
 theorem isContiguous_map {ι R M N : Type*} [CommRing R] [Invertible (2 : R)]
     [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
     (b b' : Basis ι R M)
     (hc : b.IsContiguous b') (f : M ≃ₗ[R] N) :
-    (b.map f).IsContiguous (b'.map f) := by sorry
+    (b.map f).IsContiguous (b'.map f) := by
+  obtain ⟨i, j, hij⟩ := hc
+  exact ⟨i, j, by rw [Basis.map_apply, Basis.map_apply, hij]⟩
 
-lemma Basis.map_map {ι R M₁ M₂ M₃ : Type*} [CommRing R] [Invertible (2 : R)]
-    [AddCommGroup M₁] [AddCommGroup M₂] [AddCommGroup M₃]
+lemma _root_.Module.Basis.map_map {ι R M₁ M₂ M₃ : Type*} [CommSemiring R]
+    [AddCommMonoid M₁] [AddCommMonoid M₂] [AddCommMonoid M₃]
     [Module R M₁] [Module R M₂] [Module R M₃]
     (b : Basis ι R M₁) (f : M₁ ≃ₗ[R] M₂) (g : M₂ ≃ₗ[R] M₃) :
-    (b.map f).map g = b.map (f.trans g) := by sorry
+    (b.map f).map g = b.map (f.trans g) :=
+  Basis.eq_of_apply_eq fun i ↦ by simp [Basis.map_apply]
 
-theorem nonzero_of_nondegenerate {n : ℕ} {Q : QuadraticForm k V}
-    [Invertible (2 : k)]
-    (hQ : Q.associated.SeparatingLeft) (b : Basis (Fin (n + 1)) k V) :
-    ∀ i : Fin (n + 1), Q (b i) ≠ 0 := by sorry
+#check QuadraticMap.nondegenerate_weightedSumSquares
+-- Nondegenerate vs SeparatingLeft?
+theorem nonzero_of_nondegenerate {n : ℕ} [Invertible (2 : k)]
+    {Q : QuadraticForm k V} (hQ : Q.associated.SeparatingLeft)
+    {b : Basis (Fin (n + 1)) k V} (hb : Q.associated.IsOrthoᵢ b) :
+    ∀ i : Fin (n + 1), Q (b i) ≠ 0 := by
+  intro i hi
+  refine hb.not_isOrtho_basis_self_of_separatingLeft hQ i ?_
+  simpa [QuadraticMap.associated_eq_self_apply] using hi
 
-lemma hasseMinkowskiInvBasis_eq_of_isContiguous {n : ℕ} {Q : QuadraticForm k V}
+lemma hasseMinkowskiInvBasis_eq_of_isContiguous {n : ℕ} [NeZero n] {Q : QuadraticForm k V}
     [FiniteDimensional k V]
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] (hQ : Q.associated.SeparatingLeft)
+    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] --(hQ : Q.associated.SeparatingLeft)
     {b b' : Basis (Fin (n + 1)) k V}
     (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b')
-    (ih : ∀ {w0 w0' : Fin n → kˣ},
+    (ih : ∀ {w0 w0' : Fin n → k},
       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
         hasseMinkowskiInvAux (fun i ↦ (w0 i : k)) = hasseMinkowskiInvAux (fun i ↦ (w0' i : k)))
     (hc : b.IsContiguous b') :
     Q.hasseMinkowskiInvBasis hb = Q.hasseMinkowskiInvBasis hb' := by
   simp only [hasseMinkowskiInvBasis]
-  set w := fun i ↦ Units.mk0 (Q (b i)) ((nonzero_of_nondegenerate hQ b) i) with hw
-  set w' := fun i ↦ Units.mk0 (Q (b' i)) ((nonzero_of_nondegenerate hQ b') i) with hw'
+  -- set w := fun i ↦ Units.mk0 (Q (b i)) ((nonzero_of_nondegenerate hQ hb) i) with hw
+  -- set w' := fun i ↦ Units.mk0 (Q (b' i)) ((nonzero_of_nondegenerate hQ hb') i) with hw'
+  set w := fun i ↦ Q (b i)
+  set w' := fun i ↦ Q (b' i)
   let fb := isometryEquivWeightedSumSquares' Q b hb
   let fb' := isometryEquivWeightedSumSquares' Q b' hb'
   let f := fb.symm.trans fb'
@@ -412,12 +427,12 @@ lemma hasseMinkowskiInvBasis_eq_of_isContiguous {n : ℕ} {Q : QuadraticForm k V
   rw [Basis.map_map] at this
   exact this
 
-lemma hasseMinkowskiInvBasis.eq_of_chain {n m : ℕ}
+lemma hasseMinkowskiInvBasis.eq_of_chain {n m : ℕ} [NeZero n]
     {Q : QuadraticForm k V} [FiniteDimensional k V]
-    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] (hQ : Q.associated.SeparatingLeft)
+    [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k] --(hQ : Q.associated.SeparatingLeft)
     {b b' : Basis (Fin (n + 1)) k V}
     (hb : Q.associated.IsOrthoᵢ b) (hb' : Q.associated.IsOrthoᵢ b')
-    (ih : ∀ {w0 w0' : Fin n → kˣ},
+    (ih : ∀ {w0 w0' : Fin n → k},
       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
         hasseMinkowskiInvAux (fun i ↦ (w0 i : k)) = hasseMinkowskiInvAux (fun i ↦ (w0' i : k)))
     (basis : Fin (m + 1) → Basis (Fin (n + 1)) k V)
@@ -434,7 +449,8 @@ lemma hasseMinkowskiInvBasis.eq_of_chain {n m : ℕ}
   simp only [Fin.isValue, Nat.reduceAdd, Fin.zero_eta, not_lt_zero, IsEmpty.forall_iff,
     implies_true] at *
   rw [basis_zero] at basis_m_sub_one
-  refine hasseMinkowskiInvBasis_eq_of_isContiguous hQ hb hb' ih ?_
+  refine hasseMinkowskiInvBasis_eq_of_isContiguous hb hb' ih ?_
+  -- refine hasseMinkowskiInvBasis_eq_of_isContiguous hQ hb hb' ih ?_
   use 0, 0
   exact congrArg (fun b ↦ b 0) basis_m_sub_one
   | succ m ih' =>
@@ -442,7 +458,8 @@ lemma hasseMinkowskiInvBasis.eq_of_chain {n m : ℕ}
   have ih' := ih' (basis_ortho 1) basis' (by simp [basis', basis_ortho]) (by simp [basis'])
     (by simp [basis', basis_m_sub_one]) (fun i hi ↦ basis_isContiguous (i + 1) (by omega))
   rw [← ih']
-  refine hasseMinkowskiInvBasis_eq_of_isContiguous hQ hb _ ih ?_
+  refine hasseMinkowskiInvBasis_eq_of_isContiguous hb _ ih ?_
+  -- refine hasseMinkowskiInvBasis_eq_of_isContiguous hQ hb _ ih ?_
   simpa [basis_zero] using basis_isContiguous 0 (by omega)
 
 lemma hasseMinkowskiInvBasis_map {n : ℕ} {Q : QuadraticForm k V} {Q' : QuadraticForm k W}
@@ -450,35 +467,59 @@ lemma hasseMinkowskiInvBasis_map {n : ℕ} {Q : QuadraticForm k V} {Q' : Quadrat
     [Invertible (2 : k)] [FiniteDimensional k V] [FiniteDimensional k W]
     (hb : Q.associated.IsOrthoᵢ b) (hb' : Q'.associated.IsOrthoᵢ (b.map f.toLinearEquiv)) :
     Q.hasseMinkowskiInvBasis hb = Q'.hasseMinkowskiInvBasis hb' := by
-  sorry
+  unfold hasseMinkowskiInvBasis
+  congr 1
+  funext i
+  rw [Basis.map_apply]
+  exact (f.map_app (b i)).symm
 
 end hasseMinkowskiInvBasis
 
+lemma weightedSumSquares_basisFun {ι : Type*} [Fintype ι]
+    (w : ι → k) (i : ι) :
+    weightedSumSquares k w (Pi.basisFun k ι i) = w i := by
+  classical
+  rw [QuadraticMap.weightedSumSquares_apply, Finset.sum_eq_single i]
+  · simp [Pi.basisFun_apply]
+    -- simp [Pi.basisFun_apply, Units.smul_def]
+  · intro j _ hj
+    simp [Pi.basisFun_apply, Pi.single_eq_of_ne hj]
+  · simp
+
+lemma separatingLeft_weightedSumSquares {ι : Type*} [Fintype ι] [Invertible (2 : k)]
+    (w : ι → kˣ) :
+    LinearMap.SeparatingLeft (QuadraticMap.associated (weightedSumSquares k w)) := by
+  refine LinearMap.IsOrthoᵢ.separatingLeft_of_not_isOrtho_basis_self (Pi.basisFun k ι)
+    (weightedSumSquares_isOrthoᵢ_basisFun fun i ↦ (w i : k)) fun i hi ↦ ?_
+  have h : weightedSumSquares k (fun i ↦ (w i : k)) (Pi.basisFun k ι i) = 0 := by
+    have h2 := hi
+    rw [QuadraticMap.associated_eq_self_apply] at h2
+    exact h2
+  rw [weightedSumSquares_basisFun] at h
+  exact (w i).ne_zero h
+
 open Module in
-lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n m : ℕ} {w w' : Fin (n + 1) → kˣ}
+lemma hasseMinkowskiInvAux.eq_of_equivalent_of_chain {n : ℕ} [NeZero n] {w w' : Fin (n + 1) → k}
     [Invertible (2 : k)] [hilbertSym.HasBilinHilbertSym k]
     (f : (weightedSumSquares k w).IsometryEquiv (weightedSumSquares k w'))
-    (ih : ∀ {w0 w0' : Fin n → kˣ},
+    (ih : ∀ {w0 w0' : Fin n → k},
       (weightedSumSquares k w0).Equivalent (weightedSumSquares k w0') →
         hasseMinkowskiInvAux (fun i ↦ (w0 i : k)) = hasseMinkowskiInvAux (fun i ↦ (w0' i : k)))
-    (basis : Fin (m + 1) → Basis (Fin (n + 1)) k (Fin (n + 1) → k))
-    (basis_ortho : ∀ i : Fin (m + 1), (weightedSumSquares k w').associated.IsOrthoᵢ (basis i))
-    (basis_zero : basis 0 = ((Pi.basisFun k (Fin (n + 1))).map f))
-    (basis_m_sub_one : basis ⟨m, lt_add_one m⟩ = (Pi.basisFun k (Fin (n + 1))))
-    (basis_isContiguous : ∀ i, ∀ (hi : i < m),
-      (basis ⟨i, by omega⟩).IsContiguous (basis ⟨i + 1, by omega⟩)) :
+    (c : Basis.Chain (weightedSumSquares k w')
+      ((Pi.basisFun k (Fin (n + 1))).map f) (Pi.basisFun k (Fin (n + 1)))) :
     hasseMinkowskiInvAux (fun i ↦ (w i : k)) = hasseMinkowskiInvAux (fun i ↦ (w' i : k)) := by
-  have : FiniteDimensional k (Fin (n + 1) → k) := by sorry
   rw [hasseMinkowskiInvAux_Basis w, hasseMinkowskiInvAux_Basis w']
   have hb : (weightedSumSquares k w').associated.IsOrthoᵢ
     ((Pi.basisFun k _).map f.toLinearEquiv) := sorry
   rw [hasseMinkowskiInvBasis_map f _ hb]
-  refine hasseMinkowskiInvBasis.eq_of_chain (m := m) ?_
+  refine hasseMinkowskiInvBasis.eq_of_chain (m := c.m) -- ?_
     hb (weightedSumSquares_isOrthoᵢ_basisFun w') ih
-      basis basis_ortho basis_zero basis_m_sub_one basis_isContiguous
-  sorry
+      c.basis c.basis_ortho c.basis_zero c.basis_m_sub_one c.basis_isContiguous
+  -- refine LinearMap.IsOrthoᵢ.separatingLeft_of_not_isOrtho_basis_self (Pi.basisFun k _)
+  --   (weightedSumSquares_isOrthoᵢ_basisFun w') fun i hi ↦ ?_
+  -- simp [QuadraticMap.associated_eq_self_apply, Pi.single_apply, Units.smul_def] at hi
 
-lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' : Fin m → kˣ}
+lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → k} {w' : Fin m → k}
     [Invertible (2 : k)] -- `[Invertible (2 : k)]` is used in `eq_one_iff_represents_one`
     [hilbertSym.HasBilinHilbertSym k]
     (h : (QuadraticMap.weightedSumSquares k w).Equivalent (QuadraticMap.weightedSumSquares k w')) :
@@ -499,27 +540,26 @@ lemma hasseMinkowskiInvAux.eq_of_equivalent {n m : ℕ} {w : Fin n → kˣ} {w' 
     ∏ p : Fin 2 × Fin 2 with p.1 < p.2, hilbertSym (w p.1 : k) (w p.2) =
     hilbertSym (w 0 : k) (w 1) := Finset.prod_eq_single (0, 1) (by grind) (fun h ↦ by simp at h)
   rw [hsingle (fun i ↦ (w i : k)), hsingle (fun i ↦ (w' i : k))]
-  by_cases hone : hilbertSym (w' 0 : k) (w' 1 : k) = 1
-  · rw [hone]
-    rw [hilbertSym.eq_one_iff_represents_one] at hone ⊢
-    exact (QuadraticMap.Equivalent.represents_iff h 1).mpr hone
-  · have hnegone : hilbertSym (w' 0 : k) (w' 1 : k) = -1 := by
-      simpa [hone] using
-      hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp : (w' 0 : k) ≠ 0) (by simp : (w' 1 : k) ≠ 0)
-    rw [hnegone]
-    rw [not_congr (hilbertSym.eq_one_iff_represents_one w'),
-      ← QuadraticMap.Equivalent.represents_iff h (1 : kˣ),
-      ← not_congr (hilbertSym.eq_one_iff_represents_one w)] at hone
-    simpa [hone] using
-      hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp : (w 0 : k) ≠ 0) (by simp : (w 1 : k) ≠ 0)
+  -- by_cases hone : hilbertSym (w' 0 : k) (w' 1 : k) = 1
+  -- · rw [hone]
+  --   rw [hilbertSym.eq_one_iff_represents_one] at hone ⊢
+  --   exact (QuadraticMap.Equivalent.represents_iff h 1).mpr hone
+  -- · have hnegone : hilbertSym (w' 0 : k) (w' 1 : k) = -1 := by
+  --     simpa [hone] using
+  --     hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp : (w' 0 : k) ≠ 0) (by simp : (w' 1 : k) ≠ 0)
+  --   rw [hnegone]
+  --   rw [not_congr (hilbertSym.eq_one_iff_represents_one w'),
+  --     ← QuadraticMap.Equivalent.represents_iff h (1 : kˣ),
+  --     ← not_congr (hilbertSym.eq_one_iff_represents_one w)] at hone
+  --   simpa [hone] using
+  --     hilbertSym.eq_one_or_neg_one_of_ne_zero (by simp : (w 0 : k) ≠ 0) (by simp : (w 1 : k) ≠ 0)
+  sorry
   | (r + 3) =>
-  -- obtain ⟨f⟩ := h
-  have f := Classical.choice h
+  obtain ⟨f⟩ := h
   let b' := (Pi.basisFun k (Fin (r + 3)))
   let b := b'.map f.toLinearEquiv
   have chain : Module.Basis.Chain (weightedSumSquares k w') b b' := by sorry
-  refine hasseMinkowskiInvAux.eq_of_equivalent_of_chain f ?_
-    chain.basis chain.basis_ortho chain.basis_zero chain.basis_m_sub_one chain.basis_isContiguous
+  refine hasseMinkowskiInvAux.eq_of_equivalent_of_chain f ?_ chain
   exact hasseMinkowskiInvAux.eq_of_equivalent
 
 variable [FiniteDimensional k V] [FiniteDimensional k W]
@@ -626,7 +666,7 @@ lemma of_baseChange_weightedSumSquares {R : Type*} (A : Type*) [Field R]
   simp
 
 open Module hilbertSym HasBilinHilbertSym in
-lemma prod_rank_one [HasBilinHilbertSym k] (b : Basis (Fin 2) k V) (a : kˣ) (h : Q.Nondegenerate) :
+lemma prod_rank_one (b : Basis (Fin 2) k V) (a : kˣ) (h : Q.Nondegenerate) :
     hasseMinkowskiInv
       ((Q.prod (QuadraticMap.weightedSumSquares k ![a])).nondegenerate_associated_iff.mpr
         (nondegenerate_prod h (nondegenerate_weightedSumSquares _))).1 =
@@ -686,8 +726,6 @@ private lemma represents_zero_iff_of_rank_three_aux (b : Basis (Fin 3) k V) (hQ 
 section HasBilinHilbertSym
 
 open HasBilinHilbertSym
-
-variable [HasBilinHilbertSym k]
 
 lemma represents_zero_iff_of_rank_three (b : Basis (Fin 3) k V) :
     Q.Isotropic ↔
